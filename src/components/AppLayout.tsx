@@ -23,7 +23,7 @@ export function AppLayout() {
         <div className="p-6 border-b">
           <div className="flex items-center gap-2">
             <Smartphone className="h-6 w-6 text-primary" />
-            <h1 className="text-lg font-bold">ຮ້ານສ້ອມມືຖື</h1>
+            <h1 className="text-lg font-bold">ເພັງ ໂມບາຍ Pheng Mobile</h1>
           </div>
           <p className="text-xs text-muted-foreground mt-1">ລະບົບຄຸ້ມຄອງງານສ້ອມ</p>
         </div>

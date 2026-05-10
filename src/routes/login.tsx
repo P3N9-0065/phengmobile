@@ -56,7 +56,7 @@ function LoginPage() {
           <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
             <Smartphone className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-2xl">ຮ້ານສ້ອມມືຖື</CardTitle>
+          <CardTitle className="text-2xl">ເພັງ ໂມບາຍ Pheng Mobile</CardTitle>
           <CardDescription>
             {mode === "login" ? "ເຂົ້າສູ່ລະບົບເພື່ອສືບຕໍ່" : "ສ້າງບັນຊີໃໝ່"}
           </CardDescription>

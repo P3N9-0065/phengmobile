@@ -74,10 +74,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "ຮ້ານສ້ອມມືຖື — ລະບົບຄຸ້ມຄອງງານສ້ອມ" },
-      { name: "description", content: "ລະບົບ POS ສຳລັບຮ້ານສ້ອມມືຖື ບັນທຶກໃບສ້ອມ ສະຕັອກອາໄຫຼ່ ແລະ ລູກຄ້າ" },
+      { title: "ເພັງ ໂມບາຍ Pheng Mobile — ລະບົບຄຸ້ມຄອງງານສ້ອມ" },
+      { name: "description", content: "ລະບົບ POS ສຳລັບເພັງ ໂມບາຍ Pheng Mobile ບັນທຶກໃບສ້ອມ ສະຕັອກອາໄຫຼ່ ແລະ ລູກຄ້າ" },
       { name: "author", content: "Repair Shop" },
-      { property: "og:title", content: "ຮ້ານສ້ອມມືຖື" },
+      { property: "og:title", content: "ເພັງ ໂມບາຍ Pheng Mobile" },
       { property: "og:description", content: "ລະບົບຄຸ້ມຄອງງານສ້ອມມືຖື" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
