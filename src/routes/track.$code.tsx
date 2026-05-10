@@ -39,7 +39,7 @@ function TrackPage() {
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-2 mb-6 pt-6">
           <Smartphone className="h-6 w-6 text-primary" />
-          <h1 className="text-xl font-bold">ຮ້ານສ້ອມມືຖື</h1>
+          <h1 className="text-xl font-bold">ເພັງ ໂມບາຍ Pheng Mobile</h1>
         </div>
 
         {isLoading && <p className="text-center py-12 text-muted-foreground">ກຳລັງໂຫຼດ...</p>}
