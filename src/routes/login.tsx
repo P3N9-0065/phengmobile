@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Smartphone } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -53,8 +53,8 @@ function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-            <Smartphone className="h-6 w-6 text-primary" />
+          <div className="mx-auto mb-3 h-20 w-20 rounded-xl bg-black p-2 flex items-center justify-center">
+            <Logo className="h-full w-full" />
           </div>
           <CardTitle className="text-2xl">ເພັງ ໂມບາຍ Pheng Mobile</CardTitle>
           <CardDescription>

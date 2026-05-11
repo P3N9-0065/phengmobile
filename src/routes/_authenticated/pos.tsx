@@ -13,9 +13,10 @@ import { ScanLine, Plus, Minus, Trash2, X, Printer, Receipt as ReceiptIcon } fro
 import { toast } from "sonner";
 import { formatLAK } from "@/lib/format";
 import {
-  CURRENCY_LABEL, DEFAULT_RATES, formatCurrency, fromLAK, PAYMENT_METHOD_LABEL, toLAK,
+  CURRENCY_LABEL, formatCurrency, fromLAK, PAYMENT_METHOD_LABEL, toLAK,
   type Currency,
 } from "@/lib/currency";
+import { usePosSettings } from "@/lib/settings";
 import { Receipt, printReceipt, type ReceiptData } from "@/components/pos/Receipt";
 import { useAuth } from "@/lib/auth";
 
@@ -37,18 +38,19 @@ const CURRENCIES: Currency[] = ["LAK", "THB", "USD"];
 function POSPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const settings = usePosSettings();
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<CartLine[]>([]);
   const [discount, setDiscount] = useState(0);
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<string>("cash");
   const [currency, setCurrency] = useState<Currency>("LAK");
-  const [rate, setRate] = useState<number>(DEFAULT_RATES.LAK);
+  const [rate, setRate] = useState<number>(settings.rates.LAK);
   const [amountPaid, setAmountPaid] = useState<number>(0);
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const scanRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { setRate(DEFAULT_RATES[currency]); setAmountPaid(0); }, [currency]);
+  useEffect(() => { setRate(settings.rates[currency]); setAmountPaid(0); }, [currency, settings.rates]);
   useEffect(() => { scanRef.current?.focus(); }, []);
 
   const { data: items } = useQuery({
