@@ -2,8 +2,10 @@ import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-route
 import { useAuth } from "@/lib/auth";
 import { ROLE_LABEL } from "@/lib/lao";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Wrench, Users, Package, LogOut, Smartphone, ShoppingCart, ReceiptText } from "lucide-react";
+import { LayoutDashboard, Wrench, Users, Package, LogOut, ShoppingCart, ReceiptText, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/Logo";
+import { usePosSettings } from "@/lib/settings";
 
 const NAV = [
   { to: "/dashboard", label: "ໜ້າລວມ", icon: LayoutDashboard },
@@ -12,22 +14,26 @@ const NAV = [
   { to: "/sales", label: "ບິນຂາຍ", icon: ReceiptText },
   { to: "/customers", label: "ລູກຄ້າ", icon: Users },
   { to: "/inventory", label: "ສະຕັອກ", icon: Package },
+  { to: "/settings", label: "ຕັ້ງຄ່າ", icon: Settings },
 ] as const;
 
 export function AppLayout() {
   const { user, roles, signOut } = useAuth();
   const navigate = useNavigate();
   const { location } = useRouterState();
+  const s = usePosSettings();
 
   return (
     <div className="flex min-h-screen bg-muted/30">
       <aside className="w-64 border-r bg-card flex flex-col">
-        <div className="p-6 border-b">
-          <div className="flex items-center gap-2">
-            <Smartphone className="h-6 w-6 text-primary" />
-            <h1 className="text-lg font-bold">ເພັງ ໂມບາຍ Pheng Mobile</h1>
+        <div className="p-4 border-b">
+          <div className="flex items-center gap-3">
+            <Logo className="h-12 w-12 rounded-md bg-black p-1" />
+            <div className="min-w-0">
+              <h1 className="text-sm font-bold truncate">{s.shop_name}</h1>
+              <p className="text-[11px] text-muted-foreground truncate">{s.shop_name_en}</p>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">ລະບົບຄຸ້ມຄອງງານສ້ອມ</p>
         </div>
 
         <nav className="flex-1 p-3 space-y-1">

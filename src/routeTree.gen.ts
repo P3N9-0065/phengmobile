@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrackCodeRouteImport } from './routes/track.$code'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/sales'
 import { Route as AuthenticatedRepairsRouteImport } from './routes/_authenticated/repairs'
 import { Route as AuthenticatedPosRouteImport } from './routes/_authenticated/pos'
@@ -41,6 +42,11 @@ const TrackCodeRoute = TrackCodeRouteImport.update({
   id: '/track/$code',
   path: '/track/$code',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedSalesRoute = AuthenticatedSalesRouteImport.update({
   id: '/sales',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/pos': typeof AuthenticatedPosRoute
   '/repairs': typeof AuthenticatedRepairsRouteWithChildren
   '/sales': typeof AuthenticatedSalesRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/track/$code': typeof TrackCodeRoute
   '/customers/$id': typeof AuthenticatedCustomersIdRoute
   '/repairs/$id': typeof AuthenticatedRepairsIdRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/pos': typeof AuthenticatedPosRoute
   '/repairs': typeof AuthenticatedRepairsRouteWithChildren
   '/sales': typeof AuthenticatedSalesRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/track/$code': typeof TrackCodeRoute
   '/customers/$id': typeof AuthenticatedCustomersIdRoute
   '/repairs/$id': typeof AuthenticatedRepairsIdRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/_authenticated/pos': typeof AuthenticatedPosRoute
   '/_authenticated/repairs': typeof AuthenticatedRepairsRouteWithChildren
   '/_authenticated/sales': typeof AuthenticatedSalesRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/track/$code': typeof TrackCodeRoute
   '/_authenticated/customers/$id': typeof AuthenticatedCustomersIdRoute
   '/_authenticated/repairs/$id': typeof AuthenticatedRepairsIdRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/pos'
     | '/repairs'
     | '/sales'
+    | '/settings'
     | '/track/$code'
     | '/customers/$id'
     | '/repairs/$id'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/pos'
     | '/repairs'
     | '/sales'
+    | '/settings'
     | '/track/$code'
     | '/customers/$id'
     | '/repairs/$id'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/_authenticated/pos'
     | '/_authenticated/repairs'
     | '/_authenticated/sales'
+    | '/_authenticated/settings'
     | '/track/$code'
     | '/_authenticated/customers/$id'
     | '/_authenticated/repairs/$id'
@@ -215,6 +227,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/track/$code'
       preLoaderRoute: typeof TrackCodeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/sales': {
       id: '/_authenticated/sales'
@@ -316,6 +335,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPosRoute: typeof AuthenticatedPosRoute
   AuthenticatedRepairsRoute: typeof AuthenticatedRepairsRouteWithChildren
   AuthenticatedSalesRoute: typeof AuthenticatedSalesRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -325,6 +345,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPosRoute: AuthenticatedPosRoute,
   AuthenticatedRepairsRoute: AuthenticatedRepairsRouteWithChildren,
   AuthenticatedSalesRoute: AuthenticatedSalesRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
