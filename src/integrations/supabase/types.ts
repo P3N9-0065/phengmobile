@@ -326,6 +326,116 @@ export type Database = {
           },
         ]
       }
+      sale_items: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          item_id: string
+          line_total: number
+          name_snapshot: string
+          qty: number
+          sale_id: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_id: string
+          line_total?: number
+          name_snapshot: string
+          qty: number
+          sale_id: string
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_id?: string
+          line_total?: number
+          name_snapshot?: string
+          qty?: number
+          sale_id?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales: {
+        Row: {
+          amount_paid: number
+          cashier_id: string | null
+          change_lak: number
+          created_at: string
+          currency_paid: Database["public"]["Enums"]["currency_code"]
+          customer_id: string | null
+          discount: number
+          exchange_rate: number
+          id: string
+          notes: string | null
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          sale_code: string
+          subtotal: number
+          total: number
+        }
+        Insert: {
+          amount_paid?: number
+          cashier_id?: string | null
+          change_lak?: number
+          created_at?: string
+          currency_paid?: Database["public"]["Enums"]["currency_code"]
+          customer_id?: string | null
+          discount?: number
+          exchange_rate?: number
+          id?: string
+          notes?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          sale_code?: string
+          subtotal?: number
+          total?: number
+        }
+        Update: {
+          amount_paid?: number
+          cashier_id?: string | null
+          change_lak?: number
+          created_at?: string
+          currency_paid?: Database["public"]["Enums"]["currency_code"]
+          customer_id?: string | null
+          discount?: number
+          exchange_rate?: number
+          id?: string
+          notes?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          sale_code?: string
+          subtotal?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_movements: {
         Row: {
           created_at: string
@@ -425,6 +535,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "cashier" | "technician"
+      currency_code: "LAK" | "THB" | "USD"
       item_category: "part" | "accessory" | "tool" | "phone_new" | "phone_used"
       movement_type:
         | "purchase"
@@ -432,6 +543,7 @@ export type Database = {
         | "adjustment"
         | "sale"
         | "return"
+      payment_method: "cash" | "qr" | "transfer" | "card"
       repair_status:
         | "received"
         | "inspecting"
@@ -570,8 +682,10 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "cashier", "technician"],
+      currency_code: ["LAK", "THB", "USD"],
       item_category: ["part", "accessory", "tool", "phone_new", "phone_used"],
       movement_type: ["purchase", "repair_use", "adjustment", "sale", "return"],
+      payment_method: ["cash", "qr", "transfer", "card"],
       repair_status: [
         "received",
         "inspecting",
