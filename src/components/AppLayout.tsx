@@ -2,12 +2,14 @@ import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-route
 import { useAuth } from "@/lib/auth";
 import { ROLE_LABEL } from "@/lib/lao";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Wrench, Users, Package, LogOut, Smartphone } from "lucide-react";
+import { LayoutDashboard, Wrench, Users, Package, LogOut, Smartphone, ShoppingCart, ReceiptText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { to: "/dashboard", label: "ໜ້າລວມ", icon: LayoutDashboard },
+  { to: "/pos", label: "ຂາຍ (POS)", icon: ShoppingCart },
   { to: "/repairs", label: "ໃບສ້ອມ", icon: Wrench },
+  { to: "/sales", label: "ບິນຂາຍ", icon: ReceiptText },
   { to: "/customers", label: "ລູກຄ້າ", icon: Users },
   { to: "/inventory", label: "ສະຕັອກ", icon: Package },
 ] as const;
