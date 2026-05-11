@@ -1,0 +1,144 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { saveSettings, usePosSettings, DEFAULT_SETTINGS, type PosSettings } from "@/lib/settings";
+import { CURRENCY_LABEL } from "@/lib/currency";
+import { Receipt } from "@/components/pos/Receipt";
+import { toast } from "sonner";
+import { Save, RotateCcw, Printer } from "lucide-react";
+
+export const Route = createFileRoute("/_authenticated/settings")({
+  component: SettingsPage,
+});
+
+const SAMPLE = {
+  sale_code: "SL260511XXXX",
+  created_at: new Date().toISOString(),
+  cashier_email: "cashier@pheng.la",
+  customer_name: "ລູກຄ້າທົ່ວໄປ",
+  items: [
+    { name: "ຈໍ iPhone 13", qty: 1, unit_price: 1500000, line_total: 1500000 },
+    { name: "ສາຍສາກ Type-C", qty: 2, unit_price: 50000, line_total: 100000 },
+  ],
+  subtotal: 1600000, discount: 0, total: 1600000,
+  payment_method: "cash", currency_paid: "LAK" as const,
+  exchange_rate: 1, amount_paid: 1700000, change_lak: 100000,
+};
+
+function SettingsPage() {
+  const initial = usePosSettings();
+  const [s, setS] = useState<PosSettings>(initial);
+
+  function update<K extends keyof PosSettings>(k: K, v: PosSettings[K]) {
+    setS((prev) => ({ ...prev, [k]: v }));
+  }
+  function setRate(c: keyof PosSettings["rates"], v: number) {
+    setS((prev) => ({ ...prev, rates: { ...prev.rates, [c]: v } }));
+  }
+
+  function handleSave() {
+    saveSettings(s);
+    toast.success("ບັນທຶກການຕັ້ງຄ່າສຳເລັດ");
+  }
+  function handleReset() {
+    setS(DEFAULT_SETTINGS);
+    saveSettings(DEFAULT_SETTINGS);
+    toast.success("ກັບຄືນຄ່າເລີ່ມຕົ້ນແລ້ວ");
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">ຕັ້ງຄ່າ POS</h1>
+          <p className="text-muted-foreground text-sm">ຂໍ້ມູນຮ້ານ, ອັດຕາແລກປ່ຽນ ແລະ ເຄື່ອງພິມໃບເສັດ</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleReset}><RotateCcw className="h-4 w-4 mr-2" />ຄ່າເລີ່ມຕົ້ນ</Button>
+          <Button onClick={handleSave}><Save className="h-4 w-4 mr-2" />ບັນທຶກ</Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="space-y-4">
+          <Card>
+            <CardHeader><CardTitle>ຂໍ້ມູນຮ້ານ</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>ຊື່ຮ້ານ (ລາວ)</Label><Input value={s.shop_name} onChange={(e) => update("shop_name", e.target.value)} /></div>
+                <div><Label>ຊື່ຮ້ານ (English)</Label><Input value={s.shop_name_en} onChange={(e) => update("shop_name_en", e.target.value)} /></div>
+              </div>
+              <div><Label>ທີ່ຢູ່</Label><Input value={s.shop_address} onChange={(e) => update("shop_address", e.target.value)} /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>ເບີໂທ</Label><Input value={s.shop_phone} onChange={(e) => update("shop_phone", e.target.value)} /></div>
+                <div><Label>ເລກປະຈຳຕົວຜູ້ເສຍພາສີ</Label><Input value={s.shop_tax_id} onChange={(e) => update("shop_tax_id", e.target.value)} /></div>
+              </div>
+              <div><Label>ຫົວໃບເສັດ (ຂໍ້ຄວາມເພີ່ມ)</Label><Textarea rows={2} value={s.receipt_header} onChange={(e) => update("receipt_header", e.target.value)} /></div>
+              <div><Label>ທ້າຍໃບເສັດ</Label><Textarea rows={2} value={s.receipt_footer} onChange={(e) => update("receipt_footer", e.target.value)} /></div>
+              <div className="flex items-center justify-between border rounded p-3">
+                <div><p className="font-medium text-sm">ສະແດງໂລໂກ້ໃນໃບເສັດ</p><p className="text-xs text-muted-foreground">ພິມໂລໂກ້ຮ້ານຢູ່ຫົວໃບເສັດ</p></div>
+                <Switch checked={s.show_logo} onCheckedChange={(v) => update("show_logo", v)} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle>ອັດຕາແລກປ່ຽນ (1 ໜ່ວຍ = ₭)</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {(Object.keys(s.rates) as (keyof PosSettings["rates"])[]).filter((c) => c !== "LAK").map((c) => (
+                <div key={c} className="grid grid-cols-3 items-center gap-3">
+                  <Label className="col-span-1">{CURRENCY_LABEL[c]}</Label>
+                  <Input className="col-span-2" type="number" value={s.rates[c]} onChange={(e) => setRate(c, Number(e.target.value) || 0)} />
+                </div>
+              ))}
+              <p className="text-xs text-muted-foreground">ໃຊ້ໃນໜ້າ POS ເພື່ອຮັບເງິນຫຼາຍສະກຸນ ແລະ ຄິດເງິນທອນເປັນກີບ.</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle>ເຄື່ອງພິມໃບເສັດ</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <Label>ຄວາມກວ້າງເຈ້ຍ</Label>
+                <Select value={String(s.paper_width_mm)} onValueChange={(v) => update("paper_width_mm", Number(v) as 58 | 80)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="58">58 mm</SelectItem>
+                    <SelectItem value="80">80 mm</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>ຂະໜາດຕົວອັກສອນ ({s.font_size_px}px)</Label>
+                <Input type="range" min={10} max={16} value={s.font_size_px} onChange={(e) => update("font_size_px", Number(e.target.value))} />
+              </div>
+              <p className="text-xs text-muted-foreground">ກົດ "ພິມຕົວຢ່າງ" ຢູ່ດ້ານຂວາ ເພື່ອທົດສອບກັບເຄື່ອງພິມຄວາມຮ້ອນ.</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>ຕົວຢ່າງໃບເສັດ</CardTitle>
+              <Button variant="outline" size="sm" onClick={() => import("@/components/pos/Receipt").then((m) => m.printReceipt())}>
+                <Printer className="h-4 w-4 mr-2" />ພິມຕົວຢ່າງ
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="border bg-muted/30 p-3 overflow-auto">
+                <Receipt data={SAMPLE} settings={s} />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
