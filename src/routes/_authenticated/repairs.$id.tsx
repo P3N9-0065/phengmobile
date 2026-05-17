@@ -10,8 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, Plus, Printer, ExternalLink } from "lucide-react";
+import { ArrowLeft, Plus, Printer, ExternalLink, Download, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { QRCodeCanvas } from "qrcode.react";
 import { STATUS_LABEL, STATUS_COLOR, STATUS_ORDER, ROLE_LABEL, type RepairStatus } from "@/lib/lao";
 import { formatDateTime, formatLAK } from "@/lib/format";
 
@@ -306,13 +307,54 @@ function RepairDetailPage() {
           )}
 
           <Card>
-            <CardHeader><CardTitle>ລິ້ງຕິດຕາມ</CardTitle></CardHeader>
-            <CardContent>
-              <a href={`/track/${ticket.ticket_code}`} target="_blank" rel="noopener noreferrer"
-                className="text-sm text-primary hover:underline flex items-center gap-1 break-all">
+            <CardHeader><CardTitle>QR ຕິດຕາມສະຖານະ</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-center bg-white p-4 rounded border" id="track-qr">
+                <QRCodeCanvas
+                  value={trackUrl}
+                  size={200}
+                  level="M"
+                  includeMargin
+                />
+              </div>
+              <p className="text-center text-xs text-muted-foreground">
+                ສະແກນເພື່ອເຊັກສະຖານະງານສ້ອມ<br/>
+                <span className="font-mono">{ticket.ticket_code}</span>
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const canvas = document.querySelector("#track-qr canvas") as HTMLCanvasElement | null;
+                    if (!canvas) return;
+                    const link = document.createElement("a");
+                    link.download = `${ticket.ticket_code}-qr.png`;
+                    link.href = canvas.toDataURL("image/png");
+                    link.click();
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-1" />ດາວໂຫຼດ
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    navigator.clipboard.writeText(trackUrl);
+                    toast.success("ສຳເນົາລິ້ງແລ້ວ");
+                  }}
+                >
+                  <Copy className="h-4 w-4 mr-1" />ສຳເນົາລິ້ງ
+                </Button>
+              </div>
+              <a
+                href={`/track/${ticket.ticket_code}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline flex items-center gap-1 break-all justify-center"
+              >
                 <ExternalLink className="h-3 w-3 shrink-0" />{trackUrl}
               </a>
-              <p className="text-xs text-muted-foreground mt-2">ລູກຄ້າສາມາດເຊັກສະຖານະຜ່ານລິ້ງນີ້ໂດຍບໍ່ຕ້ອງລ໋ອກອິນ</p>
             </CardContent>
           </Card>
         </div>
