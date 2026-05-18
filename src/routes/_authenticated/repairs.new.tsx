@@ -259,6 +259,7 @@ function NewRepairPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (create.isPending || create.isSuccess) return; // ป้องกันการกดบันทึกซ้ำ
     const errs = validate();
     setErrors(errs);
     if (Object.keys(errs).length > 0) {
@@ -577,10 +578,10 @@ function NewRepairPage() {
             </CardContent>
           </Card>
 
-          <Button type="submit" size="lg" disabled={create.isPending}
+          <Button type="submit" size="lg" disabled={create.isPending || create.isSuccess || uploading}
             className="w-full bg-violet-600 hover:bg-violet-700 text-white shadow-lg h-12 text-base">
             <Save className="h-5 w-5 mr-2" />
-            {create.isPending ? "ກຳລັງບັນທຶກ..." : "ບັນທຶກ ແລະ ເປີດໃບສ້ອມ"}
+            {create.isPending ? "ກຳລັງບັນທຶກ..." : create.isSuccess ? "ບັນທຶກສຳເລັດ" : "ບັນທຶກ ແລະ ເປີດໃບສ້ອມ"}
           </Button>
         </div>
       </form>
