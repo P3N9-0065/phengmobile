@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_signups: {
+        Row: {
+          account_email: string
+          account_password: string | null
+          account_type: Database["public"]["Enums"]["account_signup_type"]
+          birthdate: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          customer_name_snapshot: string
+          customer_phone_snapshot: string | null
+          id: string
+          notes: string | null
+          recovery_email: string | null
+          recovery_phone: string | null
+          service_fee: number
+          updated_at: string
+        }
+        Insert: {
+          account_email: string
+          account_password?: string | null
+          account_type?: Database["public"]["Enums"]["account_signup_type"]
+          birthdate?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          customer_name_snapshot: string
+          customer_phone_snapshot?: string | null
+          id?: string
+          notes?: string | null
+          recovery_email?: string | null
+          recovery_phone?: string | null
+          service_fee?: number
+          updated_at?: string
+        }
+        Update: {
+          account_email?: string
+          account_password?: string | null
+          account_type?: Database["public"]["Enums"]["account_signup_type"]
+          birthdate?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          customer_name_snapshot?: string
+          customer_phone_snapshot?: string | null
+          id?: string
+          notes?: string | null
+          recovery_email?: string | null
+          recovery_phone?: string | null
+          service_fee?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_signups_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           address: string | null
@@ -534,6 +596,7 @@ export type Database = {
       }
     }
     Enums: {
+      account_signup_type: "email" | "apple_id" | "google" | "other"
       app_role: "admin" | "cashier" | "technician"
       currency_code: "LAK" | "THB" | "USD"
       item_category: "part" | "accessory" | "tool" | "phone_new" | "phone_used"
@@ -681,6 +744,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_signup_type: ["email", "apple_id", "google", "other"],
       app_role: ["admin", "cashier", "technician"],
       currency_code: ["LAK", "THB", "USD"],
       item_category: ["part", "accessory", "tool", "phone_new", "phone_used"],
