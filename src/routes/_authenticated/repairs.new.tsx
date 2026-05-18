@@ -415,11 +415,13 @@ function NewRepairPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>ຍີ່ຫໍ້ *</Label>
-                  <Input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="iPhone, Samsung..." />
+                  <Input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="iPhone, Samsung..." aria-invalid={!!errors.brand} className={errors.brand ? "border-destructive" : ""} />
+                  {errors.brand && <p className="text-xs text-destructive mt-1">{errors.brand}</p>}
                 </div>
                 <div>
                   <Label>ຮຸ່ນ *</Label>
-                  <Input value={model} onChange={(e) => setModel(e.target.value)} placeholder="13 Pro, A52..." />
+                  <Input value={model} onChange={(e) => setModel(e.target.value)} placeholder="13 Pro, A52..." aria-invalid={!!errors.model} className={errors.model ? "border-destructive" : ""} />
+                  {errors.model && <p className="text-xs text-destructive mt-1">{errors.model}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
