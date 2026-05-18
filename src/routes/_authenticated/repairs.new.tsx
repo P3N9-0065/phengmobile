@@ -180,33 +180,49 @@ function NewRepairPage() {
 
   const create = useMutation({
     mutationFn: async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth?.user) throw new Error("ກະລຸນາເຂົ້າສູ່ລະບົບກ່ອນບັນທຶກ");
+
       let signatureUrl: string | null = null;
       const canvas = canvasRef.current;
       if (canvas && hasSignature) {
-        const blob: Blob = await new Promise((res) => canvas.toBlob((b) => res(b!), "image/png")!);
-        const path = `sig-${Date.now()}.png`;
-        const { error } = await supabase.storage.from("signatures").upload(path, blob);
-        if (error) throw error;
-        signatureUrl = supabase.storage.from("signatures").getPublicUrl(path).data.publicUrl;
+        try {
+          const blob: Blob | null = await new Promise((res) =>
+            canvas.toBlob((b) => res(b), "image/png"),
+          );
+          if (blob) {
+            const path = `sig-${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
+            const { error: upErr } = await supabase.storage.from("signatures").upload(path, blob);
+            if (upErr) throw upErr;
+            signatureUrl = supabase.storage.from("signatures").getPublicUrl(path).data.publicUrl;
+          }
+        } catch (e: any) {
+          // Signature upload should not block the ticket
+          toast.warning("ບັນທຶກລາຍເຊັນບໍ່ສຳເລັດ — ໃບສ້ອມຍັງຖືກບັນທຶກ");
+          console.error("signature upload failed", e);
+        }
       }
-      const { data: { user } } = await supabase.auth.getUser();
+
       const fullProblem = [problem.trim(), problemTags.length ? `[${problemTags.join(", ")}]` : ""]
-        .filter(Boolean).join(" ");
+        .filter(Boolean).join(" ").trim();
+      const priceNum = estimatedPrice.trim() ? Number(estimatedPrice) : null;
+      const warrantyNum = Number(warrantyDays || 7);
+
       const { data, error } = await supabase.from("repair_tickets").insert({
         customer_id: selectedCustomer.id,
-        device_brand: brand,
-        device_model: model,
-        device_imei: imei || null,
-        device_color: color || null,
+        device_brand: brand.trim(),
+        device_model: model.trim(),
+        device_imei: imei.trim() || null,
+        device_color: color.trim() || null,
         problem_description: fullProblem,
-        lock_code: lockCode || null,
+        lock_code: lockCode.trim() || null,
         accessories,
-        estimated_price: estimatedPrice ? Number(estimatedPrice) : null,
-        warranty_days: Number(warrantyDays || 7),
-        internal_notes: internalNotes || null,
+        estimated_price: priceNum,
+        warranty_days: warrantyNum,
+        internal_notes: internalNotes.trim() || null,
         photo_urls: photos,
         signature_url: signatureUrl,
-        created_by: user?.id,
+        created_by: auth.user.id,
       }).select().single();
       if (error) throw error;
       return data;
@@ -215,18 +231,40 @@ function NewRepairPage() {
       toast.success(`ເປີດໃບສ້ອມ ${t.ticket_code} ສຳເລັດ`);
       navigate({ to: "/repairs/$id", params: { id: t.id } });
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e?.message || "ບັນທຶກບໍ່ສຳເລັດ"),
   });
 
   function toggleTag(list: string[], setList: (v: string[]) => void, value: string) {
     setList(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
   }
 
+  function validate(): FieldErrors {
+    const errs: FieldErrors = {};
+    if (!selectedCustomer) errs.customer = "ກະລຸນາເລືອກ ຫຼື ສ້າງລູກຄ້າ";
+    if (!brand.trim()) errs.brand = "ກະລຸນາໃສ່ຍີ່ຫໍ້";
+    else if (brand.trim().length > 60) errs.brand = "ຍີ່ຫໍ້ຍາວເກີນໄປ";
+    if (!model.trim()) errs.model = "ກະລຸນາໃສ່ຮຸ່ນ";
+    else if (model.trim().length > 80) errs.model = "ຮຸ່ນຍາວເກີນໄປ";
+    if (!problem.trim() && problemTags.length === 0) errs.problem = "ກະລຸນາລະບຸອາການເສຍ";
+    else if (problem.trim().length > 1000) errs.problem = "ລາຍລະອຽດຍາວເກີນ 1000 ຕົວອັກສອນ";
+    if (estimatedPrice.trim()) {
+      const n = Number(estimatedPrice);
+      if (!Number.isFinite(n) || n < 0) errs.estimatedPrice = "ລາຄາບໍ່ຖືກຕ້ອງ";
+      else if (n > 1_000_000_000) errs.estimatedPrice = "ລາຄາສູງເກີນໄປ";
+    }
+    const w = Number(warrantyDays);
+    if (!Number.isFinite(w) || w < 0 || w > 365) errs.warrantyDays = "ປະກັນ 0–365 ມື້";
+    return errs;
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedCustomer) { toast.error("ກະລຸນາເລືອກລູກຄ້າ"); return; }
-    if (!brand.trim() || !model.trim()) { toast.error("ກະລຸນາໃສ່ຍີ່ຫໍ້ ແລະ ຮຸ່ນ"); return; }
-    if (!problem.trim() && problemTags.length === 0) { toast.error("ກະລຸນາລະບຸອາການເສຍ"); return; }
+    const errs = validate();
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) {
+      toast.error(Object.values(errs)[0]!);
+      return;
+    }
     create.mutate();
   }
 
