@@ -29,6 +29,8 @@ const COMMON_PROBLEMS = [
 ];
 const COMMON_ACCESSORIES = ["ສາຍສາກ", "ຫົວສາກ", "ເຄ​ສ", "ຟິມ", "ຫູຟັງ", "ຊິມ", "MicroSD"];
 
+type FieldErrors = Partial<Record<"customer" | "brand" | "model" | "problem" | "estimatedPrice" | "warrantyDays", string>>;
+
 function NewRepairPage() {
   const navigate = useNavigate();
   const [customerSearch, setCustomerSearch] = useState("");
@@ -48,6 +50,7 @@ function NewRepairPage() {
   const [estimatedPrice, setEstimatedPrice] = useState("");
   const [warrantyDays, setWarrantyDays] = useState("7");
   const [internalNotes, setInternalNotes] = useState("");
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawingRef = useRef(false);
