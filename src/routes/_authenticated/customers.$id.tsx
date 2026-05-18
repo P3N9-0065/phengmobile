@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Phone, Mail, MapPin, Award } from "lucide-react";
+import { ArrowLeft, Phone, Mail, MapPin, Award, Apple, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { STATUS_LABEL, STATUS_COLOR } from "@/lib/lao";
 import { formatDate, formatLAK } from "@/lib/format";
@@ -27,6 +27,18 @@ function CustomerDetailPage() {
     queryKey: ["customer-tickets", id],
     queryFn: async () => {
       const { data } = await supabase.from("repair_tickets").select("*").eq("customer_id", id).order("created_at", { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  const { data: signups } = useQuery({
+    queryKey: ["customer-signups", id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("account_signups")
+        .select("*")
+        .eq("customer_id", id)
+        .order("created_at", { ascending: false });
       return data ?? [];
     },
   });
@@ -78,6 +90,43 @@ function CustomerDetailPage() {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground text-center py-6">ຍັງບໍ່ມີປະຫວັດການສ້ອມ</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>ປະຫວັດການສະໝັກບັນຊີ ({signups?.length ?? 0})</CardTitle>
+          <Link to="/account-signups"><Button variant="outline" size="sm">ເບິ່ງທັງໝົດ</Button></Link>
+        </CardHeader>
+        <CardContent>
+          {signups && signups.length > 0 ? (
+            <div className="space-y-2">
+              {signups.map((s: any) => {
+                const Icon = s.account_type === "apple_id" ? Apple : s.account_type === "email" ? Mail : KeyRound;
+                return (
+                  <Link
+                    key={s.id}
+                    to="/account-signups"
+                    search={{ q: s.account_email } as any}
+                    className="flex items-center justify-between p-3 rounded border hover:bg-accent"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                        <Icon className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{s.account_email}</p>
+                        <p className="text-xs text-muted-foreground">{formatDate(s.created_at)}</p>
+                      </div>
+                    </div>
+                    <Badge variant="secondary" className="capitalize">{s.account_type.replace("_", " ")}</Badge>
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-6">ຍັງບໍ່ມີການສະໝັກບັນຊີ</p>
           )}
         </CardContent>
       </Card>
