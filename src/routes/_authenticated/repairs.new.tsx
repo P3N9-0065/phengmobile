@@ -333,15 +333,17 @@ function NewRepairPage() {
               ) : showCreateCust ? (
                 <div className="space-y-3 p-3 border rounded-lg bg-muted/30">
                   <p className="text-sm font-medium">ສ້າງລູກຄ້າໃໝ່</p>
-                  <Input id="new-cust-name" placeholder="ຊື່ລູກຄ້າ" />
-                  <Input id="new-cust-phone" placeholder="ເບີໂທ" />
+                  <Input id="new-cust-name" placeholder="ຊື່ລູກຄ້າ" maxLength={100} />
+                  <Input id="new-cust-phone" placeholder="ເບີໂທ (ຕົວເລກເທົ່ານັ້ນ)" inputMode="tel" maxLength={20} />
                   <div className="flex gap-2">
-                    <Button type="button" size="sm" onClick={() => {
-                      const name = (document.getElementById("new-cust-name") as HTMLInputElement).value;
-                      const phone = (document.getElementById("new-cust-phone") as HTMLInputElement).value;
-                      if (!name || !phone) return toast.error("ກະລຸນາໃສ່ຊື່ ແລະ ເບີໂທ");
+                    <Button type="button" size="sm" disabled={createCustomer.isPending} onClick={() => {
+                      const name = (document.getElementById("new-cust-name") as HTMLInputElement).value.trim();
+                      const phone = (document.getElementById("new-cust-phone") as HTMLInputElement).value.trim();
+                      if (!name) return toast.error("ກະລຸນາໃສ່ຊື່ລູກຄ້າ");
+                      if (!phone) return toast.error("ກະລຸນາໃສ່ເບີໂທ");
+                      if (!/^[+\d\s-]{6,20}$/.test(phone)) return toast.error("ເບີໂທບໍ່ຖືກຮູບແບບ");
                       createCustomer.mutate({ name, phone });
-                    }}>ບັນທຶກ</Button>
+                    }}>{createCustomer.isPending ? "ກຳລັງບັນທຶກ..." : "ບັນທຶກ"}</Button>
                     <Button type="button" size="sm" variant="ghost" onClick={() => setShowCreateCust(false)}>ຍົກເລີກ</Button>
                   </div>
                 </div>
