@@ -3,8 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Phone, Mail, MapPin, Award } from "lucide-react";
+import { ArrowLeft, Phone, Mail, MapPin, Award, Apple, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge as UBadge } from "@/components/ui/badge";
 import { STATUS_LABEL, STATUS_COLOR } from "@/lib/lao";
 import { formatDate, formatLAK } from "@/lib/format";
 
