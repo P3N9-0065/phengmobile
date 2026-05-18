@@ -31,6 +31,18 @@ function CustomerDetailPage() {
     },
   });
 
+  const { data: signups } = useQuery({
+    queryKey: ["customer-signups", id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("account_signups")
+        .select("*")
+        .eq("customer_id", id)
+        .order("created_at", { ascending: false });
+      return data ?? [];
+    },
+  });
+
   if (!customer) return <p>ກຳລັງໂຫຼດ...</p>;
 
   return (
