@@ -77,11 +77,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "ເພັງ ໂມບາຍ Pheng Mobile — ລະບົບຄຸ້ມຄອງງານສ້ອມ" },
       { name: "description", content: "ລະບົບ POS ສຳລັບເພັງ ໂມບາຍ Pheng Mobile ບັນທຶກໃບສ້ອມ ສະຕັອກອາໄຫຼ່ ແລະ ລູກຄ້າ" },
       { name: "author", content: "Repair Shop" },
-      { property: "og:title", content: "ເພັງ ໂມບາຍ Pheng Mobile" },
-      { property: "og:description", content: "ລະບົບຄຸ້ມຄອງງານສ້ອມມືຖື" },
+      { property: "og:title", content: "ເພັງ ໂມບາຍ Pheng Mobile — ລະບົບຄຸ້ມຄອງງານສ້ອມ" },
+      { property: "og:description", content: "ລະບົບ POS ສຳລັບເພັງ ໂມບາຍ Pheng Mobile ບັນທຶກໃບສ້ອມ ສະຕັອກອາໄຫຼ່ ແລະ ລູກຄ້າ" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "ເພັງ ໂມບາຍ Pheng Mobile — ລະບົບຄຸ້ມຄອງງານສ້ອມ" },
+      { name: "twitter:description", content: "ລະບົບ POS ສຳລັບເພັງ ໂມບາຍ Pheng Mobile ບັນທຶກໃບສ້ອມ ສະຕັອກອາໄຫຼ່ ແລະ ລູກຄ້າ" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/751uYDFwsiRpIyuGJ9hWSbVfsjB3/social-images/social-1779108826938-ChatGPT_Image_May_11,_2026,_12_21_06_AM.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/751uYDFwsiRpIyuGJ9hWSbVfsjB3/social-images/social-1779108826938-ChatGPT_Image_May_11,_2026,_12_21_06_AM.webp" },
     ],
     links: [
       {
