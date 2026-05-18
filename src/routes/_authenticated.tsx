@@ -1,21 +1,36 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { AppLayout } from "@/components/AppLayout";
+import { canAccess, defaultRouteFor } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthGuard,
 });
 
 function AuthGuard() {
-  const { session, loading, isStaff } = useAuth();
+  const { session, loading, isStaff, roles } = useAuth();
   const navigate = useNavigate();
+  const { location } = useRouterState();
 
   useEffect(() => {
     if (!loading && !session) {
       navigate({ to: "/login" });
     }
   }, [loading, session, navigate]);
+
+  useEffect(() => {
+    if (loading || !session || !isStaff) return;
+    // Admin-only routes
+    const adminOnly = ["/settings", "/users"];
+    if (adminOnly.some((p) => location.pathname.startsWith(p)) && !roles.includes("admin")) {
+      navigate({ to: defaultRouteFor(roles) });
+      return;
+    }
+    if (!canAccess(roles, location.pathname)) {
+      navigate({ to: defaultRouteFor(roles) });
+    }
+  }, [loading, session, isStaff, roles, location.pathname, navigate]);
 
   if (loading) {
     return (
