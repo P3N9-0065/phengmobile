@@ -597,7 +597,7 @@ export type Database = {
     }
     Enums: {
       account_signup_type: "email" | "apple_id" | "google" | "other"
-      app_role: "admin" | "cashier" | "technician"
+      app_role: "admin" | "cashier" | "technician" | "warehouse"
       currency_code: "LAK" | "THB" | "USD"
       item_category: "part" | "accessory" | "tool" | "phone_new" | "phone_used"
       movement_type:
@@ -745,7 +745,7 @@ export const Constants = {
   public: {
     Enums: {
       account_signup_type: ["email", "apple_id", "google", "other"],
-      app_role: ["admin", "cashier", "technician"],
+      app_role: ["admin", "cashier", "technician", "warehouse"],
       currency_code: ["LAK", "THB", "USD"],
       item_category: ["part", "accessory", "tool", "phone_new", "phone_used"],
       movement_type: ["purchase", "repair_use", "adjustment", "sale", "return"],
