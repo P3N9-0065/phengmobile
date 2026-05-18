@@ -19,6 +19,7 @@ import { Route as AuthenticatedPosRouteImport } from './routes/_authenticated/po
 import { Route as AuthenticatedInventoryRouteImport } from './routes/_authenticated/inventory'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCustomersRouteImport } from './routes/_authenticated/customers'
+import { Route as AuthenticatedAccountSignupsRouteImport } from './routes/_authenticated/account-signups'
 import { Route as AuthenticatedRepairsIndexRouteImport } from './routes/_authenticated/repairs.index'
 import { Route as AuthenticatedRepairsNewRouteImport } from './routes/_authenticated/repairs.new'
 import { Route as AuthenticatedRepairsIdRouteImport } from './routes/_authenticated/repairs.$id'
@@ -73,6 +74,12 @@ const AuthenticatedCustomersRoute = AuthenticatedCustomersRouteImport.update({
   path: '/customers',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAccountSignupsRoute =
+  AuthenticatedAccountSignupsRouteImport.update({
+    id: '/account-signups',
+    path: '/account-signups',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedRepairsIndexRoute =
   AuthenticatedRepairsIndexRouteImport.update({
     id: '/repairs/',
@@ -99,6 +106,7 @@ const AuthenticatedCustomersIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/account-signups': typeof AuthenticatedAccountSignupsRoute
   '/customers': typeof AuthenticatedCustomersRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/inventory': typeof AuthenticatedInventoryRoute
@@ -114,6 +122,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/account-signups': typeof AuthenticatedAccountSignupsRoute
   '/customers': typeof AuthenticatedCustomersRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/inventory': typeof AuthenticatedInventoryRoute
@@ -131,6 +140,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/_authenticated/account-signups': typeof AuthenticatedAccountSignupsRoute
   '/_authenticated/customers': typeof AuthenticatedCustomersRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/inventory': typeof AuthenticatedInventoryRoute
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/account-signups'
     | '/customers'
     | '/dashboard'
     | '/inventory'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/account-signups'
     | '/customers'
     | '/dashboard'
     | '/inventory'
@@ -179,6 +191,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/login'
+    | '/_authenticated/account-signups'
     | '/_authenticated/customers'
     | '/_authenticated/dashboard'
     | '/_authenticated/inventory'
@@ -271,6 +284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCustomersRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/account-signups': {
+      id: '/_authenticated/account-signups'
+      path: '/account-signups'
+      fullPath: '/account-signups'
+      preLoaderRoute: typeof AuthenticatedAccountSignupsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/repairs/': {
       id: '/_authenticated/repairs/'
       path: '/repairs'
@@ -317,6 +337,7 @@ const AuthenticatedCustomersRouteWithChildren =
   )
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAccountSignupsRoute: typeof AuthenticatedAccountSignupsRoute
   AuthenticatedCustomersRoute: typeof AuthenticatedCustomersRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedInventoryRoute: typeof AuthenticatedInventoryRoute
@@ -329,6 +350,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAccountSignupsRoute: AuthenticatedAccountSignupsRoute,
   AuthenticatedCustomersRoute: AuthenticatedCustomersRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedInventoryRoute: AuthenticatedInventoryRoute,
