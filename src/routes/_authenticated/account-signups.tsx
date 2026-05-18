@@ -117,7 +117,7 @@ function AccountSignupsPage() {
         service_fee: "0", notes: "",
       });
     },
-    onError: (e: any) => toast.error(e.message ?? "ບັນທຶກບໍ່ສຳເລັດ"); ,
+    onError: (e: any) => toast.error(e.message ?? "ບັນທຶກບໍ່ສຳເລັດ"),
   });
 
   function pickCustomer(id: string) {
