@@ -312,9 +312,10 @@ function NewRepairPage() {
         {/* LEFT — main form */}
         <div className="lg:col-span-2 space-y-4">
           {/* Customer */}
-          <Card className="overflow-hidden">
+          <Card className={`overflow-hidden ${errors.customer ? "border-destructive" : ""}`}>
             <SectionHeader icon={<User className="h-4 w-4" />} title="ຂໍ້ມູນລູກຄ້າ" step={1} done={!!selectedCustomer} />
             <CardContent className="space-y-3 pt-4">
+              {errors.customer && <p className="text-xs text-destructive">{errors.customer}</p>}
               {selectedCustomer ? (
                 <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50 border border-emerald-200">
                   <div className="flex items-center gap-3">
