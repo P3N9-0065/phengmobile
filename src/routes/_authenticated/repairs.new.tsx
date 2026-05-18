@@ -532,10 +532,13 @@ function NewRepairPage() {
               <div>
                 <Label>ລາຄາປະເມີນ (₭)</Label>
                 <Input value={estimatedPrice} onChange={(e) => setEstimatedPrice(e.target.value)}
-                  type="number" placeholder="0" inputMode="numeric" />
-                {estimatedPrice && (
+                  type="number" min="0" step="1000" placeholder="0" inputMode="numeric"
+                  aria-invalid={!!errors.estimatedPrice} className={errors.estimatedPrice ? "border-destructive" : ""} />
+                {errors.estimatedPrice ? (
+                  <p className="text-xs text-destructive mt-1">{errors.estimatedPrice}</p>
+                ) : estimatedPrice && Number(estimatedPrice) > 0 ? (
                   <p className="text-xs text-muted-foreground mt-1">{formatLAK(Number(estimatedPrice))}</p>
-                )}
+                ) : null}
               </div>
               <div>
                 <Label>ປະກັນຫຼັງສ້ອມ (ມື້)</Label>
