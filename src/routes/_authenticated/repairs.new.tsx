@@ -457,8 +457,10 @@ function NewRepairPage() {
               </div>
               <div>
                 <Label>ລາຍລະອຽດເພີ່ມເຕີມ</Label>
-                <Textarea value={problem} onChange={(e) => setProblem(e.target.value)} rows={3}
-                  placeholder="ອະທິບາຍອາການເສຍ, ສິ່ງທີ່ລູກຄ້າແຈ້ງ..." />
+                <Textarea value={problem} onChange={(e) => setProblem(e.target.value)} rows={3} maxLength={1000}
+                  placeholder="ອະທິບາຍອາການເສຍ, ສິ່ງທີ່ລູກຄ້າແຈ້ງ..."
+                  aria-invalid={!!errors.problem} className={errors.problem ? "border-destructive" : ""} />
+                {errors.problem && <p className="text-xs text-destructive mt-1">{errors.problem}</p>}
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">ອຸປະກອນທີ່ຝາກໄວ້</Label>
