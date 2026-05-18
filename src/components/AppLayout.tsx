@@ -40,7 +40,10 @@ export function AppLayout() {
         </div>
 
         <nav className="flex-1 p-3 space-y-1">
-          {NAV.map((item) => {
+          {NAV.filter((item) => {
+            if ((item as any).adminOnly) return roles.includes("admin");
+            return canAccess(roles, item.to);
+          }).map((item) => {
             const active = location.pathname.startsWith(item.to);
             const Icon = item.icon;
             return (
