@@ -83,6 +83,40 @@ function LoginPage() {
               {loading ? "ກຳລັງດຳເນີນການ..." : mode === "login" ? "ເຂົ້າສູ່ລະບົບ" : "ລົງທະບຽນ"}
             </Button>
           </form>
+
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">ຫຼື</span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full bg-black text-white hover:bg-black/90 hover:text-white border-black"
+            disabled={loading}
+            onClick={async () => {
+              setLoading(true);
+              try {
+                const result = await lovable.auth.signInWithOAuth("apple", {
+                  redirect_uri: window.location.origin,
+                });
+                if (result.error) throw result.error;
+                if (result.redirected) return;
+                toast.success("ເຂົ້າສູ່ລະບົບສຳເລັດ");
+                navigate({ to: "/dashboard" });
+              } catch (err: any) {
+                toast.error(err?.message || "ເຂົ້າສູ່ລະບົບດ້ວຍ Apple ບໍ່ສຳເລັດ");
+              } finally {
+                setLoading(false);
+              }
+            }}
+          >
+            <Apple className="h-4 w-4 mr-2" />
+            {mode === "login" ? "ເຂົ້າສູ່ລະບົບ" : "ລົງທະບຽນ"} ດ້ວຍ Apple ID
+          </Button>
+
           <div className="mt-4 text-center text-sm">
             {mode === "login" ? (
               <button onClick={() => setMode("signup")} className="text-primary hover:underline">
