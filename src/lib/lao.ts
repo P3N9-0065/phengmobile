@@ -44,6 +44,7 @@ export const ROLE_LABEL: Record<AppRole, string> = {
   admin: "ຜູ້ຄຸ້ມຄອງ",
   cashier: "ພະນັກງານຂາຍ",
   technician: "ຊ່າງສ້ອມ",
+  warehouse: "ພະນັກງານສາງ",
 };
 
 export const CATEGORY_LABEL: Record<ItemCategory, string> = {

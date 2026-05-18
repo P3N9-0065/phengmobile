@@ -2,10 +2,11 @@ import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-route
 import { useAuth } from "@/lib/auth";
 import { ROLE_LABEL } from "@/lib/lao";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Wrench, Users, Package, LogOut, ShoppingCart, ReceiptText, Settings, Mail } from "lucide-react";
+import { LayoutDashboard, Wrench, Users, Package, LogOut, ShoppingCart, ReceiptText, Settings, Mail, UserCog } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
 import { usePosSettings } from "@/lib/settings";
+import { canAccess } from "@/lib/permissions";
 
 const NAV = [
   { to: "/dashboard", label: "ໜ້າລວມ", icon: LayoutDashboard },
@@ -15,7 +16,8 @@ const NAV = [
   { to: "/sales", label: "ບິນຂາຍ", icon: ReceiptText },
   { to: "/customers", label: "ລູກຄ້າ", icon: Users },
   { to: "/inventory", label: "ສະຕັອກ", icon: Package },
-  { to: "/settings", label: "ຕັ້ງຄ່າ", icon: Settings },
+  { to: "/users", label: "ຜູ້ໃຊ້ງານ", icon: UserCog, adminOnly: true },
+  { to: "/settings", label: "ຕັ້ງຄ່າ", icon: Settings, adminOnly: true },
 ] as const;
 
 export function AppLayout() {
@@ -38,7 +40,10 @@ export function AppLayout() {
         </div>
 
         <nav className="flex-1 p-3 space-y-1">
-          {NAV.map((item) => {
+          {NAV.filter((item) => {
+            if ((item as any).adminOnly) return roles.includes("admin");
+            return canAccess(roles, item.to);
+          }).map((item) => {
             const active = location.pathname.startsWith(item.to);
             const Icon = item.icon;
             return (
