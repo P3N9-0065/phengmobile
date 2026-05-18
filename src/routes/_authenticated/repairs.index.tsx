@@ -11,7 +11,7 @@ import { Plus, Search } from "lucide-react";
 import { STATUS_LABEL, STATUS_COLOR, STATUS_ORDER, type RepairStatus } from "@/lib/lao";
 import { formatDateTime } from "@/lib/format";
 
-export const Route = createFileRoute("/_authenticated/repairs")({
+export const Route = createFileRoute("/_authenticated/repairs/")({
   component: RepairsPage,
 });
 

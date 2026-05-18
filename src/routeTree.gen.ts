@@ -15,11 +15,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrackCodeRouteImport } from './routes/track.$code'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/sales'
-import { Route as AuthenticatedRepairsRouteImport } from './routes/_authenticated/repairs'
 import { Route as AuthenticatedPosRouteImport } from './routes/_authenticated/pos'
 import { Route as AuthenticatedInventoryRouteImport } from './routes/_authenticated/inventory'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCustomersRouteImport } from './routes/_authenticated/customers'
+import { Route as AuthenticatedRepairsIndexRouteImport } from './routes/_authenticated/repairs.index'
 import { Route as AuthenticatedRepairsNewRouteImport } from './routes/_authenticated/repairs.new'
 import { Route as AuthenticatedRepairsIdRouteImport } from './routes/_authenticated/repairs.$id'
 import { Route as AuthenticatedCustomersIdRouteImport } from './routes/_authenticated/customers.$id'
@@ -53,11 +53,6 @@ const AuthenticatedSalesRoute = AuthenticatedSalesRouteImport.update({
   path: '/sales',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedRepairsRoute = AuthenticatedRepairsRouteImport.update({
-  id: '/repairs',
-  path: '/repairs',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedPosRoute = AuthenticatedPosRouteImport.update({
   id: '/pos',
   path: '/pos',
@@ -78,15 +73,21 @@ const AuthenticatedCustomersRoute = AuthenticatedCustomersRouteImport.update({
   path: '/customers',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedRepairsIndexRoute =
+  AuthenticatedRepairsIndexRouteImport.update({
+    id: '/repairs/',
+    path: '/repairs/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedRepairsNewRoute = AuthenticatedRepairsNewRouteImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => AuthenticatedRepairsRoute,
+  id: '/repairs/new',
+  path: '/repairs/new',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedRepairsIdRoute = AuthenticatedRepairsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AuthenticatedRepairsRoute,
+  id: '/repairs/$id',
+  path: '/repairs/$id',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedCustomersIdRoute =
   AuthenticatedCustomersIdRouteImport.update({
@@ -102,13 +103,13 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/inventory': typeof AuthenticatedInventoryRoute
   '/pos': typeof AuthenticatedPosRoute
-  '/repairs': typeof AuthenticatedRepairsRouteWithChildren
   '/sales': typeof AuthenticatedSalesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/track/$code': typeof TrackCodeRoute
   '/customers/$id': typeof AuthenticatedCustomersIdRoute
   '/repairs/$id': typeof AuthenticatedRepairsIdRoute
   '/repairs/new': typeof AuthenticatedRepairsNewRoute
+  '/repairs/': typeof AuthenticatedRepairsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -117,13 +118,13 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/inventory': typeof AuthenticatedInventoryRoute
   '/pos': typeof AuthenticatedPosRoute
-  '/repairs': typeof AuthenticatedRepairsRouteWithChildren
   '/sales': typeof AuthenticatedSalesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/track/$code': typeof TrackCodeRoute
   '/customers/$id': typeof AuthenticatedCustomersIdRoute
   '/repairs/$id': typeof AuthenticatedRepairsIdRoute
   '/repairs/new': typeof AuthenticatedRepairsNewRoute
+  '/repairs': typeof AuthenticatedRepairsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -134,13 +135,13 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/inventory': typeof AuthenticatedInventoryRoute
   '/_authenticated/pos': typeof AuthenticatedPosRoute
-  '/_authenticated/repairs': typeof AuthenticatedRepairsRouteWithChildren
   '/_authenticated/sales': typeof AuthenticatedSalesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/track/$code': typeof TrackCodeRoute
   '/_authenticated/customers/$id': typeof AuthenticatedCustomersIdRoute
   '/_authenticated/repairs/$id': typeof AuthenticatedRepairsIdRoute
   '/_authenticated/repairs/new': typeof AuthenticatedRepairsNewRoute
+  '/_authenticated/repairs/': typeof AuthenticatedRepairsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,13 +152,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/inventory'
     | '/pos'
-    | '/repairs'
     | '/sales'
     | '/settings'
     | '/track/$code'
     | '/customers/$id'
     | '/repairs/$id'
     | '/repairs/new'
+    | '/repairs/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,13 +167,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/inventory'
     | '/pos'
-    | '/repairs'
     | '/sales'
     | '/settings'
     | '/track/$code'
     | '/customers/$id'
     | '/repairs/$id'
     | '/repairs/new'
+    | '/repairs'
   id:
     | '__root__'
     | '/'
@@ -182,13 +183,13 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/inventory'
     | '/_authenticated/pos'
-    | '/_authenticated/repairs'
     | '/_authenticated/sales'
     | '/_authenticated/settings'
     | '/track/$code'
     | '/_authenticated/customers/$id'
     | '/_authenticated/repairs/$id'
     | '/_authenticated/repairs/new'
+    | '/_authenticated/repairs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -242,13 +243,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSalesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/repairs': {
-      id: '/_authenticated/repairs'
-      path: '/repairs'
-      fullPath: '/repairs'
-      preLoaderRoute: typeof AuthenticatedRepairsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/pos': {
       id: '/_authenticated/pos'
       path: '/pos'
@@ -277,19 +271,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCustomersRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/repairs/': {
+      id: '/_authenticated/repairs/'
+      path: '/repairs'
+      fullPath: '/repairs/'
+      preLoaderRoute: typeof AuthenticatedRepairsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/repairs/new': {
       id: '/_authenticated/repairs/new'
-      path: '/new'
+      path: '/repairs/new'
       fullPath: '/repairs/new'
       preLoaderRoute: typeof AuthenticatedRepairsNewRouteImport
-      parentRoute: typeof AuthenticatedRepairsRoute
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/repairs/$id': {
       id: '/_authenticated/repairs/$id'
-      path: '/$id'
+      path: '/repairs/$id'
       fullPath: '/repairs/$id'
       preLoaderRoute: typeof AuthenticatedRepairsIdRouteImport
-      parentRoute: typeof AuthenticatedRepairsRoute
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/customers/$id': {
       id: '/_authenticated/customers/$id'
@@ -315,27 +316,16 @@ const AuthenticatedCustomersRouteWithChildren =
     AuthenticatedCustomersRouteChildren,
   )
 
-interface AuthenticatedRepairsRouteChildren {
-  AuthenticatedRepairsIdRoute: typeof AuthenticatedRepairsIdRoute
-  AuthenticatedRepairsNewRoute: typeof AuthenticatedRepairsNewRoute
-}
-
-const AuthenticatedRepairsRouteChildren: AuthenticatedRepairsRouteChildren = {
-  AuthenticatedRepairsIdRoute: AuthenticatedRepairsIdRoute,
-  AuthenticatedRepairsNewRoute: AuthenticatedRepairsNewRoute,
-}
-
-const AuthenticatedRepairsRouteWithChildren =
-  AuthenticatedRepairsRoute._addFileChildren(AuthenticatedRepairsRouteChildren)
-
 interface AuthenticatedRouteChildren {
   AuthenticatedCustomersRoute: typeof AuthenticatedCustomersRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedInventoryRoute: typeof AuthenticatedInventoryRoute
   AuthenticatedPosRoute: typeof AuthenticatedPosRoute
-  AuthenticatedRepairsRoute: typeof AuthenticatedRepairsRouteWithChildren
   AuthenticatedSalesRoute: typeof AuthenticatedSalesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedRepairsIdRoute: typeof AuthenticatedRepairsIdRoute
+  AuthenticatedRepairsNewRoute: typeof AuthenticatedRepairsNewRoute
+  AuthenticatedRepairsIndexRoute: typeof AuthenticatedRepairsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -343,9 +333,11 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedInventoryRoute: AuthenticatedInventoryRoute,
   AuthenticatedPosRoute: AuthenticatedPosRoute,
-  AuthenticatedRepairsRoute: AuthenticatedRepairsRouteWithChildren,
   AuthenticatedSalesRoute: AuthenticatedSalesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedRepairsIdRoute: AuthenticatedRepairsIdRoute,
+  AuthenticatedRepairsNewRoute: AuthenticatedRepairsNewRoute,
+  AuthenticatedRepairsIndexRoute: AuthenticatedRepairsIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
