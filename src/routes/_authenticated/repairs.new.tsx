@@ -259,6 +259,7 @@ function NewRepairPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (create.isPending || create.isSuccess) return; // ป้องกันการกดบันทึกซ้ำ
     const errs = validate();
     setErrors(errs);
     if (Object.keys(errs).length > 0) {
