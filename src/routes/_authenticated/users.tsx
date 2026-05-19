@@ -96,11 +96,14 @@ function UsersPage() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold">ຜູ້ໃຊ້ງານ ແລະ ສິດ</h1>
-        <p className="text-sm text-muted-foreground">
-          ກຳນົດສິດການໃຊ້ງານຕາມໜ້າທີ່ — ຜູ້ຄຸ້ມຄອງ, ພະນັກງານຂາຍ, ຊ່າງສ້ອມ, ພະນັກງານສາງ
-        </p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold">ຜູ້ໃຊ້ງານ ແລະ ສິດ</h1>
+          <p className="text-sm text-muted-foreground">
+            ກຳນົດສິດການໃຊ້ງານຕາມໜ້າທີ່ — ຜູ້ຄຸ້ມຄອງ, ພະນັກງານຂາຍ, ຊ່າງສ້ອມ, ພະນັກງານສາງ
+          </p>
+        </div>
+        <InviteStaffDialog />
       </div>
 
       <Card>
