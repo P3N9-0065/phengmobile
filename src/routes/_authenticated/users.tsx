@@ -179,3 +179,137 @@ function UsersPage() {
     </div>
   );
 }
+
+function InviteStaffDialog() {
+  const qc = useQueryClient();
+  const createFn = useServerFn(createStaffUser);
+  const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [roles, setRoles] = useState<Set<AppRole>>(new Set(["cashier"]));
+  const [sendInvite, setSendInvite] = useState(false);
+
+  function reset() {
+    setEmail("");
+    setFullName("");
+    setPhone("");
+    setPassword("");
+    setRoles(new Set(["cashier"]));
+    setSendInvite(false);
+  }
+
+  const m = useMutation({
+    mutationFn: async () => {
+      if (!email || !fullName) throw new Error("ກະລຸນາປ້ອນອີເມວ ແລະ ຊື່");
+      if (roles.size === 0) throw new Error("ກະລຸນາເລືອກສິດຢ່າງໜ້ອຍ 1");
+      if (!sendInvite && password && password.length < 8)
+        throw new Error("ລະຫັດຜ່ານຕ້ອງມີຢ່າງໜ້ອຍ 8 ຕົວ");
+      return await createFn({
+        data: {
+          email: email.trim(),
+          fullName: fullName.trim(),
+          phone: phone.trim() || null,
+          password: sendInvite ? null : password || null,
+          roles: Array.from(roles),
+          sendInvite,
+        },
+      });
+    },
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ["admin", "profiles"] });
+      qc.invalidateQueries({ queryKey: ["admin", "user_roles"] });
+      if (res?.tempPassword) {
+        toast.success(`ສ້າງສຳເລັດ — ລະຫັດຊົ່ວຄາວ: ${res.tempPassword}`, { duration: 15000 });
+      } else if (sendInvite) {
+        toast.success("ສົ່ງຄຳເຊີນທາງອີເມວແລ້ວ");
+      } else {
+        toast.success("ສ້າງບັນຊີສຳເລັດ");
+      }
+      reset();
+      setOpen(false);
+    },
+    onError: (e: any) => toast.error(e?.message || "ບໍ່ສຳເລັດ"),
+  });
+
+  function toggleRole(r: AppRole) {
+    const n = new Set(roles);
+    if (n.has(r)) n.delete(r);
+    else n.add(r);
+    setRoles(n);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <UserPlus />
+          ເພີ່ມພະນັກງານ
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>ເພີ່ມພະນັກງານໃໝ່</DialogTitle>
+          <DialogDescription>
+            ສ້າງບັນຊີໃໝ່ ແລະ ມອບສິດທັນທີ ຫຼື ສົ່ງຄຳເຊີນທາງອີເມວ
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label>ຊື່ເຕັມ</Label>
+            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label>ອີເມວ</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label>ເບີໂທ (ຖ້າມີ)</Label>
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={sendInvite}
+              onCheckedChange={(v) => setSendInvite(!!v)}
+            />
+            ສົ່ງຄຳເຊີນທາງອີເມວ (ໃຫ້ຜູ້ໃຊ້ຕັ້ງລະຫັດເອງ)
+          </label>
+          {!sendInvite && (
+            <div className="space-y-1">
+              <Label>ລະຫັດຜ່ານ (ປະວ່າງເພື່ອສ້າງໃຫ້ອັດຕະໂນມັດ)</Label>
+              <Input
+                type="text"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="ຢ່າງໜ້ອຍ 8 ຕົວ"
+              />
+            </div>
+          )}
+          <div className="space-y-2">
+            <Label>ສິດ</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {(Object.keys(ROLE_LABEL) as AppRole[]).map((r) => (
+                <label key={r} className="flex items-center gap-2 text-sm">
+                  <Checkbox
+                    checked={roles.has(r)}
+                    onCheckedChange={() => toggleRole(r)}
+                  />
+                  {ROLE_LABEL[r]}
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={m.isPending}>
+            ຍົກເລີກ
+          </Button>
+          <Button onClick={() => m.mutate()} disabled={m.isPending}>
+            {m.isPending ? "ກຳລັງບັນທຶກ..." : "ບັນທຶກ"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
