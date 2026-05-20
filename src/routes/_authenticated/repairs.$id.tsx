@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,9 +15,13 @@ import { toast } from "sonner";
 import { QRCodeCanvas } from "qrcode.react";
 import { STATUS_LABEL, STATUS_COLOR, STATUS_ORDER, ROLE_LABEL, type RepairStatus } from "@/lib/lao";
 import { formatDateTime, formatLAK } from "@/lib/format";
+import { RepairReceipt } from "@/components/repair/RepairReceipt";
 
 export const Route = createFileRoute("/_authenticated/repairs/$id")({
   component: RepairDetailPage,
+  validateSearch: (s: Record<string, unknown>) => ({
+    print: s.print === "1" || s.print === 1 ? ("1" as const) : undefined,
+  }),
 });
 
 function RepairDetailPage() {
