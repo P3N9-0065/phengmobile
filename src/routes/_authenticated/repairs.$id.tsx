@@ -108,16 +108,27 @@ function RepairDetailPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  useEffect(() => {
+    if (print === "1" && ticket) {
+      const t = setTimeout(() => window.print(), 400);
+      return () => clearTimeout(t);
+    }
+  }, [print, ticket?.id]);
+
   if (!ticket) return <p>ກຳລັງໂຫຼດ...</p>;
 
   const partsTotal = (parts ?? []).reduce((s, p) => s + Number(p.unit_price) * p.qty, 0);
   const trackUrl = `${window.location.origin}/track/${ticket.ticket_code}`;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between print:hidden">
+    <>
+      <div className="print-only">
+        <RepairReceipt ticket={ticket} customer={ticket.customers as any} trackUrl={trackUrl} />
+      </div>
+    <div className="space-y-6 no-print">
+      <div className="flex items-center justify-between">
         <Link to="/repairs"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-2" />ກັບຄືນ</Button></Link>
-        <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4 mr-2" />ພິມ</Button>
+        <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4 mr-2" />ພິມໃບຮັບສ້ອມ</Button>
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
