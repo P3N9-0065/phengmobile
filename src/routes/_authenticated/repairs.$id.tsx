@@ -26,6 +26,7 @@ export const Route = createFileRoute("/_authenticated/repairs/$id")({
 
 function RepairDetailPage() {
   const { id } = Route.useParams();
+  const { print } = Route.useSearch();
   const qc = useQueryClient();
   const [partOpen, setPartOpen] = useState(false);
   const [editPriceOpen, setEditPriceOpen] = useState(false);
