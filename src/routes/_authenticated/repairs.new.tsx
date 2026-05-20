@@ -228,8 +228,8 @@ function NewRepairPage() {
       return data;
     },
     onSuccess: (t) => {
-      toast.success(`ເປີດໃບສ້ອມ ${t.ticket_code} ສຳເລັດ`);
-      navigate({ to: "/repairs/$id", params: { id: t.id } });
+      toast.success(`ເປີດໃບສ້ອມ ${t.ticket_code} ສຳເລັດ — ກຳລັງເປີດໜ້າພິມໃບຮັບສ້ອມ`);
+      navigate({ to: "/repairs/$id", params: { id: t.id }, search: { print: "1" } });
     },
     onError: (e: any) => toast.error(e?.message || "ບັນທຶກບໍ່ສຳເລັດ"),
   });
