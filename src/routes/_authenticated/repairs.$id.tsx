@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,13 +15,18 @@ import { toast } from "sonner";
 import { QRCodeCanvas } from "qrcode.react";
 import { STATUS_LABEL, STATUS_COLOR, STATUS_ORDER, ROLE_LABEL, type RepairStatus } from "@/lib/lao";
 import { formatDateTime, formatLAK } from "@/lib/format";
+import { RepairReceipt } from "@/components/repair/RepairReceipt";
 
 export const Route = createFileRoute("/_authenticated/repairs/$id")({
   component: RepairDetailPage,
+  validateSearch: (s: Record<string, unknown>) => ({
+    print: s.print === "1" || s.print === 1 ? ("1" as const) : undefined,
+  }),
 });
 
 function RepairDetailPage() {
   const { id } = Route.useParams();
+  const { print } = Route.useSearch();
   const qc = useQueryClient();
   const [partOpen, setPartOpen] = useState(false);
   const [editPriceOpen, setEditPriceOpen] = useState(false);
@@ -103,16 +108,27 @@ function RepairDetailPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  useEffect(() => {
+    if (print === "1" && ticket) {
+      const t = setTimeout(() => window.print(), 400);
+      return () => clearTimeout(t);
+    }
+  }, [print, ticket?.id]);
+
   if (!ticket) return <p>ກຳລັງໂຫຼດ...</p>;
 
   const partsTotal = (parts ?? []).reduce((s, p) => s + Number(p.unit_price) * p.qty, 0);
   const trackUrl = `${window.location.origin}/track/${ticket.ticket_code}`;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between print:hidden">
+    <>
+      <div className="print-only">
+        <RepairReceipt ticket={ticket} customer={ticket.customers as any} trackUrl={trackUrl} />
+      </div>
+    <div className="space-y-6 no-print">
+      <div className="flex items-center justify-between">
         <Link to="/repairs"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-2" />ກັບຄືນ</Button></Link>
-        <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4 mr-2" />ພິມ</Button>
+        <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4 mr-2" />ພິມໃບຮັບສ້ອມ</Button>
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -360,5 +376,6 @@ function RepairDetailPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

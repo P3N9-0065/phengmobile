@@ -142,3 +142,12 @@
     color: var(--color-foreground);
   }
 }
+
+@media print {
+  @page { size: A5; margin: 8mm; }
+  body { background: white !important; }
+  .print-only { display: block !important; }
+  .no-print, .no-print * { display: none !important; }
+}
+.print-only { display: none; }
+
