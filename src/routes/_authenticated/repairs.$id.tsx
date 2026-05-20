@@ -376,5 +376,6 @@ function RepairDetailPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
