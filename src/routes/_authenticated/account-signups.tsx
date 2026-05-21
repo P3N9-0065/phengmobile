@@ -13,9 +13,14 @@ import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, Mail, Apple, Eye, EyeOff, Copy } from "lucide-react";
+import { Plus, Search, Mail, Apple, Eye, EyeOff, Copy, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/account-signups")({
@@ -31,26 +36,35 @@ const TYPE_LABEL: Record<SignupType, string> = {
   other: "ອື່ນໆ",
 };
 
+type FormState = {
+  customer_id: string;
+  customer_name_snapshot: string;
+  customer_phone_snapshot: string;
+  account_type: SignupType;
+  account_email: string;
+  account_password: string;
+  recovery_email: string;
+  recovery_phone: string;
+  birthdate: string;
+  service_fee: string;
+  notes: string;
+};
+
+const EMPTY_FORM: FormState = {
+  customer_id: "", customer_name_snapshot: "", customer_phone_snapshot: "",
+  account_type: "email", account_email: "", account_password: "",
+  recovery_email: "", recovery_phone: "", birthdate: "",
+  service_fee: "0", notes: "",
+};
+
 function AccountSignupsPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [showPw, setShowPw] = useState<Record<string, boolean>>({});
-
-  const [form, setForm] = useState({
-    customer_id: "",
-    customer_name_snapshot: "",
-    customer_phone_snapshot: "",
-    account_type: "email" as SignupType,
-    account_email: "",
-    account_password: "",
-    recovery_email: "",
-    recovery_phone: "",
-    birthdate: "",
-    service_fee: "0",
-    notes: "",
-  });
+  const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
   const { data: customers } = useQuery({
     queryKey: ["customers-list-min"],
@@ -83,41 +97,60 @@ function AccountSignupsPage() {
     },
   });
 
-  const create = useMutation({
+  function buildPayload() {
+    return {
+      customer_id: form.customer_id || null,
+      customer_name_snapshot: form.customer_name_snapshot.trim(),
+      customer_phone_snapshot: form.customer_phone_snapshot.trim() || null,
+      account_type: form.account_type,
+      account_email: form.account_email.trim(),
+      account_password: form.account_password || null,
+      recovery_email: form.recovery_email.trim() || null,
+      recovery_phone: form.recovery_phone.trim() || null,
+      birthdate: form.birthdate || null,
+      service_fee: Number(form.service_fee) || 0,
+      notes: form.notes.trim() || null,
+    };
+  }
+
+  const save = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("ກະລຸນາເຂົ້າສູ່ລະບົບ");
       if (!form.customer_name_snapshot.trim()) throw new Error("ກະລຸນາໃສ່ຊື່ລູກຄ້າ");
       if (!form.account_email.trim()) throw new Error("ກະລຸນາໃສ່ອີເມວບັນຊີ");
 
-      const payload = {
-        customer_id: form.customer_id || null,
-        customer_name_snapshot: form.customer_name_snapshot.trim(),
-        customer_phone_snapshot: form.customer_phone_snapshot.trim() || null,
-        account_type: form.account_type,
-        account_email: form.account_email.trim(),
-        account_password: form.account_password || null,
-        recovery_email: form.recovery_email.trim() || null,
-        recovery_phone: form.recovery_phone.trim() || null,
-        birthdate: form.birthdate || null,
-        service_fee: Number(form.service_fee) || 0,
-        notes: form.notes.trim() || null,
-        created_by: user.id,
-      };
-      const { error } = await supabase.from("account_signups").insert(payload);
+      const payload = buildPayload();
+      if (editingId) {
+        const { error } = await supabase
+          .from("account_signups")
+          .update(payload)
+          .eq("id", editingId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("account_signups")
+          .insert({ ...payload, created_by: user.id });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["account-signups"] });
+      toast.success(editingId ? "ແກ້ໄຂສຳເລັດ" : "ບັນທຶກສຳເລັດ");
+      closeDialog();
+    },
+    onError: (e: any) => toast.error(e.message ?? "ບັນທຶກບໍ່ສຳເລັດ"),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("account_signups").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["account-signups"] });
-      toast.success("ບັນທຶກສຳເລັດ");
-      setOpen(false);
-      setForm({
-        customer_id: "", customer_name_snapshot: "", customer_phone_snapshot: "",
-        account_type: "email", account_email: "", account_password: "",
-        recovery_email: "", recovery_phone: "", birthdate: "",
-        service_fee: "0", notes: "",
-      });
+      toast.success("ລົບສຳເລັດ");
     },
-    onError: (e: any) => toast.error(e.message ?? "ບັນທຶກບໍ່ສຳເລັດ"),
+    onError: (e: any) => toast.error(e.message ?? "ລົບບໍ່ສຳເລັດ"),
   });
 
   function pickCustomer(id: string) {
@@ -138,6 +171,36 @@ function AccountSignupsPage() {
     toast.success("ສຳເນົາແລ້ວ");
   }
 
+  function openCreate() {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setOpen(true);
+  }
+
+  function openEdit(s: any) {
+    setEditingId(s.id);
+    setForm({
+      customer_id: s.customer_id ?? "",
+      customer_name_snapshot: s.customer_name_snapshot ?? "",
+      customer_phone_snapshot: s.customer_phone_snapshot ?? "",
+      account_type: s.account_type ?? "email",
+      account_email: s.account_email ?? "",
+      account_password: s.account_password ?? "",
+      recovery_email: s.recovery_email ?? "",
+      recovery_phone: s.recovery_phone ?? "",
+      birthdate: s.birthdate ?? "",
+      service_fee: String(s.service_fee ?? "0"),
+      notes: s.notes ?? "",
+    });
+    setOpen(true);
+  }
+
+  function closeDialog() {
+    setOpen(false);
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -145,14 +208,16 @@ function AccountSignupsPage() {
           <h1 className="text-2xl font-bold">ບັນຊີສະໝັກໃຫ້ລູກຄ້າ</h1>
           <p className="text-muted-foreground text-sm">ບັນທຶກ Email / Apple ID ທີ່ສະໝັກໃຫ້ລູກຄ້າ</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(v) => (v ? setOpen(true) : closeDialog())}>
           <DialogTrigger asChild>
-            <Button><Plus className="h-4 w-4 mr-2" />ເພີ່ມການສະໝັກ</Button>
+            <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />ເພີ່ມການສະໝັກ</Button>
           </DialogTrigger>
           <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>ບັນທຶກບັນຊີສະໝັກໃໝ່</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>{editingId ? "ແກ້ໄຂບັນຊີສະໝັກ" : "ບັນທຶກບັນຊີສະໝັກໃໝ່"}</DialogTitle>
+            </DialogHeader>
             <form
-              onSubmit={(e) => { e.preventDefault(); if (!create.isPending) create.mutate(); }}
+              onSubmit={(e) => { e.preventDefault(); if (!save.isPending) save.mutate(); }}
               className="space-y-3"
             >
               <div>
@@ -266,8 +331,9 @@ function AccountSignupsPage() {
               </div>
 
               <DialogFooter>
-                <Button type="submit" disabled={create.isPending}>
-                  {create.isPending ? "ກຳລັງບັນທຶກ..." : "ບັນທຶກ"}
+                <Button type="button" variant="outline" onClick={closeDialog}>ຍົກເລີກ</Button>
+                <Button type="submit" disabled={save.isPending}>
+                  {save.isPending ? "ກຳລັງບັນທຶກ..." : editingId ? "ບັນທຶກການແກ້ໄຂ" : "ບັນທຶກ"}
                 </Button>
               </DialogFooter>
             </form>
@@ -302,7 +368,31 @@ function AccountSignupsPage() {
                       <p className="text-xs text-muted-foreground truncate">{s.customer_phone_snapshot ?? "—"}</p>
                     </div>
                   </div>
-                  <Badge variant="secondary">{TYPE_LABEL[s.account_type as SignupType]}</Badge>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Badge variant="secondary">{TYPE_LABEL[s.account_type as SignupType]}</Badge>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(s)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>ຢືນຢັນການລົບ</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            ຕ້ອງການລົບບັນຊີຂອງ {s.customer_name_snapshot} ບໍ່? ການກະທຳນີ້ບໍ່ສາມາດກູ້ຄືນໄດ້.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>ຍົກເລີກ</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => remove.mutate(s.id)}>ລົບ</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
 
                 <div className="text-sm space-y-1">
