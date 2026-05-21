@@ -20,8 +20,9 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, Mail, Apple, Eye, EyeOff, Copy, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, Mail, Apple, Eye, EyeOff, Copy, Pencil, Trash2, Printer } from "lucide-react";
 import { toast } from "sonner";
+import { SignupSlip } from "@/components/account/SignupSlip";
 
 export const Route = createFileRoute("/_authenticated/account-signups")({
   component: AccountSignupsPage,
