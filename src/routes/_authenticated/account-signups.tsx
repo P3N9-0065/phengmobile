@@ -474,6 +474,7 @@ function AccountSignupsPage() {
           <p className="text-center text-muted-foreground col-span-full py-8">ຍັງບໍ່ມີຂໍ້ມູນ</p>
         )}
       </div>
+      {printing && <SignupSlip signup={printing} />}
     </div>
   );
 }
