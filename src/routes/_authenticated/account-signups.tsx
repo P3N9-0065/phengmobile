@@ -20,8 +20,9 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, Mail, Apple, Eye, EyeOff, Copy, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, Mail, Apple, Eye, EyeOff, Copy, Pencil, Trash2, Printer } from "lucide-react";
 import { toast } from "sonner";
+import { SignupSlip } from "@/components/account/SignupSlip";
 
 export const Route = createFileRoute("/_authenticated/account-signups")({
   component: AccountSignupsPage,
@@ -65,6 +66,15 @@ function AccountSignupsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showPw, setShowPw] = useState<Record<string, boolean>>({});
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [printing, setPrinting] = useState<any | null>(null);
+
+  function printSignup(s: any) {
+    setPrinting(s);
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => setPrinting(null), 500);
+    }, 100);
+  }
 
   const { data: customers } = useQuery({
     queryKey: ["customers-list-min"],
@@ -370,6 +380,9 @@ function AccountSignupsPage() {
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <Badge variant="secondary">{TYPE_LABEL[s.account_type as SignupType]}</Badge>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => printSignup(s)} title="ພິມໃບໃຫ້ລູກຄ້າ">
+                      <Printer className="h-3.5 w-3.5" />
+                    </Button>
                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(s)}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
@@ -461,6 +474,7 @@ function AccountSignupsPage() {
           <p className="text-center text-muted-foreground col-span-full py-8">ຍັງບໍ່ມີຂໍ້ມູນ</p>
         )}
       </div>
+      {printing && <SignupSlip signup={printing} />}
     </div>
   );
 }
