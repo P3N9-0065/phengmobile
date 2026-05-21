@@ -66,6 +66,15 @@ function AccountSignupsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showPw, setShowPw] = useState<Record<string, boolean>>({});
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [printing, setPrinting] = useState<any | null>(null);
+
+  function printSignup(s: any) {
+    setPrinting(s);
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => setPrinting(null), 500);
+    }, 100);
+  }
 
   const { data: customers } = useQuery({
     queryKey: ["customers-list-min"],
