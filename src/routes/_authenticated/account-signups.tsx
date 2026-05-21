@@ -380,6 +380,9 @@ function AccountSignupsPage() {
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <Badge variant="secondary">{TYPE_LABEL[s.account_type as SignupType]}</Badge>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => printSignup(s)} title="ພິມໃບໃຫ້ລູກຄ້າ">
+                      <Printer className="h-3.5 w-3.5" />
+                    </Button>
                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(s)}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
