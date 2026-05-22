@@ -10,10 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, AlertTriangle, Package as PackageIcon, Pencil, Upload, X } from "lucide-react";
+import { Plus, Search, AlertTriangle, Package as PackageIcon, Pencil, Upload, X, Barcode as BarcodeIcon, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { CATEGORY_LABEL, type ItemCategory } from "@/lib/lao";
 import { formatLAK } from "@/lib/format";
+import { Barcode } from "@/components/inventory/Barcode";
 
 export const Route = createFileRoute("/_authenticated/inventory")({
   component: InventoryPage,
@@ -24,6 +25,7 @@ const CATEGORIES: ItemCategory[] = ["part", "accessory", "tool", "phone_new", "p
 type FormState = {
   name: string;
   sku: string;
+  barcode: string;
   category: ItemCategory;
   cost_price: string;
   sell_price: string;
@@ -34,10 +36,15 @@ type FormState = {
 };
 
 const EMPTY: FormState = {
-  name: "", sku: "", category: "part",
+  name: "", sku: "", barcode: "", category: "part",
   cost_price: "0", sell_price: "0", stock_qty: "0", low_stock_threshold: "5",
   image_url: "", description: "",
 };
+
+function genBarcode() {
+  // 12-digit numeric, easy to scan with CODE128
+  return Date.now().toString().slice(-9) + Math.floor(100 + Math.random() * 900).toString();
+}
 
 function InventoryPage() {
   const [search, setSearch] = useState("");
@@ -46,6 +53,7 @@ function InventoryPage() {
   const [form, setForm] = useState<FormState>(EMPTY);
   const [uploading, setUploading] = useState(false);
   const [adjustItem, setAdjustItem] = useState<any>(null);
+  const [printItem, setPrintItem] = useState<any>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
 
@@ -53,7 +61,8 @@ function InventoryPage() {
     queryKey: ["inventory", search],
     queryFn: async () => {
       let q = supabase.from("inventory_items").select("*").order("name").limit(500);
-      if (search.trim()) q = q.ilike("name", `%${search}%`);
+      const s = search.trim();
+      if (s) q = q.or(`name.ilike.%${s}%,sku.ilike.%${s}%,barcode.ilike.%${s}%`);
       const { data } = await q;
       return data ?? [];
     },
@@ -65,6 +74,7 @@ function InventoryPage() {
       const payload = {
         name: form.name.trim(),
         sku: form.sku.trim() || null,
+        barcode: form.barcode.trim() || null,
         category: form.category,
         cost_price: Number(form.cost_price) || 0,
         sell_price: Number(form.sell_price) || 0,
@@ -134,6 +144,7 @@ function InventoryPage() {
     setForm({
       name: item.name ?? "",
       sku: item.sku ?? "",
+      barcode: item.barcode ?? "",
       category: item.category ?? "part",
       cost_price: String(item.cost_price ?? "0"),
       sell_price: String(item.sell_price ?? "0"),
@@ -229,6 +240,24 @@ function InventoryPage() {
                 </Select>
               </div>
             </div>
+            <div>
+              <Label>ບາໂຄດ (Barcode)</Label>
+              <div className="flex gap-2 mt-1">
+                <Input
+                  value={form.barcode}
+                  onChange={(e) => setForm({ ...form, barcode: e.target.value })}
+                  placeholder="ສະແກນ ຫຼື ປ້ອນເລກ"
+                />
+                <Button type="button" variant="outline" size="sm" onClick={() => setForm({ ...form, barcode: genBarcode() })}>
+                  <BarcodeIcon className="h-4 w-4 mr-1" />ສ້າງ
+                </Button>
+              </div>
+              {form.barcode && (
+                <div className="mt-2 flex justify-center border rounded-md py-2 bg-white">
+                  <Barcode value={form.barcode} height={40} />
+                </div>
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>ລາຄາທຶນ (₭)</Label>
                 <Input type="number" value={form.cost_price} onChange={(e) => setForm({ ...form, cost_price: e.target.value })} />
@@ -289,11 +318,19 @@ function InventoryPage() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{item.name}</p>
                     <Badge variant="secondary" className="mt-1 text-xs">{CATEGORY_LABEL[item.category]}</Badge>
-                    {item.sku && <p className="text-xs text-muted-foreground mt-1">{item.sku}</p>}
+                    {item.sku && <p className="text-xs text-muted-foreground mt-1">SKU: {item.sku}</p>}
+                    {item.barcode && <p className="text-xs text-muted-foreground font-mono">{item.barcode}</p>}
                   </div>
-                  <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => openEdit(item)}>
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex flex-col gap-1 shrink-0">
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(item)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    {item.barcode && (
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setPrintItem(item)} title="ພິມບາໂຄດ">
+                        <Printer className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <div className="mt-3 flex items-end justify-between">
                   <div>
@@ -329,6 +366,21 @@ function InventoryPage() {
             <div><Label>ໝາຍເຫດ</Label><Textarea name="note" rows={2} /></div>
             <DialogFooter><Button type="submit" disabled={adjust.isPending}>ຢືນຢັນ</Button></DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!printItem} onOpenChange={(o) => !o && setPrintItem(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>ພິມບາໂຄດ</DialogTitle></DialogHeader>
+          <div id="barcode-print-area" className="bg-white text-black border rounded-md p-4 text-center">
+            <p className="text-sm font-medium truncate">{printItem?.name}</p>
+            <p className="text-xs text-gray-600 mb-1">{formatLAK(Number(printItem?.sell_price ?? 0))}</p>
+            {printItem?.barcode && <div className="flex justify-center"><Barcode value={printItem.barcode} height={60} fontSize={14} /></div>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPrintItem(null)}>ປິດ</Button>
+            <Button onClick={() => window.print()}><Printer className="h-4 w-4 mr-1" />ພິມ</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
