@@ -160,6 +160,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          image_url: string | null
           low_stock_threshold: number
           name: string
           sell_price: number
@@ -173,6 +174,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           low_stock_threshold?: number
           name: string
           sell_price?: number
@@ -186,6 +188,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           low_stock_threshold?: number
           name?: string
           sell_price?: number
@@ -581,6 +584,21 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      track_signup: {
+        Args: { _id: string }
+        Returns: {
+          account_email: string
+          account_type: string
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          notes: string
+          recovery_email: string
+          recovery_phone: string
+          service_fee: number
+        }[]
+      }
       track_ticket: {
         Args: { _code: string }
         Returns: {
