@@ -72,6 +72,7 @@ function InventoryPage() {
       const payload = {
         name: form.name.trim(),
         sku: form.sku.trim() || null,
+        barcode: form.barcode.trim() || null,
         category: form.category,
         cost_price: Number(form.cost_price) || 0,
         sell_price: Number(form.sell_price) || 0,
@@ -141,6 +142,7 @@ function InventoryPage() {
     setForm({
       name: item.name ?? "",
       sku: item.sku ?? "",
+      barcode: item.barcode ?? "",
       category: item.category ?? "part",
       cost_price: String(item.cost_price ?? "0"),
       sell_price: String(item.sell_price ?? "0"),
