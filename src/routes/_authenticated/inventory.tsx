@@ -318,11 +318,19 @@ function InventoryPage() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{item.name}</p>
                     <Badge variant="secondary" className="mt-1 text-xs">{CATEGORY_LABEL[item.category]}</Badge>
-                    {item.sku && <p className="text-xs text-muted-foreground mt-1">{item.sku}</p>}
+                    {item.sku && <p className="text-xs text-muted-foreground mt-1">SKU: {item.sku}</p>}
+                    {item.barcode && <p className="text-xs text-muted-foreground font-mono">{item.barcode}</p>}
                   </div>
-                  <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => openEdit(item)}>
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex flex-col gap-1 shrink-0">
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(item)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    {item.barcode && (
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setPrintItem(item)} title="ພິມບາໂຄດ">
+                        <Printer className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <div className="mt-3 flex items-end justify-between">
                   <div>
@@ -358,6 +366,21 @@ function InventoryPage() {
             <div><Label>ໝາຍເຫດ</Label><Textarea name="note" rows={2} /></div>
             <DialogFooter><Button type="submit" disabled={adjust.isPending}>ຢືນຢັນ</Button></DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!printItem} onOpenChange={(o) => !o && setPrintItem(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>ພິມບາໂຄດ</DialogTitle></DialogHeader>
+          <div id="barcode-print-area" className="bg-white text-black border rounded-md p-4 text-center">
+            <p className="text-sm font-medium truncate">{printItem?.name}</p>
+            <p className="text-xs text-gray-600 mb-1">{formatLAK(Number(printItem?.sell_price ?? 0))}</p>
+            {printItem?.barcode && <div className="flex justify-center"><Barcode value={printItem.barcode} height={60} fontSize={14} /></div>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPrintItem(null)}>ປິດ</Button>
+            <Button onClick={() => window.print()}><Printer className="h-4 w-4 mr-1" />ພິມ</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
