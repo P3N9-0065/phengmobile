@@ -1,3 +1,4 @@
+import { QRCodeCanvas } from "qrcode.react";
 import { usePosSettings } from "@/lib/settings";
 
 type SignupRecord = {
@@ -25,6 +26,10 @@ const TYPE_LABEL: Record<string, string> = {
 export function SignupSlip({ signup }: { signup: SignupRecord }) {
   const settings = usePosSettings();
   const created = new Date(signup.created_at).toLocaleString("lo-LA");
+  const trackUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/signup/${signup.id}`
+      : `/signup/${signup.id}`;
 
   return (
     <div className="print-only" style={{ color: "#000", background: "#fff", padding: "10mm", fontFamily: "sans-serif" }}>
@@ -36,12 +41,20 @@ export function SignupSlip({ signup }: { signup: SignupRecord }) {
         <h2 style={{ fontSize: 14, fontWeight: 700, marginTop: 8 }}>ໃບຂໍ້ມູນບັນຊີສະໝັກ</h2>
       </div>
 
-      <div style={{ fontSize: 12, lineHeight: 1.6 }}>
-        <Row label="ວັນທີ" value={created} />
-        <Row label="ລູກຄ້າ" value={signup.customer_name_snapshot} />
-        {signup.customer_phone_snapshot && <Row label="ເບີໂທ" value={signup.customer_phone_snapshot} />}
-        <Row label="ປະເພດບັນຊີ" value={TYPE_LABEL[signup.account_type] ?? signup.account_type} />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, fontSize: 12, lineHeight: 1.6 }}>
+        <div>
+          <Row label="ວັນທີ" value={created} />
+          <Row label="ລູກຄ້າ" value={signup.customer_name_snapshot} />
+          {signup.customer_phone_snapshot && <Row label="ເບີໂທ" value={signup.customer_phone_snapshot} />}
+          <Row label="ປະເພດບັນຊີ" value={TYPE_LABEL[signup.account_type] ?? signup.account_type} />
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <QRCodeCanvas value={trackUrl} size={90} level="M" includeMargin={false} />
+          <p style={{ fontSize: 9, margin: "4px 0 0" }}>ສະແກນເບິ່ງຂໍ້ມູນ</p>
+        </div>
+      </div>
 
+      <div style={{ fontSize: 12, lineHeight: 1.6 }}>
         <div style={{ border: "1px dashed #000", padding: 8, margin: "10px 0", borderRadius: 4 }}>
           <p style={{ fontWeight: 700, marginBottom: 4, fontSize: 12 }}>ຂໍ້ມູນບັນຊີ</p>
           <Row label="ອີເມວ" value={signup.account_email} mono />
