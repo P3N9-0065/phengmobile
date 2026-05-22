@@ -10,10 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, AlertTriangle, Package as PackageIcon, Pencil, Upload, X } from "lucide-react";
+import { Plus, Search, AlertTriangle, Package as PackageIcon, Pencil, Upload, X, Barcode as BarcodeIcon, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { CATEGORY_LABEL, type ItemCategory } from "@/lib/lao";
 import { formatLAK } from "@/lib/format";
+import { Barcode } from "@/components/inventory/Barcode";
 
 export const Route = createFileRoute("/_authenticated/inventory")({
   component: InventoryPage,
@@ -24,6 +25,7 @@ const CATEGORIES: ItemCategory[] = ["part", "accessory", "tool", "phone_new", "p
 type FormState = {
   name: string;
   sku: string;
+  barcode: string;
   category: ItemCategory;
   cost_price: string;
   sell_price: string;
@@ -34,10 +36,15 @@ type FormState = {
 };
 
 const EMPTY: FormState = {
-  name: "", sku: "", category: "part",
+  name: "", sku: "", barcode: "", category: "part",
   cost_price: "0", sell_price: "0", stock_qty: "0", low_stock_threshold: "5",
   image_url: "", description: "",
 };
+
+function genBarcode() {
+  // 12-digit numeric, easy to scan with CODE128
+  return Date.now().toString().slice(-9) + Math.floor(100 + Math.random() * 900).toString();
+}
 
 function InventoryPage() {
   const [search, setSearch] = useState("");
