@@ -53,6 +53,7 @@ function InventoryPage() {
   const [form, setForm] = useState<FormState>(EMPTY);
   const [uploading, setUploading] = useState(false);
   const [adjustItem, setAdjustItem] = useState<any>(null);
+  const [printItem, setPrintItem] = useState<any>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
 
@@ -60,7 +61,8 @@ function InventoryPage() {
     queryKey: ["inventory", search],
     queryFn: async () => {
       let q = supabase.from("inventory_items").select("*").order("name").limit(500);
-      if (search.trim()) q = q.ilike("name", `%${search}%`);
+      const s = search.trim();
+      if (s) q = q.or(`name.ilike.%${s}%,sku.ilike.%${s}%,barcode.ilike.%${s}%`);
       const { data } = await q;
       return data ?? [];
     },
@@ -237,6 +239,24 @@ function InventoryPage() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div>
+              <Label>ບາໂຄດ (Barcode)</Label>
+              <div className="flex gap-2 mt-1">
+                <Input
+                  value={form.barcode}
+                  onChange={(e) => setForm({ ...form, barcode: e.target.value })}
+                  placeholder="ສະແກນ ຫຼື ປ້ອນເລກ"
+                />
+                <Button type="button" variant="outline" size="sm" onClick={() => setForm({ ...form, barcode: genBarcode() })}>
+                  <BarcodeIcon className="h-4 w-4 mr-1" />ສ້າງ
+                </Button>
+              </div>
+              {form.barcode && (
+                <div className="mt-2 flex justify-center border rounded-md py-2 bg-white">
+                  <Barcode value={form.barcode} height={40} />
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>ລາຄາທຶນ (₭)</Label>
