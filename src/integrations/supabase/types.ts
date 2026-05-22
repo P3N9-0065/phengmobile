@@ -155,6 +155,7 @@ export type Database = {
       }
       inventory_items: {
         Row: {
+          barcode: string | null
           category: Database["public"]["Enums"]["item_category"]
           cost_price: number
           created_at: string
@@ -169,6 +170,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          barcode?: string | null
           category?: Database["public"]["Enums"]["item_category"]
           cost_price?: number
           created_at?: string
@@ -183,6 +185,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          barcode?: string | null
           category?: Database["public"]["Enums"]["item_category"]
           cost_price?: number
           created_at?: string

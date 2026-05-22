@@ -1,0 +1,2 @@
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS barcode text;
+CREATE UNIQUE INDEX IF NOT EXISTS inventory_items_barcode_unique ON public.inventory_items (barcode) WHERE barcode IS NOT NULL;
