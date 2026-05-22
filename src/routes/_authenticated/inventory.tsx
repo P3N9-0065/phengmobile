@@ -1,16 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, AlertTriangle, Package as PackageIcon } from "lucide-react";
+import { Plus, Search, AlertTriangle, Package as PackageIcon, Pencil, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { CATEGORY_LABEL, type ItemCategory } from "@/lib/lao";
 import { formatLAK } from "@/lib/format";
@@ -21,10 +21,32 @@ export const Route = createFileRoute("/_authenticated/inventory")({
 
 const CATEGORIES: ItemCategory[] = ["part", "accessory", "tool", "phone_new", "phone_used"];
 
+type FormState = {
+  name: string;
+  sku: string;
+  category: ItemCategory;
+  cost_price: string;
+  sell_price: string;
+  stock_qty: string;
+  low_stock_threshold: string;
+  image_url: string;
+  description: string;
+};
+
+const EMPTY: FormState = {
+  name: "", sku: "", category: "part",
+  cost_price: "0", sell_price: "0", stock_qty: "0", low_stock_threshold: "5",
+  image_url: "", description: "",
+};
+
 function InventoryPage() {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<FormState>(EMPTY);
+  const [uploading, setUploading] = useState(false);
   const [adjustItem, setAdjustItem] = useState<any>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
 
   const { data: items } = useQuery({
@@ -37,15 +59,33 @@ function InventoryPage() {
     },
   });
 
-  const create = useMutation({
-    mutationFn: async (form: any) => {
-      const { error } = await supabase.from("inventory_items").insert(form);
-      if (error) throw error;
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!form.name.trim()) throw new Error("ກະລຸນາໃສ່ຊື່ສິນຄ້າ");
+      const payload = {
+        name: form.name.trim(),
+        sku: form.sku.trim() || null,
+        category: form.category,
+        cost_price: Number(form.cost_price) || 0,
+        sell_price: Number(form.sell_price) || 0,
+        low_stock_threshold: Number(form.low_stock_threshold) || 5,
+        image_url: form.image_url || null,
+        description: form.description.trim() || null,
+      };
+      if (editingId) {
+        const { error } = await supabase.from("inventory_items").update(payload).eq("id", editingId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("inventory_items")
+          .insert({ ...payload, stock_qty: Number(form.stock_qty) || 0 });
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["inventory"] });
-      toast.success("ເພີ່ມສິນຄ້າສຳເລັດ");
-      setOpen(false);
+      toast.success(editingId ? "ແກ້ໄຂສຳເລັດ" : "ເພີ່ມສິນຄ້າສຳເລັດ");
+      closeDialog();
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -66,18 +106,49 @@ function InventoryPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  function handleCreate(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    create.mutate({
-      name: fd.get("name"),
-      sku: fd.get("sku") || null,
-      category: fd.get("category"),
-      cost_price: Number(fd.get("cost_price") || 0),
-      sell_price: Number(fd.get("sell_price") || 0),
-      stock_qty: Number(fd.get("stock_qty") || 0),
-      low_stock_threshold: Number(fd.get("low_stock_threshold") || 5),
+  async function handleUpload(file: File) {
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() ?? "jpg";
+      const path = `${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: false });
+      if (error) throw error;
+      const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+      setForm((f) => ({ ...f, image_url: data.publicUrl }));
+      toast.success("ອັບໂຫຼດຮູບສຳເລັດ");
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function openCreate() {
+    setEditingId(null);
+    setForm(EMPTY);
+    setOpen(true);
+  }
+
+  function openEdit(item: any) {
+    setEditingId(item.id);
+    setForm({
+      name: item.name ?? "",
+      sku: item.sku ?? "",
+      category: item.category ?? "part",
+      cost_price: String(item.cost_price ?? "0"),
+      sell_price: String(item.sell_price ?? "0"),
+      stock_qty: String(item.stock_qty ?? "0"),
+      low_stock_threshold: String(item.low_stock_threshold ?? "5"),
+      image_url: item.image_url ?? "",
+      description: item.description ?? "",
     });
+    setOpen(true);
+  }
+
+  function closeDialog() {
+    setOpen(false);
+    setEditingId(null);
+    setForm(EMPTY);
   }
 
   function handleAdjust(e: React.FormEvent<HTMLFormElement>) {
@@ -97,37 +168,104 @@ function InventoryPage() {
           <h1 className="text-2xl font-bold">ສະຕັອກອາໄຫຼ່ ແລະ ສິນຄ້າ</h1>
           <p className="text-muted-foreground text-sm">ຈັດການສິນຄ້າທີ່ມີໃນຮ້ານ</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />ເພີ່ມສິນຄ້າ</Button></DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>ເພີ່ມສິນຄ້າໃໝ່</DialogTitle></DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-3">
-              <div><Label>ຊື່ສິນຄ້າ *</Label><Input name="name" required /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>ລະຫັດ SKU</Label><Input name="sku" /></div>
+        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />ເພີ່ມສິນຄ້າ</Button>
+      </div>
+
+      <Dialog open={open} onOpenChange={(v) => (v ? setOpen(true) : closeDialog())}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingId ? "ແກ້ໄຂສິນຄ້າ" : "ເພີ່ມສິນຄ້າໃໝ່"}</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => { e.preventDefault(); if (!save.isPending) save.mutate(); }}
+            className="space-y-3"
+          >
+            <div>
+              <Label>ຮູບສິນຄ້າ</Label>
+              <div className="flex items-center gap-3 mt-1">
+                {form.image_url ? (
+                  <div className="relative">
+                    <img src={form.image_url} alt="" className="h-20 w-20 rounded-md object-cover border" />
+                    <Button
+                      type="button" size="icon" variant="destructive"
+                      className="absolute -top-2 -right-2 h-5 w-5"
+                      onClick={() => setForm({ ...form, image_url: "" })}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="h-20 w-20 rounded-md border border-dashed flex items-center justify-center text-muted-foreground">
+                    <PackageIcon className="h-6 w-6" />
+                  </div>
+                )}
                 <div>
-                  <Label>ໝວດ *</Label>
-                  <Select name="category" defaultValue="part">
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{CATEGORY_LABEL[c]}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <input
+                    ref={fileRef} type="file" accept="image/*" className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f); }}
+                  />
+                  <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => fileRef.current?.click()}>
+                    <Upload className="h-3.5 w-3.5 mr-1" />
+                    {uploading ? "ກຳລັງອັບໂຫຼດ..." : form.image_url ? "ປ່ຽນຮູບ" : "ອັບໂຫຼດຮູບ"}
+                  </Button>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>ລາຄາທຶນ (₭)</Label><Input name="cost_price" type="number" defaultValue="0" /></div>
-                <div><Label>ລາຄາຂາຍ (₭)</Label><Input name="sell_price" type="number" defaultValue="0" /></div>
+            </div>
+
+            <div><Label>ຊື່ສິນຄ້າ *</Label>
+              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>ລະຫັດ SKU</Label>
+                <Input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>ຈຳນວນເລີ່ມຕົ້ນ</Label><Input name="stock_qty" type="number" defaultValue="0" /></div>
-                <div><Label>ແຈ້ງເຕືອນເມື່ອເຫຼືອ</Label><Input name="low_stock_threshold" type="number" defaultValue="5" /></div>
+              <div>
+                <Label>ໝວດ *</Label>
+                <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v as ItemCategory })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{CATEGORY_LABEL[c]}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
-              <DialogFooter><Button type="submit">ບັນທຶກ</Button></DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>ລາຄາທຶນ (₭)</Label>
+                <Input type="number" value={form.cost_price} onChange={(e) => setForm({ ...form, cost_price: e.target.value })} />
+              </div>
+              <div><Label>ລາຄາຂາຍ (₭)</Label>
+                <Input type="number" value={form.sell_price} onChange={(e) => setForm({ ...form, sell_price: e.target.value })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {!editingId && (
+                <div><Label>ຈຳນວນເລີ່ມຕົ້ນ</Label>
+                  <Input type="number" value={form.stock_qty} onChange={(e) => setForm({ ...form, stock_qty: e.target.value })} />
+                </div>
+              )}
+              <div><Label>ແຈ້ງເຕືອນເມື່ອເຫຼືອ</Label>
+                <Input type="number" value={form.low_stock_threshold}
+                  onChange={(e) => setForm({ ...form, low_stock_threshold: e.target.value })} />
+              </div>
+            </div>
+            <div>
+              <Label>ລາຍລະອຽດ</Label>
+              <Textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            </div>
+            {editingId && (
+              <p className="text-xs text-muted-foreground">
+                * ການແກ້ໄຂນີ້ບໍ່ປ່ຽນຈຳນວນສະຕັອກ. ໃຊ້ປຸ່ມ "ປັບສະຕັອກ" ເພື່ອປ່ຽນຈຳນວນ.
+              </p>
+            )}
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={closeDialog}>ຍົກເລີກ</Button>
+              <Button type="submit" disabled={save.isPending}>
+                {save.isPending ? "ກຳລັງບັນທຶກ..." : "ບັນທຶກ"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -140,13 +278,22 @@ function InventoryPage() {
           return (
             <Card key={item.id} className={low ? "border-amber-300" : ""}>
               <CardContent className="pt-4">
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start gap-3">
+                  {item.image_url ? (
+                    <img src={item.image_url} alt={item.name} className="h-14 w-14 rounded-md object-cover border shrink-0" />
+                  ) : (
+                    <div className="h-14 w-14 rounded-md bg-muted flex items-center justify-center shrink-0">
+                      <PackageIcon className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{item.name}</p>
                     <Badge variant="secondary" className="mt-1 text-xs">{CATEGORY_LABEL[item.category]}</Badge>
                     {item.sku && <p className="text-xs text-muted-foreground mt-1">{item.sku}</p>}
                   </div>
-                  <PackageIcon className="h-5 w-5 text-muted-foreground" />
+                  <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => openEdit(item)}>
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
                 <div className="mt-3 flex items-end justify-between">
                   <div>
