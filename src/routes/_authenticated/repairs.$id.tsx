@@ -385,6 +385,20 @@ function RepairDetailPage() {
         </div>
       </div>
     </div>
+    <BarcodeScanner
+      open={scanOpen}
+      onOpenChange={setScanOpen}
+      title="ສະແກນເພື່ອເລືອກສິນຄ້າ"
+      onScan={(code) => {
+        const found = items?.find((i) => i.barcode === code || i.sku === code || i.id === code);
+        if (found) {
+          setSelectedItemId(found.id);
+          toast.success("ເລືອກ: " + found.name);
+        } else {
+          toast.error("ບໍ່ພົບສິນຄ້າ: " + code);
+        }
+      }}
+    />
     </>
   );
 }
