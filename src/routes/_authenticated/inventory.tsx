@@ -254,13 +254,16 @@ function InventoryPage() {
                   onChange={(e) => setForm({ ...form, barcode: e.target.value })}
                   placeholder="ສະແກນ ຫຼື ປ້ອນເລກ"
                 />
+                <Button type="button" variant="outline" size="sm" onClick={() => setScanFormOpen(true)} title="ສະແກນດ້ວຍກ້ອງ">
+                  <Camera className="h-4 w-4" />
+                </Button>
                 <Button type="button" variant="outline" size="sm" onClick={() => setForm({ ...form, barcode: genBarcode() })}>
                   <BarcodeIcon className="h-4 w-4 mr-1" />ສ້າງ
                 </Button>
               </div>
               {form.barcode && (
                 <div className="mt-2 flex justify-center border rounded-md py-2 bg-white">
-                  <Barcode value={form.barcode} height={40} />
+                  <Barcode value={form.barcode} format={settings.barcode_format} height={40} />
                 </div>
               )}
             </div>
