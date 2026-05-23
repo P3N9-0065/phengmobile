@@ -247,6 +247,9 @@ function POSPage() {
                 onKeyDown={handleScan}
               />
             </div>
+            <Button size="sm" variant="outline" onClick={() => setScanOpen(true)} title="ສະແກນດ້ວຍກ້ອງ">
+              <Camera className="h-4 w-4 mr-1" />ກ້ອງ
+            </Button>
             <div className="text-xs text-slate-600">
               ສິນຄ້າ <span className="font-bold text-slate-900">{items?.length ?? 0}</span> ລາຍການ
             </div>
