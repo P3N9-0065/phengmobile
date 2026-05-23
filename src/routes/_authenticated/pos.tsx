@@ -10,8 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   ScanLine, Plus, Minus, Trash2, Printer, Receipt as ReceiptIcon,
-  Settings, User, Pause, ListChecks, Package, Eraser,
+  Settings, User, Pause, ListChecks, Package, Eraser, Camera,
 } from "lucide-react";
+import { BarcodeScanner } from "@/components/inventory/BarcodeScanner";
 import { toast } from "sonner";
 import { formatLAK } from "@/lib/format";
 import {
@@ -58,6 +59,7 @@ function POSPage() {
   const [amountPaid, setAmountPaid] = useState<number>(0);
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const [showPay, setShowPay] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
   const scanRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setRate(settings.rates[currency]); setAmountPaid(0); }, [currency, settings.rates]);
