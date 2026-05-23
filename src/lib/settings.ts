@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import type { Currency } from "./currency";
 
+export type BarcodeFormat = "CODE128" | "EAN13" | "EAN8" | "CODE39" | "UPC" | "ITF14";
+
 export interface PosSettings {
   shop_name: string;
   shop_name_en: string;
@@ -13,6 +15,14 @@ export interface PosSettings {
   font_size_px: number;
   show_logo: boolean;
   rates: Record<Currency, number>;
+  // Barcode label printing
+  barcode_format: BarcodeFormat;
+  label_width_mm: number;
+  label_height_mm: number;
+  barcode_show_name: boolean;
+  barcode_show_price: boolean;
+  barcode_show_shop: boolean;
+  barcode_bar_height: number; // px
 }
 
 const KEY = "pheng-pos-settings-v1";
@@ -29,6 +39,13 @@ export const DEFAULT_SETTINGS: PosSettings = {
   font_size_px: 12,
   show_logo: true,
   rates: { LAK: 1, THB: 620, USD: 21500 },
+  barcode_format: "CODE128",
+  label_width_mm: 50,
+  label_height_mm: 30,
+  barcode_show_name: true,
+  barcode_show_price: true,
+  barcode_show_shop: false,
+  barcode_bar_height: 40,
 };
 
 export function loadSettings(): PosSettings {

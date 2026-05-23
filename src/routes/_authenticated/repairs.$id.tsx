@@ -10,12 +10,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, Plus, Printer, ExternalLink, Download, Copy } from "lucide-react";
+import { ArrowLeft, Plus, Printer, ExternalLink, Download, Copy, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { QRCodeCanvas } from "qrcode.react";
 import { STATUS_LABEL, STATUS_COLOR, STATUS_ORDER, ROLE_LABEL, type RepairStatus } from "@/lib/lao";
 import { formatDateTime, formatLAK } from "@/lib/format";
 import { RepairReceipt } from "@/components/repair/RepairReceipt";
+import { BarcodeScanner } from "@/components/inventory/BarcodeScanner";
 
 export const Route = createFileRoute("/_authenticated/repairs/$id")({
   component: RepairDetailPage,
@@ -30,6 +31,8 @@ function RepairDetailPage() {
   const qc = useQueryClient();
   const [partOpen, setPartOpen] = useState(false);
   const [editPriceOpen, setEditPriceOpen] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState<string>("");
 
   const { data: ticket } = useQuery({
     queryKey: ["ticket", id],
@@ -73,7 +76,7 @@ function RepairDetailPage() {
   const { data: items } = useQuery({
     queryKey: ["inventory-min"],
     queryFn: async () => {
-      const { data } = await supabase.from("inventory_items").select("id, name, stock_qty, cost_price, sell_price").gt("stock_qty", 0).order("name");
+      const { data } = await supabase.from("inventory_items").select("id, name, barcode, sku, stock_qty, cost_price, sell_price").gt("stock_qty", 0).order("name");
       return data ?? [];
     },
   });
@@ -180,8 +183,9 @@ function RepairDetailPage() {
                   <form onSubmit={(e) => {
                     e.preventDefault();
                     const fd = new FormData(e.currentTarget);
-                    const itemId = fd.get("item_id") as string;
+                    const itemId = (fd.get("item_id") as string) || selectedItemId;
                     const item = items?.find((i) => i.id === itemId);
+                    if (!item) { toast.error("ກະລຸນາເລືອກສິນຄ້າ"); return; }
                     addPart.mutate({
                       item_id: itemId,
                       qty: Number(fd.get("qty")),
@@ -191,14 +195,19 @@ function RepairDetailPage() {
                   }} className="space-y-3">
                     <div>
                       <Label>ສິນຄ້າ</Label>
-                      <Select name="item_id" required>
-                        <SelectTrigger><SelectValue placeholder="ເລືອກສິນຄ້າ" /></SelectTrigger>
-                        <SelectContent>
-                          {items?.map((i) => (
-                            <SelectItem key={i.id} value={i.id}>{i.name} (ຄົງເຫຼືອ: {i.stock_qty})</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="flex gap-2">
+                        <Select name="item_id" value={selectedItemId} onValueChange={setSelectedItemId} required>
+                          <SelectTrigger><SelectValue placeholder="ເລືອກສິນຄ້າ" /></SelectTrigger>
+                          <SelectContent>
+                            {items?.map((i) => (
+                              <SelectItem key={i.id} value={i.id}>{i.name} (ຄົງເຫຼືອ: {i.stock_qty})</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button type="button" variant="outline" size="sm" onClick={() => setScanOpen(true)} title="ສະແກນ">
+                          <Camera className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div><Label>ຈຳນວນ</Label><Input name="qty" type="number" min="1" defaultValue="1" required /></div>
@@ -376,6 +385,20 @@ function RepairDetailPage() {
         </div>
       </div>
     </div>
+    <BarcodeScanner
+      open={scanOpen}
+      onOpenChange={setScanOpen}
+      title="ສະແກນເພື່ອເລືອກສິນຄ້າ"
+      onScan={(code) => {
+        const found = items?.find((i) => i.barcode === code || i.sku === code || i.id === code);
+        if (found) {
+          setSelectedItemId(found.id);
+          toast.success("ເລືອກ: " + found.name);
+        } else {
+          toast.error("ບໍ່ພົບສິນຄ້າ: " + code);
+        }
+      }}
+    />
     </>
   );
 }

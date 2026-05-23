@@ -10,8 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   ScanLine, Plus, Minus, Trash2, Printer, Receipt as ReceiptIcon,
-  Settings, User, Pause, ListChecks, Package, Eraser,
+  Settings, User, Pause, ListChecks, Package, Eraser, Camera,
 } from "lucide-react";
+import { BarcodeScanner } from "@/components/inventory/BarcodeScanner";
 import { toast } from "sonner";
 import { formatLAK } from "@/lib/format";
 import {
@@ -58,6 +59,7 @@ function POSPage() {
   const [amountPaid, setAmountPaid] = useState<number>(0);
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const [showPay, setShowPay] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
   const scanRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setRate(settings.rates[currency]); setAmountPaid(0); }, [currency, settings.rates]);
@@ -66,9 +68,9 @@ function POSPage() {
   const { data: items } = useQuery({
     queryKey: ["pos-items", search, activeCat],
     queryFn: async () => {
-      let q = supabase.from("inventory_items").select("id,name,sku,sell_price,stock_qty,category").gt("stock_qty", 0).order("name").limit(120);
+      let q = supabase.from("inventory_items").select("id,name,sku,barcode,sell_price,stock_qty,category").gt("stock_qty", 0).order("name").limit(120);
       if (activeCat !== "all") q = q.eq("category", activeCat);
-      if (search.trim()) q = q.or(`name.ilike.%${search}%,sku.ilike.%${search}%`);
+      if (search.trim()) q = q.or(`name.ilike.%${search}%,sku.ilike.%${search}%,barcode.ilike.%${search}%`);
       const { data } = await q;
       return data ?? [];
     },
@@ -107,18 +109,30 @@ function POSPage() {
 
   function removeLine(item_id: string) { setCart((c) => c.filter((l) => l.item_id !== item_id)); }
 
+  async function lookupAndAdd(code: string) {
+    const c = code.trim();
+    if (!c) return;
+    const { data } = await supabase
+      .from("inventory_items")
+      .select("id,name,sell_price,stock_qty")
+      .or(`barcode.eq.${c},sku.eq.${c},id.eq.${c}`)
+      .limit(1)
+      .maybeSingle();
+    if (data) {
+      addToCart(data as any);
+      toast.success("ເພີ່ມ: " + data.name);
+    } else {
+      toast.error("ບໍ່ພົບສິນຄ້າລະຫັດ: " + c);
+    }
+  }
+
   async function handleScan(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter") return;
     const code = e.currentTarget.value.trim();
     if (!code) return;
-    const { data } = await supabase.from("inventory_items").select("id,name,sell_price,stock_qty").or(`sku.eq.${code},id.eq.${code}`).limit(1).maybeSingle();
-    if (data) {
-      addToCart(data as any);
-      e.currentTarget.value = "";
-      setSearch("");
-    } else {
-      toast.error("ບໍ່ພົບສິນຄ້າລະຫັດ: " + code);
-    }
+    await lookupAndAdd(code);
+    e.currentTarget.value = "";
+    setSearch("");
   }
 
   function resetSale() {
@@ -233,6 +247,9 @@ function POSPage() {
                 onKeyDown={handleScan}
               />
             </div>
+            <Button size="sm" variant="outline" onClick={() => setScanOpen(true)} title="ສະແກນດ້ວຍກ້ອງ">
+              <Camera className="h-4 w-4 mr-1" />ກ້ອງ
+            </Button>
             <div className="text-xs text-slate-600">
               ສິນຄ້າ <span className="font-bold text-slate-900">{items?.length ?? 0}</span> ລາຍການ
             </div>
@@ -449,6 +466,13 @@ function POSPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <BarcodeScanner
+        open={scanOpen}
+        onOpenChange={setScanOpen}
+        title="ສະແກນບາໂຄດເພື່ອເພີ່ມສິນຄ້າ"
+        onScan={(code) => lookupAndAdd(code)}
+      />
     </div>
   );
 }
