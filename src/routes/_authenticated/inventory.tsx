@@ -305,9 +305,14 @@ function InventoryPage() {
         </DialogContent>
       </Dialog>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="ຄົ້ນຫາສິນຄ້າ..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="ຄົ້ນຫາສິນຄ້າ ຫຼື ສະແກນບາໂຄດ..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        <Button variant="outline" onClick={() => setScanOpen(true)} title="ສະແກນດ້ວຍກ້ອງ">
+          <Camera className="h-4 w-4 mr-1" />ສະແກນ
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -378,20 +383,54 @@ function InventoryPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!printItem} onOpenChange={(o) => !o && setPrintItem(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>ພິມບາໂຄດ</DialogTitle></DialogHeader>
-          <div id="barcode-print-area" className="bg-white text-black border rounded-md p-4 text-center">
-            <p className="text-sm font-medium truncate">{printItem?.name}</p>
-            <p className="text-xs text-gray-600 mb-1">{formatLAK(Number(printItem?.sell_price ?? 0))}</p>
-            {printItem?.barcode && <div className="flex justify-center"><Barcode value={printItem.barcode} height={60} fontSize={14} /></div>}
+      <Dialog open={!!printItem} onOpenChange={(o) => { if (!o) { setPrintItem(null); setPrintQty(1); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>ພິມປ້າຍບາໂຄດ</DialogTitle></DialogHeader>
+          <div className="flex items-center justify-between gap-2 text-sm">
+            <div>
+              <p className="text-muted-foreground">ຮູບແບບ: <b>{settings.barcode_format}</b></p>
+              <p className="text-muted-foreground">ຂະໜາດ: <b>{settings.label_width_mm}×{settings.label_height_mm} mm</b></p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label>ຈຳນວນປ້າຍ</Label>
+              <Input type="number" min={1} max={100} value={printQty} onChange={(e) => setPrintQty(Math.max(1, Math.min(100, Number(e.target.value) || 1)))} className="w-20 h-8" />
+            </div>
+          </div>
+          <div className="bg-muted/40 p-3 rounded max-h-72 overflow-auto">
+            <div id="barcode-print-area" className="barcode-labels">
+              {Array.from({ length: printQty }).map((_, i) => (
+                <div
+                  key={i}
+                  className="barcode-label bg-white text-black border rounded-sm flex flex-col items-center justify-center px-1 py-0.5 mx-auto mb-2"
+                  style={{ width: `${settings.label_width_mm}mm`, height: `${settings.label_height_mm}mm` }}
+                >
+                  {settings.barcode_show_shop && <div className="text-[8px] font-semibold truncate w-full text-center leading-tight">{settings.shop_name}</div>}
+                  {settings.barcode_show_name && <div className="text-[10px] font-medium truncate w-full text-center leading-tight">{printItem?.name}</div>}
+                  {printItem?.barcode && <Barcode value={printItem.barcode} format={settings.barcode_format} height={settings.barcode_bar_height} fontSize={10} />}
+                  {settings.barcode_show_price && <div className="text-[10px] font-bold leading-tight">{formatLAK(Number(printItem?.sell_price ?? 0))}</div>}
+                </div>
+              ))}
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPrintItem(null)}>ປິດ</Button>
-            <Button onClick={() => window.print()}><Printer className="h-4 w-4 mr-1" />ພິມ</Button>
+            <Button variant="outline" onClick={() => { setPrintItem(null); setPrintQty(1); }}>ປິດ</Button>
+            <Button onClick={() => window.print()}><Printer className="h-4 w-4 mr-1" />ພິມ ({printQty})</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <BarcodeScanner
+        open={scanOpen}
+        onOpenChange={setScanOpen}
+        title="ສະແກນເພື່ອຄົ້ນຫາສິນຄ້າ"
+        onScan={(code) => { setSearch(code); toast.success("ສະແກນໄດ້: " + code); }}
+      />
+      <BarcodeScanner
+        open={scanFormOpen}
+        onOpenChange={setScanFormOpen}
+        title="ສະແກນບາໂຄດສິນຄ້າ"
+        onScan={(code) => setForm((f) => ({ ...f, barcode: code }))}
+      />
     </div>
   );
 }
