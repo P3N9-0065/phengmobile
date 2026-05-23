@@ -10,12 +10,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, Plus, Printer, ExternalLink, Download, Copy } from "lucide-react";
+import { ArrowLeft, Plus, Printer, ExternalLink, Download, Copy, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { QRCodeCanvas } from "qrcode.react";
 import { STATUS_LABEL, STATUS_COLOR, STATUS_ORDER, ROLE_LABEL, type RepairStatus } from "@/lib/lao";
 import { formatDateTime, formatLAK } from "@/lib/format";
 import { RepairReceipt } from "@/components/repair/RepairReceipt";
+import { BarcodeScanner } from "@/components/inventory/BarcodeScanner";
 
 export const Route = createFileRoute("/_authenticated/repairs/$id")({
   component: RepairDetailPage,
@@ -30,6 +31,8 @@ function RepairDetailPage() {
   const qc = useQueryClient();
   const [partOpen, setPartOpen] = useState(false);
   const [editPriceOpen, setEditPriceOpen] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState<string>("");
 
   const { data: ticket } = useQuery({
     queryKey: ["ticket", id],
