@@ -68,9 +68,9 @@ function POSPage() {
   const { data: items } = useQuery({
     queryKey: ["pos-items", search, activeCat],
     queryFn: async () => {
-      let q = supabase.from("inventory_items").select("id,name,sku,sell_price,stock_qty,category").gt("stock_qty", 0).order("name").limit(120);
+      let q = supabase.from("inventory_items").select("id,name,sku,barcode,sell_price,stock_qty,category").gt("stock_qty", 0).order("name").limit(120);
       if (activeCat !== "all") q = q.eq("category", activeCat);
-      if (search.trim()) q = q.or(`name.ilike.%${search}%,sku.ilike.%${search}%`);
+      if (search.trim()) q = q.or(`name.ilike.%${search}%,sku.ilike.%${search}%,barcode.ilike.%${search}%`);
       const { data } = await q;
       return data ?? [];
     },
@@ -109,18 +109,30 @@ function POSPage() {
 
   function removeLine(item_id: string) { setCart((c) => c.filter((l) => l.item_id !== item_id)); }
 
+  async function lookupAndAdd(code: string) {
+    const c = code.trim();
+    if (!c) return;
+    const { data } = await supabase
+      .from("inventory_items")
+      .select("id,name,sell_price,stock_qty")
+      .or(`barcode.eq.${c},sku.eq.${c},id.eq.${c}`)
+      .limit(1)
+      .maybeSingle();
+    if (data) {
+      addToCart(data as any);
+      toast.success("ເພີ່ມ: " + data.name);
+    } else {
+      toast.error("ບໍ່ພົບສິນຄ້າລະຫັດ: " + c);
+    }
+  }
+
   async function handleScan(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter") return;
     const code = e.currentTarget.value.trim();
     if (!code) return;
-    const { data } = await supabase.from("inventory_items").select("id,name,sell_price,stock_qty").or(`sku.eq.${code},id.eq.${code}`).limit(1).maybeSingle();
-    if (data) {
-      addToCart(data as any);
-      e.currentTarget.value = "";
-      setSearch("");
-    } else {
-      toast.error("ບໍ່ພົບສິນຄ້າລະຫັດ: " + code);
-    }
+    await lookupAndAdd(code);
+    e.currentTarget.value = "";
+    setSearch("");
   }
 
   function resetSale() {
