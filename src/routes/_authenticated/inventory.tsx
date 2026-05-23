@@ -10,11 +10,13 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, AlertTriangle, Package as PackageIcon, Pencil, Upload, X, Barcode as BarcodeIcon, Printer } from "lucide-react";
+import { Plus, Search, AlertTriangle, Package as PackageIcon, Pencil, Upload, X, Barcode as BarcodeIcon, Printer, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { CATEGORY_LABEL, type ItemCategory } from "@/lib/lao";
 import { formatLAK } from "@/lib/format";
 import { Barcode } from "@/components/inventory/Barcode";
+import { BarcodeScanner } from "@/components/inventory/BarcodeScanner";
+import { usePosSettings } from "@/lib/settings";
 
 export const Route = createFileRoute("/_authenticated/inventory")({
   component: InventoryPage,
@@ -47,6 +49,7 @@ function genBarcode() {
 }
 
 function InventoryPage() {
+  const settings = usePosSettings();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -54,6 +57,9 @@ function InventoryPage() {
   const [uploading, setUploading] = useState(false);
   const [adjustItem, setAdjustItem] = useState<any>(null);
   const [printItem, setPrintItem] = useState<any>(null);
+  const [printQty, setPrintQty] = useState(1);
+  const [scanOpen, setScanOpen] = useState(false);
+  const [scanFormOpen, setScanFormOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
 
