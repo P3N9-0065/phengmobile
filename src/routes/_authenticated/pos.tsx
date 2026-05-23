@@ -466,6 +466,13 @@ function POSPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <BarcodeScanner
+        open={scanOpen}
+        onOpenChange={setScanOpen}
+        title="ສະແກນບາໂຄດເພື່ອເພີ່ມສິນຄ້າ"
+        onScan={(code) => lookupAndAdd(code)}
+      />
     </div>
   );
 }
