@@ -76,7 +76,7 @@ function RepairDetailPage() {
   const { data: items } = useQuery({
     queryKey: ["inventory-min"],
     queryFn: async () => {
-      const { data } = await supabase.from("inventory_items").select("id, name, stock_qty, cost_price, sell_price").gt("stock_qty", 0).order("name");
+      const { data } = await supabase.from("inventory_items").select("id, name, barcode, sku, stock_qty, cost_price, sell_price").gt("stock_qty", 0).order("name");
       return data ?? [];
     },
   });
@@ -183,8 +183,9 @@ function RepairDetailPage() {
                   <form onSubmit={(e) => {
                     e.preventDefault();
                     const fd = new FormData(e.currentTarget);
-                    const itemId = fd.get("item_id") as string;
+                    const itemId = (fd.get("item_id") as string) || selectedItemId;
                     const item = items?.find((i) => i.id === itemId);
+                    if (!item) { toast.error("ກະລຸນາເລືອກສິນຄ້າ"); return; }
                     addPart.mutate({
                       item_id: itemId,
                       qty: Number(fd.get("qty")),
@@ -194,14 +195,19 @@ function RepairDetailPage() {
                   }} className="space-y-3">
                     <div>
                       <Label>ສິນຄ້າ</Label>
-                      <Select name="item_id" required>
-                        <SelectTrigger><SelectValue placeholder="ເລືອກສິນຄ້າ" /></SelectTrigger>
-                        <SelectContent>
-                          {items?.map((i) => (
-                            <SelectItem key={i.id} value={i.id}>{i.name} (ຄົງເຫຼືອ: {i.stock_qty})</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="flex gap-2">
+                        <Select name="item_id" value={selectedItemId} onValueChange={setSelectedItemId} required>
+                          <SelectTrigger><SelectValue placeholder="ເລືອກສິນຄ້າ" /></SelectTrigger>
+                          <SelectContent>
+                            {items?.map((i) => (
+                              <SelectItem key={i.id} value={i.id}>{i.name} (ຄົງເຫຼືອ: {i.stock_qty})</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button type="button" variant="outline" size="sm" onClick={() => setScanOpen(true)} title="ສະແກນ">
+                          <Camera className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div><Label>ຈຳນວນ</Label><Input name="qty" type="number" min="1" defaultValue="1" required /></div>
