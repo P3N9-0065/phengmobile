@@ -12,6 +12,35 @@ import { CURRENCY_LABEL } from "@/lib/currency";
 import { Receipt } from "@/components/pos/Receipt";
 import { toast } from "sonner";
 import { Save, RotateCcw, Printer } from "lucide-react";
+import { Barcode } from "@/components/inventory/Barcode";
+import { formatLAK } from "@/lib/format";
+
+const BARCODE_FORMATS: { value: PosSettings["barcode_format"]; label: string; hint: string }[] = [
+  { value: "CODE128", label: "CODE128", hint: "ໃຊ້ໄດ້ກັບທຸກຕົວອັກສອນ/ຕົວເລກ" },
+  { value: "EAN13", label: "EAN-13", hint: "ຕ້ອງເປັນຕົວເລກ 13 ຫຼັກ (ສິນຄ້າຂາຍຍ່ອຍ)" },
+  { value: "EAN8", label: "EAN-8", hint: "ຕົວເລກ 8 ຫຼັກ (ສິນຄ້າຂະໜາດນ້ອຍ)" },
+  { value: "UPC", label: "UPC-A", hint: "ຕົວເລກ 12 ຫຼັກ (ມາດຕະຖານ US)" },
+  { value: "CODE39", label: "CODE39", hint: "ຕົວເລກ + ຕົວອັກສອນໃຫຍ່" },
+  { value: "ITF14", label: "ITF-14", hint: "ຕົວເລກ 14 ຫຼັກ (ກ່ອງ/ຫີບ)" },
+];
+
+const LABEL_PRESETS: { label: string; w: number; h: number }[] = [
+  { label: "50×30 (ມາດຕະຖານ)", w: 50, h: 30 },
+  { label: "40×20 (ນ້ອຍ)", w: 40, h: 20 },
+  { label: "70×40 (ໃຫຍ່)", w: 70, h: 40 },
+  { label: "100×50 (A6 ນ້ອຍ)", w: 100, h: 50 },
+];
+
+function sampleBarcodeValue(fmt: PosSettings["barcode_format"]): string {
+  switch (fmt) {
+    case "EAN13": return "5901234123457";
+    case "EAN8":  return "96385074";
+    case "UPC":   return "036000291452";
+    case "CODE39":return "PHENG001";
+    case "ITF14": return "12345678901231";
+    default:      return "PM" + Date.now().toString().slice(-8);
+  }
+}
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
