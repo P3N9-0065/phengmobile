@@ -150,6 +150,68 @@ function SettingsPage() {
               <p className="text-xs text-muted-foreground">ກົດ "ພິມຕົວຢ່າງ" ຢູ່ດ້ານຂວາ ເພື່ອທົດສອບກັບເຄື່ອງພິມຄວາມຮ້ອນ.</p>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader><CardTitle>ປ້າຍບາໂຄດສິນຄ້າ</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <Label>ຮູບແບບບາໂຄດ</Label>
+                <Select value={s.barcode_format} onValueChange={(v) => update("barcode_format", v as PosSettings["barcode_format"])}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {BARCODE_FORMATS.map((f) => (
+                      <SelectItem key={f.value} value={f.value}>{f.label} — {f.hint}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>ຂະໜາດປ້າຍ (preset)</Label>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {LABEL_PRESETS.map((p) => (
+                    <Button
+                      key={p.label} type="button" size="sm"
+                      variant={s.label_width_mm === p.w && s.label_height_mm === p.h ? "default" : "outline"}
+                      onClick={() => { update("label_width_mm", p.w); update("label_height_mm", p.h); }}
+                    >{p.label}</Button>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div><Label>ກວ້າງ (mm)</Label><Input type="number" min={20} max={210} value={s.label_width_mm} onChange={(e) => update("label_width_mm", Number(e.target.value) || 50)} /></div>
+                <div><Label>ສູງ (mm)</Label><Input type="number" min={15} max={150} value={s.label_height_mm} onChange={(e) => update("label_height_mm", Number(e.target.value) || 30)} /></div>
+                <div><Label>ສູງແທ່ງ (px)</Label><Input type="number" min={20} max={120} value={s.barcode_bar_height} onChange={(e) => update("barcode_bar_height", Number(e.target.value) || 40)} /></div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between border rounded p-2">
+                  <span className="text-sm">ສະແດງຊື່ສິນຄ້າ</span>
+                  <Switch checked={s.barcode_show_name} onCheckedChange={(v) => update("barcode_show_name", v)} />
+                </div>
+                <div className="flex items-center justify-between border rounded p-2">
+                  <span className="text-sm">ສະແດງລາຄາ</span>
+                  <Switch checked={s.barcode_show_price} onCheckedChange={(v) => update("barcode_show_price", v)} />
+                </div>
+                <div className="flex items-center justify-between border rounded p-2">
+                  <span className="text-sm">ສະແດງຊື່ຮ້ານ</span>
+                  <Switch checked={s.barcode_show_shop} onCheckedChange={(v) => update("barcode_show_shop", v)} />
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">ຕົວຢ່າງປ້າຍ</p>
+                <div className="flex justify-center bg-muted/40 p-3 rounded">
+                  <div
+                    className="bg-white text-black border rounded-sm shadow-sm flex flex-col items-center justify-center px-2 py-1"
+                    style={{ width: `${s.label_width_mm * 3.78}px`, height: `${s.label_height_mm * 3.78}px` }}
+                  >
+                    {s.barcode_show_shop && <div className="text-[9px] font-semibold truncate w-full text-center">{s.shop_name}</div>}
+                    {s.barcode_show_name && <div className="text-[10px] font-medium truncate w-full text-center">ສິນຄ້າຕົວຢ່າງ</div>}
+                    <Barcode value={sampleBarcodeValue(s.barcode_format)} format={s.barcode_format} height={s.barcode_bar_height} fontSize={10} />
+                    {s.barcode_show_price && <div className="text-[10px] font-bold">{formatLAK(50000)}</div>}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="space-y-3">
