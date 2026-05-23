@@ -157,6 +157,24 @@
     margin: 0 !important;
     padding: 0 !important;
   }
+  /* Barcode label printing: reveal only the labels area */
+  #barcode-print-area, #barcode-print-area * { visibility: visible !important; }
+  #barcode-print-area {
+    position: absolute !important;
+    left: 0 !important; top: 0 !important;
+    width: 100% !important;
+    background: white !important;
+    padding: 0 !important; margin: 0 !important;
+    max-height: none !important; overflow: visible !important;
+  }
+  .barcode-labels { display: block; }
+  .barcode-label {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    border: none !important;
+    margin: 0 auto 2mm auto !important;
+  }
 }
 .print-only { display: none; }
+
 
