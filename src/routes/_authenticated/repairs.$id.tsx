@@ -17,6 +17,7 @@ import { STATUS_LABEL, STATUS_COLOR, STATUS_ORDER, ROLE_LABEL, type RepairStatus
 import { formatDateTime, formatLAK } from "@/lib/format";
 import { RepairReceipt } from "@/components/repair/RepairReceipt";
 import { BarcodeScanner } from "@/components/inventory/BarcodeScanner";
+import { fallbackLookup, type LookupItem } from "@/lib/barcode-lookup";
 
 export const Route = createFileRoute("/_authenticated/repairs/$id")({
   component: RepairDetailPage,
