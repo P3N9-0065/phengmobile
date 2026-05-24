@@ -61,6 +61,8 @@ function InventoryPage() {
   const [printQty, setPrintQty] = useState(1);
   const [scanOpen, setScanOpen] = useState(false);
   const [scanFormOpen, setScanFormOpen] = useState(false);
+  const [scanResults, setScanResults] = useState<LookupItem[] | null>(null);
+  const [scanCode, setScanCode] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
 
