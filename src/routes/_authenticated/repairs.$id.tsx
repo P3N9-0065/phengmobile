@@ -34,6 +34,8 @@ function RepairDetailPage() {
   const [editPriceOpen, setEditPriceOpen] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
+  const [scanResults, setScanResults] = useState<LookupItem[] | null>(null);
+  const [scanCode, setScanCode] = useState("");
 
   const { data: ticket } = useQuery({
     queryKey: ["ticket", id],
