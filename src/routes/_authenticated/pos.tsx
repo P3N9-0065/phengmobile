@@ -25,6 +25,7 @@ import { useAuth } from "@/lib/auth";
 import { CATEGORY_LABEL, type ItemCategory } from "@/lib/lao";
 import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
+import { fallbackLookup, type LookupItem } from "@/lib/barcode-lookup";
 
 export const Route = createFileRoute("/_authenticated/pos")({
   component: POSPage,
@@ -60,6 +61,8 @@ function POSPage() {
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const [showPay, setShowPay] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
+  const [scanResults, setScanResults] = useState<LookupItem[] | null>(null);
+  const [scanCode, setScanCode] = useState("");
   const scanRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setRate(settings.rates[currency]); setAmountPaid(0); }, [currency, settings.rates]);
@@ -112,15 +115,13 @@ function POSPage() {
   async function lookupAndAdd(code: string) {
     const c = code.trim();
     if (!c) return;
-    const { data } = await supabase
-      .from("inventory_items")
-      .select("id,name,sell_price,stock_qty")
-      .or(`barcode.eq.${c},sku.eq.${c},id.eq.${c}`)
-      .limit(1)
-      .maybeSingle();
-    if (data) {
-      addToCart(data as any);
-      toast.success("ເພີ່ມ: " + data.name);
+    const results = await fallbackLookup(c);
+    if (results.length === 1) {
+      addToCart(results[ 0 ]);
+      toast.success("ເພີ່ມ: " + results[0].name);
+    } else if (results.length > 1) {
+      setScanCode(c);
+      setScanResults(results);
     } else {
       toast.error("ບໍ່ພົບສິນຄ້າລະຫັດ: " + c);
     }
@@ -473,6 +474,38 @@ function POSPage() {
         title="ສະແກນບາໂຄດເພື່ອເພີ່ມສິນຄ້າ"
         onScan={(code) => lookupAndAdd(code)}
       />
+
+      {/* Fallback scan results */}
+      <Dialog open={!!scanResults} onOpenChange={(o) => { if (!o) setScanResults(null); }}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>ເລືອກສິນຄ້າ ({scanResults?.length} ລາຍການ)</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">ຄົ້ນຫາ: <b>{scanCode}</b></p>
+          <div className="space-y-2">
+            {scanResults?.map((it) => (
+              <button
+                key={it.id}
+                onClick={() => { addToCart(it); setScanResults(null); toast.success("ເພີ່ມ: " + it.name); }}
+                className="w-full text-left border rounded-md p-3 hover:bg-emerald-50 hover:border-emerald-300 transition-colors flex items-center justify-between"
+              >
+                <div>
+                  <p className="font-medium text-sm">{it.name}</p>
+                  {it.sku && <p className="text-xs text-muted-foreground">SKU: {it.sku}</p>}
+                  {it.barcode && <p className="text-xs text-muted-foreground font-mono">{it.barcode}</p>}
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold">{formatLAK(Number(it.sell_price))}</p>
+                  <p className="text-xs text-muted-foreground">ຄົງເຫຼືອ {it.stock_qty}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setScanResults(null)}>ຍົກເລີກ</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

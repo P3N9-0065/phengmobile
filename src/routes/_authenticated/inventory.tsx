@@ -17,6 +17,7 @@ import { formatLAK } from "@/lib/format";
 import { Barcode } from "@/components/inventory/Barcode";
 import { BarcodeScanner } from "@/components/inventory/BarcodeScanner";
 import { usePosSettings } from "@/lib/settings";
+import { fallbackLookup, type LookupItem } from "@/lib/barcode-lookup";
 
 export const Route = createFileRoute("/_authenticated/inventory")({
   component: InventoryPage,
@@ -60,6 +61,8 @@ function InventoryPage() {
   const [printQty, setPrintQty] = useState(1);
   const [scanOpen, setScanOpen] = useState(false);
   const [scanFormOpen, setScanFormOpen] = useState(false);
+  const [scanResults, setScanResults] = useState<LookupItem[] | null>(null);
+  const [scanCode, setScanCode] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
 
@@ -423,7 +426,18 @@ function InventoryPage() {
         open={scanOpen}
         onOpenChange={setScanOpen}
         title="ສະແກນເພື່ອຄົ້ນຫາສິນຄ້າ"
-        onScan={(code) => { setSearch(code); toast.success("ສະແກນໄດ້: " + code); }}
+        onScan={async (code) => {
+          const results = await fallbackLookup(code);
+          if (results.length === 1) {
+            setSearch(results[0].barcode || results[0].name);
+            toast.success("ສະແກນໄດ້: " + results[0].name);
+          } else if (results.length > 1) {
+            setScanCode(code);
+            setScanResults(results);
+          } else {
+            toast.error("ບໍ່ພົບສິນຄ້າ: " + code);
+          }
+        }}
       />
       <BarcodeScanner
         open={scanFormOpen}
@@ -431,6 +445,38 @@ function InventoryPage() {
         title="ສະແກນບາໂຄດສິນຄ້າ"
         onScan={(code) => setForm((f) => ({ ...f, barcode: code }))}
       />
+
+      {/* Fallback scan results */}
+      <Dialog open={!!scanResults} onOpenChange={(o) => { if (!o) setScanResults(null); }}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>ເລືອກສິນຄ້າ ({scanResults?.length} ລາຍການ)</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">ຄົ້ນຫາ: <b>{scanCode}</b></p>
+          <div className="space-y-2">
+            {scanResults?.map((it) => (
+              <button
+                key={it.id}
+                onClick={() => { setSearch(it.barcode || it.name); setScanResults(null); toast.success("ເລືອກ: " + it.name); }}
+                className="w-full text-left border rounded-md p-3 hover:bg-emerald-50 hover:border-emerald-300 transition-colors flex items-center justify-between"
+              >
+                <div>
+                  <p className="font-medium text-sm">{it.name}</p>
+                  {it.sku && <p className="text-xs text-muted-foreground">SKU: {it.sku}</p>}
+                  {it.barcode && <p className="text-xs text-muted-foreground font-mono">{it.barcode}</p>}
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold">{formatLAK(Number(it.sell_price))}</p>
+                  <p className="text-xs text-muted-foreground">ຄົງເຫຼືອ {it.stock_qty}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setScanResults(null)}>ຍົກເລີກ</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
