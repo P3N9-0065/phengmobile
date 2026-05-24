@@ -115,15 +115,13 @@ function POSPage() {
   async function lookupAndAdd(code: string) {
     const c = code.trim();
     if (!c) return;
-    const { data } = await supabase
-      .from("inventory_items")
-      .select("id,name,sell_price,stock_qty")
-      .or(`barcode.eq.${c},sku.eq.${c},id.eq.${c}`)
-      .limit(1)
-      .maybeSingle();
-    if (data) {
-      addToCart(data as any);
-      toast.success("ເພີ່ມ: " + data.name);
+    const results = await fallbackLookup(c);
+    if (results.length === 1) {
+      addToCart(results[ 0 ]);
+      toast.success("ເພີ່ມ: " + results[0].name);
+    } else if (results.length > 1) {
+      setScanCode(c);
+      setScanResults(results);
     } else {
       toast.error("ບໍ່ພົບສິນຄ້າລະຫັດ: " + c);
     }
