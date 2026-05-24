@@ -25,6 +25,7 @@ import { useAuth } from "@/lib/auth";
 import { CATEGORY_LABEL, type ItemCategory } from "@/lib/lao";
 import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
+import { fallbackLookup, type LookupItem } from "@/lib/barcode-lookup";
 
 export const Route = createFileRoute("/_authenticated/pos")({
   component: POSPage,
