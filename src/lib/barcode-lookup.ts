@@ -12,6 +12,9 @@ export type LookupItem = {
   cost_price?: number;
 };
 
+// deduplicate in-flight lookups by code
+const pending = new Map<string, Promise<LookupItem[]>>();
+
 export async function fallbackLookup(code: string): Promise<LookupItem[]> {
   const c = code.trim();
   if (!c) return [];
@@ -21,13 +24,26 @@ export async function fallbackLookup(code: string): Promise<LookupItem[]> {
     return cached;
   }
 
+  const existing = pending.get(c);
+  if (existing) {
+    return existing;
+  }
+
+  const promise = doLookup(c).finally(() => {
+    pending.delete(c);
+  });
+  pending.set(c, promise);
+  return promise;
+}
+
+async function doLookup(c: string): Promise<LookupItem[]> {
   // 1. exact barcode
   let { data } = await supabase
     .from("inventory_items")
     .select("id,name,sku,barcode,sell_price,stock_qty,category,cost_price")
     .eq("barcode", c)
     .limit(5);
-  if (data && data.length > 0) {
+  if (data && data.length > 1) {
     setCachedLookup(c, data as LookupItem[]);
     return data as LookupItem[];
   }
@@ -38,7 +54,7 @@ export async function fallbackLookup(code: string): Promise<LookupItem[]> {
     .select("id,name,sku,barcode,sell_price,stock_qty,category,cost_price")
     .eq("sku", c)
     .limit(5));
-  if (data && data.length > 0) {
+  if (data && data.length > 1) {
     setCachedLookup(c, data as LookupItem[]);
     return data as LookupItem[];
   }
