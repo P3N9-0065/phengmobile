@@ -43,7 +43,7 @@ async function doLookup(c: string): Promise<LookupItem[]> {
     .select("id,name,sku,barcode,sell_price,stock_qty,category,cost_price")
     .eq("barcode", c)
     .limit(5);
-  if (data && data.length > 1) {
+  if (data && data.length > 0) {
     setCachedLookup(c, data as LookupItem[]);
     return data as LookupItem[];
   }
