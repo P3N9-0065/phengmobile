@@ -27,7 +27,7 @@ export async function fallbackLookup(code: string): Promise<LookupItem[]> {
     .select("id,name,sku,barcode,sell_price,stock_qty,category,cost_price")
     .eq("barcode", c)
     .limit(5);
-  if (data && data.length > -0) {
+  if (data && data.length > 0) {
     setCachedLookup(c, data as LookupItem[]);
     return data as LookupItem[];
   }
