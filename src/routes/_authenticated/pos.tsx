@@ -15,8 +15,7 @@ import {
 import { BarcodeScanner } from "@/components/inventory/BarcodeScanner";
 import { toast } from "sonner";
 import { formatLAK } from "@/lib/format";
-import {
-  CURRENCY_LABEL, formatCurrency, fromLAK, PAYMENT_METHOD_LABEL, toLAK,
+import { CURRENCY_LABEL, formatCurrency, fromLAK, PAYMENT_METHOD_LABEL, toLAK,
   type Currency,
 } from "@/lib/currency";
 import { usePosSettings } from "@/lib/settings";
@@ -26,6 +25,7 @@ import { CATEGORY_LABEL, type ItemCategory } from "@/lib/lao";
 import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 import { fallbackLookup, type LookupItem } from "@/lib/barcode-lookup";
+import { clearScanCache } from "@/lib/scan-cache";
 
 export const Route = createFileRoute("/_authenticated/pos")({
   component: POSPage,
@@ -182,6 +182,7 @@ function POSPage() {
       setShowPay(false);
       qc.invalidateQueries({ queryKey: ["pos-items"] });
       qc.invalidateQueries({ queryKey: ["inventory"] });
+      clearScanCache();
       toast.success("ບັນທຶກບິນສຳເລັດ: " + sale.sale_code);
     },
     onError: (e: any) => toast.error(e.message),

@@ -18,6 +18,7 @@ import { Barcode } from "@/components/inventory/Barcode";
 import { BarcodeScanner } from "@/components/inventory/BarcodeScanner";
 import { usePosSettings } from "@/lib/settings";
 import { fallbackLookup, type LookupItem } from "@/lib/barcode-lookup";
+import { clearScanCache } from "@/lib/scan-cache";
 
 export const Route = createFileRoute("/_authenticated/inventory")({
   component: InventoryPage,
@@ -103,6 +104,7 @@ function InventoryPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["inventory"] });
+      clearScanCache();
       toast.success(editingId ? "ແກ້ໄຂສຳເລັດ" : "ເພີ່ມສິນຄ້າສຳເລັດ");
       closeDialog();
     },
@@ -119,6 +121,7 @@ function InventoryPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["inventory"] });
+      clearScanCache();
       toast.success("ປັບສະຕັອກສຳເລັດ");
       setAdjustItem(null);
     },

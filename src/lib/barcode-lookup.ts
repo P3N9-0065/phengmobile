@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getCachedLookup, setCachedLookup } from "./scan-cache";
 
 export type LookupItem = {
   id: string;
@@ -15,13 +16,21 @@ export async function fallbackLookup(code: string): Promise<LookupItem[]> {
   const c = code.trim();
   if (!c) return [];
 
+  const cached = getCachedLookup(c);
+  if (cached !== undefined) {
+    return cached;
+  }
+
   // 1. exact barcode
   let { data } = await supabase
     .from("inventory_items")
     .select("id,name,sku,barcode,sell_price,stock_qty,category,cost_price")
     .eq("barcode", c)
     .limit(5);
-  if (data && data.length > 0) return data as LookupItem[];
+  if (data && data.length > 0) {
+    setCachedLookup(c, data as LookupItem[]);
+    return data as LookupItem[];
+  }
 
   // 2. exact sku
   ({ data } = await supabase
@@ -29,7 +38,10 @@ export async function fallbackLookup(code: string): Promise<LookupItem[]> {
     .select("id,name,sku,barcode,sell_price,stock_qty,category,cost_price")
     .eq("sku", c)
     .limit(5));
-  if (data && data.length > 0) return data as LookupItem[];
+  if (data && data.length > 0) {
+    setCachedLookup(c, data as LookupItem[]);
+    return data as LookupItem[];
+  }
 
   // 3. ilike name / sku / barcode (partial match)
   ({ data } = await supabase
@@ -37,5 +49,8 @@ export async function fallbackLookup(code: string): Promise<LookupItem[]> {
     .select("id,name,sku,barcode,sell_price,stock_qty,category,cost_price")
     .or(`name.ilike.%${c}%,sku.ilike.%${c}%,barcode.ilike.%${c}%`)
     .limit(10));
-  return (data ?? []) as LookupItem[];
+  const result = (data ?? []) as LookupItem[];
+  setCachedLookup(c, result);
+  return result;
 }
+
