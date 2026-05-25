@@ -182,6 +182,7 @@ function POSPage() {
       setShowPay(false);
       qc.invalidateQueries({ queryKey: ["pos-items"] });
       qc.invalidateQueries({ queryKey: ["inventory"] });
+      clearScanCache();
       toast.success("ບັນທຶກບິນສຳເລັດ: " + sale.sale_code);
     },
     onError: (e: any) => toast.error(e.message),

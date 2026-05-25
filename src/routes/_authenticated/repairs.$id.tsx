@@ -109,6 +109,7 @@ function RepairDetailPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["ticket-parts", id] });
       qc.invalidateQueries({ queryKey: ["inventory-min"] });
+      clearScanCache();
       toast.success("ເພີ່ມອາໄຫຼ່ສຳເລັດ (ສະຕັອກຖືກຕັດອັດຕະໂນມັດ)");
       setPartOpen(false);
     },

@@ -104,6 +104,7 @@ function InventoryPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["inventory"] });
+      clearScanCache();
       toast.success(editingId ? "ແກ້ໄຂສຳເລັດ" : "ເພີ່ມສິນຄ້າສຳເລັດ");
       closeDialog();
     },
@@ -120,6 +121,7 @@ function InventoryPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["inventory"] });
+      clearScanCache();
       toast.success("ປັບສະຕັອກສຳເລັດ");
       setAdjustItem(null);
     },
