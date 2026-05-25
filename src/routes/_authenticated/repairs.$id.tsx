@@ -18,6 +18,7 @@ import { formatDateTime, formatLAK } from "@/lib/format";
 import { RepairReceipt } from "@/components/repair/RepairReceipt";
 import { BarcodeScanner } from "@/components/inventory/BarcodeScanner";
 import { fallbackLookup, type LookupItem } from "@/lib/barcode-lookup";
+import { clearScanCache } from "@/lib/scan-cache";
 
 export const Route = createFileRoute("/_authenticated/repairs/$id")({
   component: RepairDetailPage,

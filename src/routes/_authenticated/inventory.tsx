@@ -18,6 +18,7 @@ import { Barcode } from "@/components/inventory/Barcode";
 import { BarcodeScanner } from "@/components/inventory/BarcodeScanner";
 import { usePosSettings } from "@/lib/settings";
 import { fallbackLookup, type LookupItem } from "@/lib/barcode-lookup";
+import { clearScanCache } from "@/lib/scan-cache";
 
 export const Route = createFileRoute("/_authenticated/inventory")({
   component: InventoryPage,
