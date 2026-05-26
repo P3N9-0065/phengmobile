@@ -67,9 +67,35 @@ const SAMPLE = {
 function SettingsPage() {
   const initial = usePosSettings();
   const [s, setS] = useState<PosSettings>(initial);
+  const { hasRole } = useAuth();
+  const isAdmin = hasRole("admin");
+  const qc = useQueryClient();
+  const { data: loyalty } = useLoyaltySettings();
+  const [ly, setLy] = useState<LoyaltySettings | null>(null);
+  useEffect(() => { if (loyalty) setLy(loyalty); }, [loyalty]);
 
-  function update<K extends keyof PosSettings>(k: K, v: PosSettings[K]) {
-    setS((prev) => ({ ...prev, [k]: v }));
+  const saveLoyalty = useMutation({
+    mutationFn: async (next: LoyaltySettings) => {
+      const { error } = await supabase.from("loyalty_settings" as any).update({
+        earn_rate_lak: next.earn_rate_lak,
+        redeem_value_lak: next.redeem_value_lak,
+        bronze_threshold: next.bronze_threshold,
+        silver_threshold: next.silver_threshold,
+        gold_threshold: next.gold_threshold,
+        enabled: next.enabled,
+        updated_at: new Date().toISOString(),
+      }).eq("id", 1);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["loyalty-settings"] });
+      toast.success("ບັນທຶກລະບົບສະສົມແຕ້ມສຳເລັດ");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  function updateLy<K extends keyof LoyaltySettings>(k: K, v: LoyaltySettings[K]) {
+    setLy((p) => (p ? { ...p, [k]: v } : p));
   }
   function setRate(c: keyof PosSettings["rates"], v: number) {
     setS((prev) => ({ ...prev, rates: { ...prev.rates, [c]: v } }));
