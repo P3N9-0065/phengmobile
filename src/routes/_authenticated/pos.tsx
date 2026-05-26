@@ -402,9 +402,33 @@ function POSPage() {
                 <span className="text-slate-600">ສ່ວນຫຼຸດ ₭</span>
                 <Input type="number" min={0} className="h-7 w-28 text-right" value={discount || ""} onChange={(e) => setDiscount(Math.max(0, Number(e.target.value) || 0))} />
               </div>
+              {selectedCustomer && loyalty?.enabled && (selectedCustomer.points ?? 0) > 0 && maxRedeemablePoints > 0 && (
+                <div className="space-y-1 border rounded p-2 bg-amber-50/50">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1 text-amber-800 font-medium">
+                      <Award className="h-3 w-3" />ໃຊ້ແຕ້ມ (ມີ {selectedCustomer.points}, ສູງສຸດ {maxRedeemablePoints})
+                    </span>
+                    <Button size="sm" variant="ghost" className="h-5 text-[10px] px-2" onClick={() => setPointsToRedeem(maxRedeemablePoints)}>
+                      ໃຊ້ສູງສຸດ
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input type="number" min={0} max={maxRedeemablePoints} className="h-7 w-24 text-right"
+                      value={pointsToRedeem || ""}
+                      onChange={(e) => setPointsToRedeem(Math.max(0, Math.min(maxRedeemablePoints, Number(e.target.value) || 0)))} />
+                    <span className="text-xs text-slate-600">ແຕ້ມ = </span>
+                    <span className="text-sm font-semibold text-emerald-700">-{formatLAK(pointsDiscount)}</span>
+                  </div>
+                </div>
+              )}
               <div className="flex justify-between text-sm border-t pt-2">
                 <span>ຍອດລວມ</span><span>{formatLAK(subtotal)}</span>
               </div>
+              {totalDiscount > 0 && (
+                <div className="flex justify-between text-xs text-emerald-700">
+                  <span>ສ່ວນຫຼຸດທັງໝົດ</span><span>-{formatLAK(totalDiscount)}</span>
+                </div>
+              )}
               <div className="flex justify-between font-bold text-lg">
                 <span>ລວມຈ່າຍ</span>
                 <span className="text-emerald-700">{formatLAK(total)}</span>
