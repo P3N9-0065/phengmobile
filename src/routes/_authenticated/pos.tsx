@@ -56,6 +56,7 @@ function POSPage() {
   const [discount, setDiscount] = useState(0);
   const [discountPct, setDiscountPct] = useState(0);
   const [customerId, setCustomerId] = useState<string | null>(null);
+  const [pointsToRedeem, setPointsToRedeem] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<string>("cash");
   const [currency, setCurrency] = useState<Currency>("LAK");
   const [rate, setRate] = useState<number>(settings.rates.LAK);
@@ -66,9 +67,11 @@ function POSPage() {
   const [scanResults, setScanResults] = useState<LookupItem[] | null>(null);
   const [scanCode, setScanCode] = useState("");
   const scanRef = useRef<HTMLInputElement>(null);
+  const { data: loyalty } = useLoyaltySettings();
 
   useEffect(() => { setRate(settings.rates[currency]); setAmountPaid(0); }, [currency, settings.rates]);
   useEffect(() => { scanRef.current?.focus(); }, []);
+  useEffect(() => { setPointsToRedeem(0); }, [customerId]);
 
   const { data: items } = useQuery({
     queryKey: ["pos-items", search, activeCat],
