@@ -26,6 +26,8 @@ import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 import { fallbackLookup, type LookupItem } from "@/lib/barcode-lookup";
 import { clearScanCache } from "@/lib/scan-cache";
+import { useLoyaltySettings, computeTier, TIER_LABEL, TIER_COLOR } from "@/lib/loyalty";
+import { Award } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/pos")({
   component: POSPage,
@@ -54,6 +56,7 @@ function POSPage() {
   const [discount, setDiscount] = useState(0);
   const [discountPct, setDiscountPct] = useState(0);
   const [customerId, setCustomerId] = useState<string | null>(null);
+  const [pointsToRedeem, setPointsToRedeem] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<string>("cash");
   const [currency, setCurrency] = useState<Currency>("LAK");
   const [rate, setRate] = useState<number>(settings.rates.LAK);
@@ -64,9 +67,11 @@ function POSPage() {
   const [scanResults, setScanResults] = useState<LookupItem[] | null>(null);
   const [scanCode, setScanCode] = useState("");
   const scanRef = useRef<HTMLInputElement>(null);
+  const { data: loyalty } = useLoyaltySettings();
 
   useEffect(() => { setRate(settings.rates[currency]); setAmountPaid(0); }, [currency, settings.rates]);
   useEffect(() => { scanRef.current?.focus(); }, []);
+  useEffect(() => { setPointsToRedeem(0); }, [customerId]);
 
   const { data: items } = useQuery({
     queryKey: ["pos-items", search, activeCat],
@@ -81,11 +86,22 @@ function POSPage() {
 
   const { data: customers } = useQuery({
     queryKey: ["pos-customers"],
-    queryFn: async () => (await supabase.from("customers").select("id,name,phone").order("name").limit(200)).data ?? [],
+    queryFn: async () => (await supabase.from("customers").select("id,name,phone,points").order("name").limit(200)).data ?? [],
   });
 
+  const selectedCustomer = customers?.find((c) => c.id === customerId) ?? null;
+  const customerTier = computeTier(selectedCustomer?.points ?? 0, loyalty);
+
   const subtotal = useMemo(() => cart.reduce((s, l) => s + l.unit_price * l.qty, 0), [cart]);
-  const totalDiscount = Math.min(subtotal, discount + Math.floor((subtotal * discountPct) / 100));
+  const manualDiscount = Math.min(subtotal, discount + Math.floor((subtotal * discountPct) / 100));
+  const baseAfterManual = Math.max(0, subtotal - manualDiscount);
+  const redeemValue = loyalty?.redeem_value_lak ?? 0;
+  const maxRedeemablePoints = redeemValue > 0
+    ? Math.min(selectedCustomer?.points ?? 0, Math.floor(baseAfterManual / redeemValue))
+    : 0;
+  const effectivePoints = Math.min(pointsToRedeem, maxRedeemablePoints);
+  const pointsDiscount = effectivePoints * redeemValue;
+  const totalDiscount = manualDiscount + pointsDiscount;
   const total = Math.max(0, subtotal - totalDiscount);
   const paidLAK = toLAK(amountPaid, currency, rate);
   const change = Math.max(0, paidLAK - total);
@@ -138,7 +154,7 @@ function POSPage() {
 
   function resetSale() {
     setCart([]); setDiscount(0); setDiscountPct(0); setCustomerId(null); setPaymentMethod("cash");
-    setCurrency("LAK"); setAmountPaid(0); setShowPay(false); scanRef.current?.focus();
+    setCurrency("LAK"); setAmountPaid(0); setShowPay(false); setPointsToRedeem(0); scanRef.current?.focus();
   }
 
   // Keyboard shortcuts: F2 = pay, F9 = focus barcode
@@ -159,7 +175,8 @@ function POSPage() {
         customer_id: customerId, cashier_id: user.id, subtotal, discount: totalDiscount, total,
         payment_method: paymentMethod as any, currency_paid: currency,
         exchange_rate: rate, amount_paid: amountPaid, change_lak: change,
-      }).select().single();
+        points_redeemed: effectivePoints, points_discount: pointsDiscount,
+      } as any).select().single();
       if (error) throw error;
       const lines = cart.map((l) => ({
         sale_id: sale.id, item_id: l.item_id, name_snapshot: l.name,
@@ -182,8 +199,15 @@ function POSPage() {
       setShowPay(false);
       qc.invalidateQueries({ queryKey: ["pos-items"] });
       qc.invalidateQueries({ queryKey: ["inventory"] });
+      qc.invalidateQueries({ queryKey: ["pos-customers"] });
+      qc.invalidateQueries({ queryKey: ["customer"] });
+      qc.invalidateQueries({ queryKey: ["customer-points"] });
       clearScanCache();
-      toast.success("ບັນທຶກບິນສຳເລັດ: " + sale.sale_code);
+      const earned = redeemValue && loyalty?.earn_rate_lak ? Math.floor(total / loyalty.earn_rate_lak) : 0;
+      const msg = "ບັນທຶກບິນສຳເລັດ: " + sale.sale_code
+        + (effectivePoints > 0 ? ` (ໃຊ້ ${effectivePoints} ແຕ້ມ)` : "")
+        + (earned > 0 && customerId ? ` (+${earned} ແຕ້ມ)` : "");
+      toast.success(msg);
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -216,7 +240,20 @@ function POSPage() {
                 {customers?.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} ({c.phone})</SelectItem>)}
               </SelectContent>
             </Select>
+            {selectedCustomer && loyalty?.enabled && (
+              <div className="flex items-center gap-1 bg-white/15 px-2 py-1 rounded text-xs">
+                <Award className="h-3 w-3 text-amber-300" />
+                <span className="font-semibold">{selectedCustomer.points}</span>
+                <span className="opacity-80">ແຕ້ມ</span>
+                {customerTier !== "none" && (
+                  <Badge variant="outline" className={cn("ml-1 text-[10px] py-0", TIER_COLOR[customerTier])}>
+                    {TIER_LABEL[customerTier]}
+                  </Badge>
+                )}
+              </div>
+            )}
           </div>
+
 
           <div className="ml-auto flex items-center gap-3">
             <div className="bg-slate-900 text-amber-300 font-mono font-bold text-2xl px-5 py-1.5 rounded shadow-inner tracking-wider min-w-[180px] text-right">
@@ -365,9 +402,33 @@ function POSPage() {
                 <span className="text-slate-600">ສ່ວນຫຼຸດ ₭</span>
                 <Input type="number" min={0} className="h-7 w-28 text-right" value={discount || ""} onChange={(e) => setDiscount(Math.max(0, Number(e.target.value) || 0))} />
               </div>
+              {selectedCustomer && loyalty?.enabled && (selectedCustomer.points ?? 0) > 0 && maxRedeemablePoints > 0 && (
+                <div className="space-y-1 border rounded p-2 bg-amber-50/50">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1 text-amber-800 font-medium">
+                      <Award className="h-3 w-3" />ໃຊ້ແຕ້ມ (ມີ {selectedCustomer.points}, ສູງສຸດ {maxRedeemablePoints})
+                    </span>
+                    <Button size="sm" variant="ghost" className="h-5 text-[10px] px-2" onClick={() => setPointsToRedeem(maxRedeemablePoints)}>
+                      ໃຊ້ສູງສຸດ
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input type="number" min={0} max={maxRedeemablePoints} className="h-7 w-24 text-right"
+                      value={pointsToRedeem || ""}
+                      onChange={(e) => setPointsToRedeem(Math.max(0, Math.min(maxRedeemablePoints, Number(e.target.value) || 0)))} />
+                    <span className="text-xs text-slate-600">ແຕ້ມ = </span>
+                    <span className="text-sm font-semibold text-emerald-700">-{formatLAK(pointsDiscount)}</span>
+                  </div>
+                </div>
+              )}
               <div className="flex justify-between text-sm border-t pt-2">
                 <span>ຍອດລວມ</span><span>{formatLAK(subtotal)}</span>
               </div>
+              {totalDiscount > 0 && (
+                <div className="flex justify-between text-xs text-emerald-700">
+                  <span>ສ່ວນຫຼຸດທັງໝົດ</span><span>-{formatLAK(totalDiscount)}</span>
+                </div>
+              )}
               <div className="flex justify-between font-bold text-lg">
                 <span>ລວມຈ່າຍ</span>
                 <span className="text-emerald-700">{formatLAK(total)}</span>

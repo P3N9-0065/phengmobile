@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,9 +11,13 @@ import { saveSettings, usePosSettings, DEFAULT_SETTINGS, type PosSettings } from
 import { CURRENCY_LABEL } from "@/lib/currency";
 import { Receipt } from "@/components/pos/Receipt";
 import { toast } from "sonner";
-import { Save, RotateCcw, Printer } from "lucide-react";
+import { Save, RotateCcw, Printer, Award } from "lucide-react";
 import { Barcode } from "@/components/inventory/Barcode";
 import { formatLAK } from "@/lib/format";
+import { useLoyaltySettings, type LoyaltySettings } from "@/lib/loyalty";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 
 const BARCODE_FORMATS: { value: PosSettings["barcode_format"]; label: string; hint: string }[] = [
   { value: "CODE128", label: "CODE128", hint: "ໃຊ້ໄດ້ກັບທຸກຕົວອັກສອນ/ຕົວເລກ" },
@@ -63,9 +67,38 @@ const SAMPLE = {
 function SettingsPage() {
   const initial = usePosSettings();
   const [s, setS] = useState<PosSettings>(initial);
+  const { hasRole } = useAuth();
+  const isAdmin = hasRole("admin");
+  const qc = useQueryClient();
+  const { data: loyalty } = useLoyaltySettings();
+  const [ly, setLy] = useState<LoyaltySettings | null>(null);
+  useEffect(() => { if (loyalty) setLy(loyalty); }, [loyalty]);
 
+  const saveLoyalty = useMutation({
+    mutationFn: async (next: LoyaltySettings) => {
+      const { error } = await supabase.from("loyalty_settings" as any).update({
+        earn_rate_lak: next.earn_rate_lak,
+        redeem_value_lak: next.redeem_value_lak,
+        bronze_threshold: next.bronze_threshold,
+        silver_threshold: next.silver_threshold,
+        gold_threshold: next.gold_threshold,
+        enabled: next.enabled,
+        updated_at: new Date().toISOString(),
+      }).eq("id", 1);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["loyalty-settings"] });
+      toast.success("ບັນທຶກລະບົບສະສົມແຕ້ມສຳເລັດ");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
   function update<K extends keyof PosSettings>(k: K, v: PosSettings[K]) {
     setS((prev) => ({ ...prev, [k]: v }));
+  }
+
+  function updateLy<K extends keyof LoyaltySettings>(k: K, v: LoyaltySettings[K]) {
+    setLy((p) => (p ? { ...p, [k]: v } : p));
   }
   function setRate(c: keyof PosSettings["rates"], v: number) {
     setS((prev) => ({ ...prev, rates: { ...prev.rates, [c]: v } }));
@@ -216,6 +249,77 @@ function SettingsPage() {
 
         <div className="space-y-3">
           <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5 text-amber-600" />
+                ລະບົບສະສົມແຕ້ມສະມາຊິກ
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {!ly ? (
+                <p className="text-sm text-muted-foreground">ກຳລັງໂຫຼດ...</p>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between border rounded p-3">
+                    <div>
+                      <p className="font-medium text-sm">ເປີດໃຊ້ລະບົບສະສົມແຕ້ມ</p>
+                      <p className="text-xs text-muted-foreground">ປິດເພື່ອຢຸດການສະສົມ/ໃຊ້ແຕ້ມຊົ່ວຄາວ</p>
+                    </div>
+                    <Switch checked={ly.enabled} disabled={!isAdmin} onCheckedChange={(v) => updateLy("enabled", v)} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>ສະສົມ 1 ແຕ້ມ ຕໍ່ (ກີບ)</Label>
+                      <Input type="number" min={1} disabled={!isAdmin}
+                        value={ly.earn_rate_lak}
+                        onChange={(e) => updateLy("earn_rate_lak", Number(e.target.value) || 0)} />
+                      <p className="text-[11px] text-muted-foreground mt-1">ຕົວຢ່າງ: 10,000 = ຊື້ 10,000 ກີບ ໄດ້ 1 ແຕ້ມ</p>
+                    </div>
+                    <div>
+                      <Label>1 ແຕ້ມ = ສ່ວນຫຼຸດ (ກີບ)</Label>
+                      <Input type="number" min={1} disabled={!isAdmin}
+                        value={ly.redeem_value_lak}
+                        onChange={(e) => updateLy("redeem_value_lak", Number(e.target.value) || 0)} />
+                      <p className="text-[11px] text-muted-foreground mt-1">ຕົວຢ່າງ: 100 = 100 ແຕ້ມ ແລກ 10,000 ກີບ</p>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-semibold">ເກນລະດັບສະມາຊິກ (ແຕ້ມສະສົມ)</Label>
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      <div>
+                        <Label className="text-xs text-amber-700">Bronze</Label>
+                        <Input type="number" min={0} disabled={!isAdmin}
+                          value={ly.bronze_threshold}
+                          onChange={(e) => updateLy("bronze_threshold", Number(e.target.value) || 0)} />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-700">Silver</Label>
+                        <Input type="number" min={0} disabled={!isAdmin}
+                          value={ly.silver_threshold}
+                          onChange={(e) => updateLy("silver_threshold", Number(e.target.value) || 0)} />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-yellow-700">Gold</Label>
+                        <Input type="number" min={0} disabled={!isAdmin}
+                          value={ly.gold_threshold}
+                          onChange={(e) => updateLy("gold_threshold", Number(e.target.value) || 0)} />
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    className="w-full"
+                    disabled={!isAdmin || saveLoyalty.isPending}
+                    onClick={() => ly && saveLoyalty.mutate(ly)}
+                  >
+                    <Save className="h-4 w-4 mr-2" />ບັນທຶກລະບົບສະມາຊິກ
+                  </Button>
+                  {!isAdmin && <p className="text-xs text-muted-foreground text-center">ສະເພາະ admin ປັບແກ້ໄດ້</p>}
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>ຕົວຢ່າງໃບເສັດ</CardTitle>
               <Button variant="outline" size="sm" onClick={() => import("@/components/pos/Receipt").then((m) => m.printReceipt())}>
@@ -229,6 +333,7 @@ function SettingsPage() {
             </CardContent>
           </Card>
         </div>
+
       </div>
     </div>
   );

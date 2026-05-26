@@ -3,10 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Phone, Mail, MapPin, Award, Apple, KeyRound } from "lucide-react";
+import { ArrowLeft, Phone, Mail, MapPin, Award, Apple, KeyRound, TrendingUp, TrendingDown, Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { STATUS_LABEL, STATUS_COLOR } from "@/lib/lao";
 import { formatDate, formatLAK } from "@/lib/format";
+import { useLoyaltySettings, computeTier, TIER_LABEL, TIER_COLOR } from "@/lib/loyalty";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/customers/$id")({
   component: CustomerDetailPage,
@@ -43,7 +45,32 @@ function CustomerDetailPage() {
     },
   });
 
+  const { data: pointHistory } = useQuery({
+    queryKey: ["customer-points", id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("point_transactions" as any)
+        .select("*")
+        .eq("customer_id", id)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      return ((data ?? []) as any[]);
+    },
+  });
+
+  const { data: loyalty } = useLoyaltySettings();
+
   if (!customer) return <p>ກຳລັງໂຫຼດ...</p>;
+
+  const tier = computeTier(customer.points ?? 0, loyalty);
+  const nextThreshold =
+    tier === "none" ? loyalty?.bronze_threshold :
+    tier === "bronze" ? loyalty?.silver_threshold :
+    tier === "silver" ? loyalty?.gold_threshold : null;
+  const nextTierLabel =
+    tier === "none" ? "Bronze" :
+    tier === "bronze" ? "Silver" :
+    tier === "silver" ? "Gold" : null;
 
   return (
     <div className="space-y-6">
@@ -51,15 +78,72 @@ function CustomerDetailPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{customer.name}</CardTitle>
+          <CardTitle className="flex items-center gap-3">
+            {customer.name}
+            {loyalty?.enabled && tier !== "none" && (
+              <Badge variant="outline" className={cn("text-xs", TIER_COLOR[tier])}>
+                {TIER_LABEL[tier]} Member
+              </Badge>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" />{customer.phone}</p>
           {customer.email && <p className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" />{customer.email}</p>}
           {customer.address && <p className="flex items-center gap-2"><MapPin className="h-4 w-4 text-muted-foreground" />{customer.address}</p>}
-          <p className="flex items-center gap-2"><Award className="h-4 w-4 text-amber-600" />{customer.points} ແຕ້ມ</p>
+          <div className="flex items-center gap-2 pt-1">
+            <Award className="h-4 w-4 text-amber-600" />
+            <span className="font-semibold">{customer.points}</span>
+            <span className="text-muted-foreground">ແຕ້ມ</span>
+            {loyalty?.enabled && nextThreshold && nextTierLabel && (
+              <span className="text-xs text-muted-foreground ml-2">
+                (ອີກ {Math.max(0, nextThreshold - (customer.points ?? 0))} ແຕ້ມ ຈະຂຶ້ນ {nextTierLabel})
+              </span>
+            )}
+          </div>
         </CardContent>
       </Card>
+
+      {loyalty?.enabled && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>ປະຫວັດແຕ້ມ ({pointHistory?.length ?? 0})</CardTitle>
+            <Link to="/settings"><Button variant="ghost" size="sm"><SettingsIcon className="h-3 w-3 mr-1" />ຕັ້ງຄ່າ</Button></Link>
+          </CardHeader>
+          <CardContent>
+            {pointHistory && pointHistory.length > 0 ? (
+              <div className="space-y-1.5">
+                {pointHistory.map((t) => {
+                  const pts = Number(t.points);
+                  const isPositive = pts > 0;
+                  const Icon = isPositive ? TrendingUp : TrendingDown;
+                  const colors = isPositive
+                    ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+                    : "text-rose-700 bg-rose-50 border-rose-200";
+                  return (
+                    <div key={t.id} className="flex items-center justify-between border rounded-md p-2.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className={cn("h-7 w-7 rounded-full border flex items-center justify-center", colors)}>
+                          <Icon className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm truncate">{t.note || t.type}</p>
+                          <p className="text-[11px] text-muted-foreground">{formatDate(t.created_at)}</p>
+                        </div>
+                      </div>
+                      <span className={cn("text-sm font-bold", isPositive ? "text-emerald-700" : "text-rose-700")}>
+                        {isPositive ? "+" : ""}{pts}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-6">ຍັງບໍ່ມີປະຫວັດແຕ້ມ</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader><CardTitle>ປະຫວັດການສ້ອມ ({tickets?.length ?? 0})</CardTitle></CardHeader>

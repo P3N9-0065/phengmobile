@@ -201,6 +201,87 @@ export type Database = {
         }
         Relationships: []
       }
+      loyalty_settings: {
+        Row: {
+          bronze_threshold: number
+          earn_rate_lak: number
+          enabled: boolean
+          gold_threshold: number
+          id: number
+          redeem_value_lak: number
+          silver_threshold: number
+          updated_at: string
+        }
+        Insert: {
+          bronze_threshold?: number
+          earn_rate_lak?: number
+          enabled?: boolean
+          gold_threshold?: number
+          id?: number
+          redeem_value_lak?: number
+          silver_threshold?: number
+          updated_at?: string
+        }
+        Update: {
+          bronze_threshold?: number
+          earn_rate_lak?: number
+          enabled?: boolean
+          gold_threshold?: number
+          id?: number
+          redeem_value_lak?: number
+          silver_threshold?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      point_transactions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          id: string
+          note: string | null
+          points: number
+          ref_sale_id: string | null
+          type: Database["public"]["Enums"]["point_txn_type"]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          id?: string
+          note?: string | null
+          points: number
+          ref_sale_id?: string | null
+          type: Database["public"]["Enums"]["point_txn_type"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          id?: string
+          note?: string | null
+          points?: number
+          ref_sale_id?: string | null
+          type?: Database["public"]["Enums"]["point_txn_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "point_transactions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "point_transactions_ref_sale_id_fkey"
+            columns: ["ref_sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -458,6 +539,9 @@ export type Database = {
           id: string
           notes: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
+          points_discount: number
+          points_earned: number
+          points_redeemed: number
           sale_code: string
           subtotal: number
           total: number
@@ -474,6 +558,9 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          points_discount?: number
+          points_earned?: number
+          points_redeemed?: number
           sale_code?: string
           subtotal?: number
           total?: number
@@ -490,6 +577,9 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          points_discount?: number
+          points_earned?: number
+          points_redeemed?: number
           sale_code?: string
           subtotal?: number
           total?: number
@@ -628,6 +718,7 @@ export type Database = {
         | "sale"
         | "return"
       payment_method: "cash" | "qr" | "transfer" | "card"
+      point_txn_type: "earn" | "redeem" | "adjust" | "expire"
       repair_status:
         | "received"
         | "inspecting"
@@ -771,6 +862,7 @@ export const Constants = {
       item_category: ["part", "accessory", "tool", "phone_new", "phone_used"],
       movement_type: ["purchase", "repair_use", "adjustment", "sale", "return"],
       payment_method: ["cash", "qr", "transfer", "card"],
+      point_txn_type: ["earn", "redeem", "adjust", "expire"],
       repair_status: [
         "received",
         "inspecting",
