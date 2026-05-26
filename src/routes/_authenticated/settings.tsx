@@ -93,6 +93,9 @@ function SettingsPage() {
     },
     onError: (e: any) => toast.error(e.message),
   });
+  function update<K extends keyof PosSettings>(k: K, v: PosSettings[K]) {
+    setS((prev) => ({ ...prev, [k]: v }));
+  }
 
   function updateLy<K extends keyof LoyaltySettings>(k: K, v: LoyaltySettings[K]) {
     setLy((p) => (p ? { ...p, [k]: v } : p));
