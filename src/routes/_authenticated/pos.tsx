@@ -26,6 +26,8 @@ import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 import { fallbackLookup, type LookupItem } from "@/lib/barcode-lookup";
 import { clearScanCache } from "@/lib/scan-cache";
+import { useLoyaltySettings, computeTier, TIER_LABEL, TIER_COLOR } from "@/lib/loyalty";
+import { Award } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/pos")({
   component: POSPage,
