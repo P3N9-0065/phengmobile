@@ -3,10 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Phone, Mail, MapPin, Award, Apple, KeyRound } from "lucide-react";
+import { ArrowLeft, Phone, Mail, MapPin, Award, Apple, KeyRound, TrendingUp, TrendingDown, Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { STATUS_LABEL, STATUS_COLOR } from "@/lib/lao";
 import { formatDate, formatLAK } from "@/lib/format";
+import { useLoyaltySettings, computeTier, TIER_LABEL, TIER_COLOR } from "@/lib/loyalty";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/customers/$id")({
   component: CustomerDetailPage,
