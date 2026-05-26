@@ -240,7 +240,20 @@ function POSPage() {
                 {customers?.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} ({c.phone})</SelectItem>)}
               </SelectContent>
             </Select>
+            {selectedCustomer && loyalty?.enabled && (
+              <div className="flex items-center gap-1 bg-white/15 px-2 py-1 rounded text-xs">
+                <Award className="h-3 w-3 text-amber-300" />
+                <span className="font-semibold">{selectedCustomer.points}</span>
+                <span className="opacity-80">ແຕ້ມ</span>
+                {customerTier !== "none" && (
+                  <Badge variant="outline" className={cn("ml-1 text-[10px] py-0", TIER_COLOR[customerTier])}>
+                    {TIER_LABEL[customerTier]}
+                  </Badge>
+                )}
+              </div>
+            )}
           </div>
+
 
           <div className="ml-auto flex items-center gap-3">
             <div className="bg-slate-900 text-amber-300 font-mono font-bold text-2xl px-5 py-1.5 rounded shadow-inner tracking-wider min-w-[180px] text-right">
