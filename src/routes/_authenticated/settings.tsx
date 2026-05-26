@@ -249,6 +249,77 @@ function SettingsPage() {
 
         <div className="space-y-3">
           <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5 text-amber-600" />
+                ລະບົບສະສົມແຕ້ມສະມາຊິກ
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {!ly ? (
+                <p className="text-sm text-muted-foreground">ກຳລັງໂຫຼດ...</p>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between border rounded p-3">
+                    <div>
+                      <p className="font-medium text-sm">ເປີດໃຊ້ລະບົບສະສົມແຕ້ມ</p>
+                      <p className="text-xs text-muted-foreground">ປິດເພື່ອຢຸດການສະສົມ/ໃຊ້ແຕ້ມຊົ່ວຄາວ</p>
+                    </div>
+                    <Switch checked={ly.enabled} disabled={!isAdmin} onCheckedChange={(v) => updateLy("enabled", v)} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>ສະສົມ 1 ແຕ້ມ ຕໍ່ (ກີບ)</Label>
+                      <Input type="number" min={1} disabled={!isAdmin}
+                        value={ly.earn_rate_lak}
+                        onChange={(e) => updateLy("earn_rate_lak", Number(e.target.value) || 0)} />
+                      <p className="text-[11px] text-muted-foreground mt-1">ຕົວຢ່າງ: 10,000 = ຊື້ 10,000 ກີບ ໄດ້ 1 ແຕ້ມ</p>
+                    </div>
+                    <div>
+                      <Label>1 ແຕ້ມ = ສ່ວນຫຼຸດ (ກີບ)</Label>
+                      <Input type="number" min={1} disabled={!isAdmin}
+                        value={ly.redeem_value_lak}
+                        onChange={(e) => updateLy("redeem_value_lak", Number(e.target.value) || 0)} />
+                      <p className="text-[11px] text-muted-foreground mt-1">ຕົວຢ່າງ: 100 = 100 ແຕ້ມ ແລກ 10,000 ກີບ</p>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-semibold">ເກນລະດັບສະມາຊິກ (ແຕ້ມສະສົມ)</Label>
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      <div>
+                        <Label className="text-xs text-amber-700">Bronze</Label>
+                        <Input type="number" min={0} disabled={!isAdmin}
+                          value={ly.bronze_threshold}
+                          onChange={(e) => updateLy("bronze_threshold", Number(e.target.value) || 0)} />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-700">Silver</Label>
+                        <Input type="number" min={0} disabled={!isAdmin}
+                          value={ly.silver_threshold}
+                          onChange={(e) => updateLy("silver_threshold", Number(e.target.value) || 0)} />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-yellow-700">Gold</Label>
+                        <Input type="number" min={0} disabled={!isAdmin}
+                          value={ly.gold_threshold}
+                          onChange={(e) => updateLy("gold_threshold", Number(e.target.value) || 0)} />
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    className="w-full"
+                    disabled={!isAdmin || saveLoyalty.isPending}
+                    onClick={() => ly && saveLoyalty.mutate(ly)}
+                  >
+                    <Save className="h-4 w-4 mr-2" />ບັນທຶກລະບົບສະມາຊິກ
+                  </Button>
+                  {!isAdmin && <p className="text-xs text-muted-foreground text-center">ສະເພາະ admin ປັບແກ້ໄດ້</p>}
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>ຕົວຢ່າງໃບເສັດ</CardTitle>
               <Button variant="outline" size="sm" onClick={() => import("@/components/pos/Receipt").then((m) => m.printReceipt())}>
@@ -262,6 +333,7 @@ function SettingsPage() {
             </CardContent>
           </Card>
         </div>
+
       </div>
     </div>
   );
