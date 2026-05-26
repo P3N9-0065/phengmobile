@@ -154,7 +154,7 @@ function POSPage() {
 
   function resetSale() {
     setCart([]); setDiscount(0); setDiscountPct(0); setCustomerId(null); setPaymentMethod("cash");
-    setCurrency("LAK"); setAmountPaid(0); setShowPay(false); scanRef.current?.focus();
+    setCurrency("LAK"); setAmountPaid(0); setShowPay(false); setPointsToRedeem(0); scanRef.current?.focus();
   }
 
   // Keyboard shortcuts: F2 = pay, F9 = focus barcode
@@ -175,7 +175,8 @@ function POSPage() {
         customer_id: customerId, cashier_id: user.id, subtotal, discount: totalDiscount, total,
         payment_method: paymentMethod as any, currency_paid: currency,
         exchange_rate: rate, amount_paid: amountPaid, change_lak: change,
-      }).select().single();
+        points_redeemed: effectivePoints, points_discount: pointsDiscount,
+      } as any).select().single();
       if (error) throw error;
       const lines = cart.map((l) => ({
         sale_id: sale.id, item_id: l.item_id, name_snapshot: l.name,
@@ -198,8 +199,15 @@ function POSPage() {
       setShowPay(false);
       qc.invalidateQueries({ queryKey: ["pos-items"] });
       qc.invalidateQueries({ queryKey: ["inventory"] });
+      qc.invalidateQueries({ queryKey: ["pos-customers"] });
+      qc.invalidateQueries({ queryKey: ["customer"] });
+      qc.invalidateQueries({ queryKey: ["customer-points"] });
       clearScanCache();
-      toast.success("ບັນທຶກບິນສຳເລັດ: " + sale.sale_code);
+      const earned = redeemValue && loyalty?.earn_rate_lak ? Math.floor(total / loyalty.earn_rate_lak) : 0;
+      const msg = "ບັນທຶກບິນສຳເລັດ: " + sale.sale_code
+        + (effectivePoints > 0 ? ` (ໃຊ້ ${effectivePoints} ແຕ້ມ)` : "")
+        + (earned > 0 && customerId ? ` (+${earned} ແຕ້ມ)` : "");
+      toast.success(msg);
     },
     onError: (e: any) => toast.error(e.message),
   });
