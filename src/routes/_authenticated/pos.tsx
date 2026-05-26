@@ -86,11 +86,22 @@ function POSPage() {
 
   const { data: customers } = useQuery({
     queryKey: ["pos-customers"],
-    queryFn: async () => (await supabase.from("customers").select("id,name,phone").order("name").limit(200)).data ?? [],
+    queryFn: async () => (await supabase.from("customers").select("id,name,phone,points").order("name").limit(200)).data ?? [],
   });
 
+  const selectedCustomer = customers?.find((c) => c.id === customerId) ?? null;
+  const customerTier = computeTier(selectedCustomer?.points ?? 0, loyalty);
+
   const subtotal = useMemo(() => cart.reduce((s, l) => s + l.unit_price * l.qty, 0), [cart]);
-  const totalDiscount = Math.min(subtotal, discount + Math.floor((subtotal * discountPct) / 100));
+  const manualDiscount = Math.min(subtotal, discount + Math.floor((subtotal * discountPct) / 100));
+  const baseAfterManual = Math.max(0, subtotal - manualDiscount);
+  const redeemValue = loyalty?.redeem_value_lak ?? 0;
+  const maxRedeemablePoints = redeemValue > 0
+    ? Math.min(selectedCustomer?.points ?? 0, Math.floor(baseAfterManual / redeemValue))
+    : 0;
+  const effectivePoints = Math.min(pointsToRedeem, maxRedeemablePoints);
+  const pointsDiscount = effectivePoints * redeemValue;
+  const totalDiscount = manualDiscount + pointsDiscount;
   const total = Math.max(0, subtotal - totalDiscount);
   const paidLAK = toLAK(amountPaid, currency, rate);
   const change = Math.max(0, paidLAK - total);
