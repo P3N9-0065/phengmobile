@@ -195,7 +195,7 @@ function NewRepairPage() {
             const path = `sig-${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
             const { error: upErr } = await supabase.storage.from("signatures").upload(path, blob);
             if (upErr) throw upErr;
-            signatureUrl = supabase.storage.from("signatures").getPublicUrl(path).data.publicUrl;
+            signatureUrl = `signatures/${path}`;
           }
         } catch (e: any) {
           // Signature upload should not block the ticket
