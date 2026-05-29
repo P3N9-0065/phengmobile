@@ -1,5 +1,6 @@
 import { QRCodeCanvas } from "qrcode.react";
 import { Logo } from "@/components/Logo";
+import { SignedImg } from "@/components/SignedImg";
 import { usePosSettings } from "@/lib/settings";
 import { formatDateTime } from "@/lib/format";
 import { STATUS_LABEL, type RepairStatus } from "@/lib/lao";
