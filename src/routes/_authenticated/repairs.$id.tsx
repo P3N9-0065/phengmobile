@@ -19,6 +19,8 @@ import { RepairReceipt } from "@/components/repair/RepairReceipt";
 import { BarcodeScanner } from "@/components/inventory/BarcodeScanner";
 import { fallbackLookup, type LookupItem } from "@/lib/barcode-lookup";
 import { clearScanCache } from "@/lib/scan-cache";
+import { SignedImg } from "@/components/SignedImg";
+import { getSignedUrl } from "@/lib/signed-url";
 
 export const Route = createFileRoute("/_authenticated/repairs/$id")({
   component: RepairDetailPage,
