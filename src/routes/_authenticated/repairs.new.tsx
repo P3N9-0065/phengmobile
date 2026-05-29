@@ -156,8 +156,8 @@ function NewRepairPage() {
         const path = `${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name}`;
         const { error } = await supabase.storage.from("repair-photos").upload(path, file);
         if (error) throw error;
-        const { data } = supabase.storage.from("repair-photos").getPublicUrl(path);
-        urls.push(data.publicUrl);
+        // Store the raw object path; the app generates short-lived signed URLs when displaying.
+        urls.push(`repair-photos/${path}`);
       }
       setPhotos((p) => [...p, ...urls]);
     } catch (err: any) {
