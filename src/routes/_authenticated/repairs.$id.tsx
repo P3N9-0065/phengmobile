@@ -341,7 +341,7 @@ function RepairDetailPage() {
             <Card>
               <CardHeader><CardTitle>ລາຍເຊັນ</CardTitle></CardHeader>
               <CardContent>
-                <img src={ticket.signature_url} alt="signature" className="border rounded bg-white" />
+                <SignedImg src={ticket.signature_url} alt="signature" className="border rounded bg-white" />
               </CardContent>
             </Card>
           )}
