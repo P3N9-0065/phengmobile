@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatLAK } from "@/lib/format";
+import { SignedImg } from "@/components/SignedImg";
 
 export const Route = createFileRoute("/_authenticated/repairs/new")({
   component: NewRepairPage,
