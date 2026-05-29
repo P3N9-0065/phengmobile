@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatLAK } from "@/lib/format";
+import { SignedImg } from "@/components/SignedImg";
 
 export const Route = createFileRoute("/_authenticated/repairs/new")({
   component: NewRepairPage,
@@ -156,8 +157,8 @@ function NewRepairPage() {
         const path = `${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name}`;
         const { error } = await supabase.storage.from("repair-photos").upload(path, file);
         if (error) throw error;
-        const { data } = supabase.storage.from("repair-photos").getPublicUrl(path);
-        urls.push(data.publicUrl);
+        // Store the raw object path; the app generates short-lived signed URLs when displaying.
+        urls.push(`repair-photos/${path}`);
       }
       setPhotos((p) => [...p, ...urls]);
     } catch (err: any) {
@@ -194,7 +195,7 @@ function NewRepairPage() {
             const path = `sig-${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
             const { error: upErr } = await supabase.storage.from("signatures").upload(path, blob);
             if (upErr) throw upErr;
-            signatureUrl = supabase.storage.from("signatures").getPublicUrl(path).data.publicUrl;
+            signatureUrl = `signatures/${path}`;
           }
         } catch (e: any) {
           // Signature upload should not block the ticket
@@ -496,7 +497,7 @@ function NewRepairPage() {
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                   {photos.map((url, i) => (
                     <div key={i} className="relative group aspect-square">
-                      <img src={url} alt="" className="w-full h-full object-cover rounded-lg border" />
+                      <SignedImg src={url} alt="" className="w-full h-full object-cover rounded-lg border" />
                       <button type="button" onClick={() => setPhotos((p) => p.filter((_, j) => j !== i))}
                         className="absolute top-1 right-1 bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <X className="h-3 w-3" />

@@ -1,5 +1,6 @@
 import { QRCodeCanvas } from "qrcode.react";
 import { Logo } from "@/components/Logo";
+import { SignedImg } from "@/components/SignedImg";
 import { usePosSettings } from "@/lib/settings";
 import { formatDateTime } from "@/lib/format";
 import { STATUS_LABEL, type RepairStatus } from "@/lib/lao";
@@ -66,7 +67,7 @@ export function RepairReceipt({ ticket, customer, trackUrl }: Props) {
         {/* Right: device photo + QR */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "130px" }}>
           {photo && (
-            <img
+            <SignedImg
               src={photo}
               alt="device"
               style={{
@@ -91,7 +92,7 @@ export function RepairReceipt({ ticket, customer, trackUrl }: Props) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginTop: "10px", fontSize: "10px" }}>
         <div style={{ textAlign: "center" }}>
           {ticket.signature_url ? (
-            <img src={ticket.signature_url} alt="sig" style={{ height: "36px", margin: "0 auto", objectFit: "contain" }} />
+            <SignedImg src={ticket.signature_url} alt="sig" style={{ height: "36px", margin: "0 auto", objectFit: "contain" }} />
           ) : (
             <div style={{ height: "36px" }} />
           )}
