@@ -92,7 +92,7 @@ export function RepairReceipt({ ticket, customer, trackUrl }: Props) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginTop: "10px", fontSize: "10px" }}>
         <div style={{ textAlign: "center" }}>
           {ticket.signature_url ? (
-            <img src={ticket.signature_url} alt="sig" style={{ height: "36px", margin: "0 auto", objectFit: "contain" }} />
+            <SignedImg src={ticket.signature_url} alt="sig" style={{ height: "36px", margin: "0 auto", objectFit: "contain" }} />
           ) : (
             <div style={{ height: "36px" }} />
           )}
