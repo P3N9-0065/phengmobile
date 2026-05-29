@@ -171,9 +171,17 @@ function RepairDetailPage() {
               <CardContent>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                   {ticket.photo_urls.map((url, i) => (
-                    <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                      <img src={url} alt="" className="w-full h-24 object-cover rounded" />
-                    </a>
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={async () => {
+                        const signed = await getSignedUrl(url);
+                        if (signed) window.open(signed, "_blank", "noopener,noreferrer");
+                      }}
+                      className="block"
+                    >
+                      <SignedImg src={url} alt="" className="w-full h-24 object-cover rounded" />
+                    </button>
                   ))}
                 </div>
               </CardContent>
