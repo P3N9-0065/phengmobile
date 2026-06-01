@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { ROLE_LABEL } from "@/lib/lao";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { LayoutDashboard, Wrench, Users, Package, LogOut, ShoppingCart, ReceiptText, Settings, Mail, UserCog, Menu, X } from "lucide-react";
+import { LayoutDashboard, Wrench, Users, Package, LogOut, ShoppingCart, ReceiptText, Settings, Mail, UserCog, Menu, X, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
 import { usePosSettings } from "@/lib/settings";
@@ -19,6 +19,7 @@ const NAV = [
   { to: "/sales", label: "ບິນຂາຍ", icon: ReceiptText },
   { to: "/customers", label: "ລູກຄ້າ", icon: Users },
   { to: "/inventory", label: "ສະຕັອກ", icon: Package },
+  { to: "/reports", label: "ລາຍງານ", icon: BarChart3, adminOnly: true },
   { to: "/users", label: "ຜູ້ໃຊ້ງານ", icon: UserCog, adminOnly: true },
   { to: "/settings", label: "ຕັ້ງຄ່າ", icon: Settings, adminOnly: true },
 ] as const;
