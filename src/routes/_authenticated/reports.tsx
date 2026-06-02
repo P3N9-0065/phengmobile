@@ -21,7 +21,7 @@ import {
   LineChart,
   Line,
 } from "recharts";
-import { TrendingUp, DollarSign, Receipt, Package, Download } from "lucide-react";
+import { TrendingUp, DollarSign, Receipt, Package, Download, Wrench } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   component: ReportsPage,
