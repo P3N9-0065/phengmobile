@@ -82,6 +82,102 @@ function ReportsPage() {
     },
   });
 
+  const { data: repairData } = useQuery({
+    queryKey: ["reports-repairs", fromISO, toISO],
+    queryFn: async () => {
+      const [ticketsRes, profilesRes] = await Promise.all([
+        supabase
+          .from("repair_tickets")
+          .select(
+            "id, ticket_code, created_at, picked_up_at, status, technician_id, labor_cost, final_price, estimated_price, repair_parts_used(qty, unit_cost, unit_price)"
+          )
+          .gte("created_at", fromISO)
+          .lt("created_at", toISO)
+          .order("created_at", { ascending: true })
+          .limit(5000),
+        supabase.from("profiles").select("id, full_name"),
+      ]);
+      if (ticketsRes.error) throw ticketsRes.error;
+      const profiles = new Map((profilesRes.data ?? []).map((p) => [p.id, p.full_name]));
+      return { tickets: ticketsRes.data ?? [], profiles };
+    },
+  });
+
+  const repairAgg = useMemo(() => {
+    if (!repairData) return null;
+    const { tickets, profiles } = repairData;
+
+    let revenue = 0;
+    let laborRevenue = 0;
+    let partsRevenue = 0;
+    let partsCost = 0;
+    let count = tickets.length;
+    let completed = 0;
+
+    const byDay = new Map<string, { day: string; revenue: number; profit: number; labor: number; parts: number }>();
+    const byTech = new Map<
+      string,
+      { name: string; tickets: number; revenue: number; labor: number; parts: number; profit: number }
+    >();
+
+    for (const t of tickets as any[]) {
+      const labor = Number(t.labor_cost) || 0;
+      let pRev = 0;
+      let pCost = 0;
+      for (const p of (t.repair_parts_used ?? []) as any[]) {
+        const q = Number(p.qty) || 0;
+        pRev += (Number(p.unit_price) || 0) * q;
+        pCost += (Number(p.unit_cost) || 0) * q;
+      }
+      const rev = Number(t.final_price) || Number(t.estimated_price) || labor + pRev;
+      const profit = rev - pCost;
+
+      revenue += rev;
+      laborRevenue += labor;
+      partsRevenue += pRev;
+      partsCost += pCost;
+      if (t.status === "picked_up" || t.status === "done") completed += 1;
+
+      const day = (t.created_at as string).slice(0, 10);
+      const d = byDay.get(day) ?? { day, revenue: 0, profit: 0, labor: 0, parts: 0 };
+      d.revenue += rev;
+      d.profit += profit;
+      d.labor += labor;
+      d.parts += pRev;
+      byDay.set(day, d);
+
+      const tid = t.technician_id ?? "unknown";
+      const tName = t.technician_id ? (profiles.get(t.technician_id) ?? "(ບໍ່ມີຊື່)") : "(ຍັງບໍ່ມອບໝາຍ)";
+      const tc = byTech.get(tid) ?? { name: tName, tickets: 0, revenue: 0, labor: 0, parts: 0, profit: 0 };
+      tc.tickets += 1;
+      tc.revenue += rev;
+      tc.labor += labor;
+      tc.parts += pRev;
+      tc.profit += profit;
+      byTech.set(tid, tc);
+    }
+
+    const dayList: { day: string; revenue: number; profit: number; labor: number; parts: number }[] = [];
+    const start = new Date(from + "T00:00:00");
+    const end = new Date(to + "T00:00:00");
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const k = ymd(d);
+      dayList.push(byDay.get(k) ?? { day: k, revenue: 0, profit: 0, labor: 0, parts: 0 });
+    }
+
+    return {
+      revenue,
+      laborRevenue,
+      partsRevenue,
+      partsCost,
+      profit: revenue - partsCost,
+      count,
+      completed,
+      byDay: dayList,
+      byTech: [...byTech.values()].sort((a, b) => b.revenue - a.revenue),
+    };
+  }, [repairData, from, to]);
+
   const agg = useMemo(() => {
     if (!data) return null;
     const { sales, profiles, cost } = data;
