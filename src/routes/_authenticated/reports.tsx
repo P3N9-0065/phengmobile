@@ -487,6 +487,108 @@ function ReportsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="repairs" className="space-y-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <KPI label="ໃບສ້ອມລວມ" value={`${repairAgg?.count ?? 0} (${repairAgg?.completed ?? 0} ສຳເລັດ)`} icon={Wrench} color="text-blue-600" />
+            <KPI label="ຍອດສ້ອມລວມ" value={formatLAK(repairAgg?.revenue ?? 0)} icon={DollarSign} color="text-blue-600" />
+            <KPI label="ຄ່າແຮງ" value={formatLAK(repairAgg?.laborRevenue ?? 0)} icon={Wrench} color="text-purple-600" />
+            <KPI label="ກຳໄລຂັ້ນຕົ້ນ" value={formatLAK(repairAgg?.profit ?? 0)} icon={TrendingUp} color="text-emerald-600" />
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>ຄ່າແຮງ vs ຄ່າອາໄຫຼ່ ຕາມມື້</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={repairAgg?.byDay ?? []}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                    <XAxis dataKey="day" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <RTooltip
+                      formatter={(v: any) => formatLAK(Number(v))}
+                      labelFormatter={(l) => formatDate(String(l))}
+                    />
+                    <Legend />
+                    <Bar dataKey="labor" name="ຄ່າແຮງ" stackId="a" fill="hsl(var(--primary))" radius={[0, 0, 0, 0]} />
+                    <Bar dataKey="parts" name="ຄ່າອາໄຫຼ່" stackId="a" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="profit" name="ກຳໄລ" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">ຍອດຕາມຊ່າງສ້ອມ</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ຊ່າງ</TableHead>
+                    <TableHead className="text-right">ໃບສ້ອມ</TableHead>
+                    <TableHead className="text-right">ຄ່າແຮງ</TableHead>
+                    <TableHead className="text-right">ຄ່າອາໄຫຼ່</TableHead>
+                    <TableHead className="text-right">ຍອດລວມ</TableHead>
+                    <TableHead className="text-right">ກຳໄລ</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {repairAgg?.byTech.map((t, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="font-medium">{t.name}</TableCell>
+                      <TableCell className="text-right">{t.tickets}</TableCell>
+                      <TableCell className="text-right">{formatLAK(t.labor)}</TableCell>
+                      <TableCell className="text-right">{formatLAK(t.parts)}</TableCell>
+                      <TableCell className="text-right">{formatLAK(t.revenue)}</TableCell>
+                      <TableCell className="text-right text-emerald-600">{formatLAK(t.profit)}</TableCell>
+                    </TableRow>
+                  ))}
+                  {(!repairAgg || repairAgg.byTech.length === 0) && (
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">ບໍ່ມີຂໍ້ມູນ</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">ລາຍລະອຽດຕາມມື້</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ວັນທີ</TableHead>
+                    <TableHead className="text-right">ຄ່າແຮງ</TableHead>
+                    <TableHead className="text-right">ຄ່າອາໄຫຼ່</TableHead>
+                    <TableHead className="text-right">ຍອດລວມ</TableHead>
+                    <TableHead className="text-right">ກຳໄລ</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {repairAgg?.byDay.filter((d) => d.revenue > 0).map((d, i) => (
+                    <TableRow key={i}>
+                      <TableCell>{formatDate(d.day)}</TableCell>
+                      <TableCell className="text-right">{formatLAK(d.labor)}</TableCell>
+                      <TableCell className="text-right">{formatLAK(d.parts)}</TableCell>
+                      <TableCell className="text-right">{formatLAK(d.revenue)}</TableCell>
+                      <TableCell className="text-right text-emerald-600">{formatLAK(d.profit)}</TableCell>
+                    </TableRow>
+                  ))}
+                  {(!repairAgg || repairAgg.byDay.every((d) => d.revenue === 0)) && (
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">ບໍ່ມີຂໍ້ມູນ</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       <p className="text-xs text-muted-foreground">
