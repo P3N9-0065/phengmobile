@@ -21,7 +21,7 @@ import {
   LineChart,
   Line,
 } from "recharts";
-import { TrendingUp, DollarSign, Receipt, Package, Download } from "lucide-react";
+import { TrendingUp, DollarSign, Receipt, Package, Download, Wrench } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   component: ReportsPage,
@@ -81,6 +81,102 @@ function ReportsPage() {
       return { sales: salesRes.data ?? [], profiles, cost };
     },
   });
+
+  const { data: repairData } = useQuery({
+    queryKey: ["reports-repairs", fromISO, toISO],
+    queryFn: async () => {
+      const [ticketsRes, profilesRes] = await Promise.all([
+        supabase
+          .from("repair_tickets")
+          .select(
+            "id, ticket_code, created_at, picked_up_at, status, technician_id, labor_cost, final_price, estimated_price, repair_parts_used(qty, unit_cost, unit_price)"
+          )
+          .gte("created_at", fromISO)
+          .lt("created_at", toISO)
+          .order("created_at", { ascending: true })
+          .limit(5000),
+        supabase.from("profiles").select("id, full_name"),
+      ]);
+      if (ticketsRes.error) throw ticketsRes.error;
+      const profiles = new Map((profilesRes.data ?? []).map((p) => [p.id, p.full_name]));
+      return { tickets: ticketsRes.data ?? [], profiles };
+    },
+  });
+
+  const repairAgg = useMemo(() => {
+    if (!repairData) return null;
+    const { tickets, profiles } = repairData;
+
+    let revenue = 0;
+    let laborRevenue = 0;
+    let partsRevenue = 0;
+    let partsCost = 0;
+    let count = tickets.length;
+    let completed = 0;
+
+    const byDay = new Map<string, { day: string; revenue: number; profit: number; labor: number; parts: number }>();
+    const byTech = new Map<
+      string,
+      { name: string; tickets: number; revenue: number; labor: number; parts: number; profit: number }
+    >();
+
+    for (const t of tickets as any[]) {
+      const labor = Number(t.labor_cost) || 0;
+      let pRev = 0;
+      let pCost = 0;
+      for (const p of (t.repair_parts_used ?? []) as any[]) {
+        const q = Number(p.qty) || 0;
+        pRev += (Number(p.unit_price) || 0) * q;
+        pCost += (Number(p.unit_cost) || 0) * q;
+      }
+      const rev = Number(t.final_price) || Number(t.estimated_price) || labor + pRev;
+      const profit = rev - pCost;
+
+      revenue += rev;
+      laborRevenue += labor;
+      partsRevenue += pRev;
+      partsCost += pCost;
+      if (t.status === "picked_up" || t.status === "done") completed += 1;
+
+      const day = (t.created_at as string).slice(0, 10);
+      const d = byDay.get(day) ?? { day, revenue: 0, profit: 0, labor: 0, parts: 0 };
+      d.revenue += rev;
+      d.profit += profit;
+      d.labor += labor;
+      d.parts += pRev;
+      byDay.set(day, d);
+
+      const tid = t.technician_id ?? "unknown";
+      const tName = t.technician_id ? (profiles.get(t.technician_id) ?? "(ບໍ່ມີຊື່)") : "(ຍັງບໍ່ມອບໝາຍ)";
+      const tc = byTech.get(tid) ?? { name: tName, tickets: 0, revenue: 0, labor: 0, parts: 0, profit: 0 };
+      tc.tickets += 1;
+      tc.revenue += rev;
+      tc.labor += labor;
+      tc.parts += pRev;
+      tc.profit += profit;
+      byTech.set(tid, tc);
+    }
+
+    const dayList: { day: string; revenue: number; profit: number; labor: number; parts: number }[] = [];
+    const start = new Date(from + "T00:00:00");
+    const end = new Date(to + "T00:00:00");
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const k = ymd(d);
+      dayList.push(byDay.get(k) ?? { day: k, revenue: 0, profit: 0, labor: 0, parts: 0 });
+    }
+
+    return {
+      revenue,
+      laborRevenue,
+      partsRevenue,
+      partsCost,
+      profit: revenue - partsCost,
+      count,
+      completed,
+      byDay: dayList,
+      byTech: [...byTech.values()].sort((a, b) => b.revenue - a.revenue),
+    };
+  }, [repairData, from, to]);
 
   const agg = useMemo(() => {
     if (!data) return null;
@@ -292,6 +388,7 @@ function ReportsPage() {
         <TabsList>
           <TabsTrigger value="products">ສິນຄ້າຂາຍດີ</TabsTrigger>
           <TabsTrigger value="cashiers">ຍອດຕາມພະນັກງານ</TabsTrigger>
+          <TabsTrigger value="repairs">ງານສ້ອມ</TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="space-y-4">
@@ -383,6 +480,108 @@ function ReportsPage() {
                     </TableRow>
                   ))}
                   {(!agg || agg.byCashier.length === 0) && (
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">ບໍ່ມີຂໍ້ມູນ</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="repairs" className="space-y-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <KPI label="ໃບສ້ອມລວມ" value={`${repairAgg?.count ?? 0} (${repairAgg?.completed ?? 0} ສຳເລັດ)`} icon={Wrench} color="text-blue-600" />
+            <KPI label="ຍອດສ້ອມລວມ" value={formatLAK(repairAgg?.revenue ?? 0)} icon={DollarSign} color="text-blue-600" />
+            <KPI label="ຄ່າແຮງ" value={formatLAK(repairAgg?.laborRevenue ?? 0)} icon={Wrench} color="text-purple-600" />
+            <KPI label="ກຳໄລຂັ້ນຕົ້ນ" value={formatLAK(repairAgg?.profit ?? 0)} icon={TrendingUp} color="text-emerald-600" />
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>ຄ່າແຮງ vs ຄ່າອາໄຫຼ່ ຕາມມື້</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={repairAgg?.byDay ?? []}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                    <XAxis dataKey="day" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <RTooltip
+                      formatter={(v: any) => formatLAK(Number(v))}
+                      labelFormatter={(l) => formatDate(String(l))}
+                    />
+                    <Legend />
+                    <Bar dataKey="labor" name="ຄ່າແຮງ" stackId="a" fill="hsl(var(--primary))" radius={[0, 0, 0, 0]} />
+                    <Bar dataKey="parts" name="ຄ່າອາໄຫຼ່" stackId="a" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="profit" name="ກຳໄລ" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">ຍອດຕາມຊ່າງສ້ອມ</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ຊ່າງ</TableHead>
+                    <TableHead className="text-right">ໃບສ້ອມ</TableHead>
+                    <TableHead className="text-right">ຄ່າແຮງ</TableHead>
+                    <TableHead className="text-right">ຄ່າອາໄຫຼ່</TableHead>
+                    <TableHead className="text-right">ຍອດລວມ</TableHead>
+                    <TableHead className="text-right">ກຳໄລ</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {repairAgg?.byTech.map((t, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="font-medium">{t.name}</TableCell>
+                      <TableCell className="text-right">{t.tickets}</TableCell>
+                      <TableCell className="text-right">{formatLAK(t.labor)}</TableCell>
+                      <TableCell className="text-right">{formatLAK(t.parts)}</TableCell>
+                      <TableCell className="text-right">{formatLAK(t.revenue)}</TableCell>
+                      <TableCell className="text-right text-emerald-600">{formatLAK(t.profit)}</TableCell>
+                    </TableRow>
+                  ))}
+                  {(!repairAgg || repairAgg.byTech.length === 0) && (
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">ບໍ່ມີຂໍ້ມູນ</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">ລາຍລະອຽດຕາມມື້</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ວັນທີ</TableHead>
+                    <TableHead className="text-right">ຄ່າແຮງ</TableHead>
+                    <TableHead className="text-right">ຄ່າອາໄຫຼ່</TableHead>
+                    <TableHead className="text-right">ຍອດລວມ</TableHead>
+                    <TableHead className="text-right">ກຳໄລ</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {repairAgg?.byDay.filter((d) => d.revenue > 0).map((d, i) => (
+                    <TableRow key={i}>
+                      <TableCell>{formatDate(d.day)}</TableCell>
+                      <TableCell className="text-right">{formatLAK(d.labor)}</TableCell>
+                      <TableCell className="text-right">{formatLAK(d.parts)}</TableCell>
+                      <TableCell className="text-right">{formatLAK(d.revenue)}</TableCell>
+                      <TableCell className="text-right text-emerald-600">{formatLAK(d.profit)}</TableCell>
+                    </TableRow>
+                  ))}
+                  {(!repairAgg || repairAgg.byDay.every((d) => d.revenue === 0)) && (
                     <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">ບໍ່ມີຂໍ້ມູນ</TableCell></TableRow>
                   )}
                 </TableBody>
