@@ -42,6 +42,9 @@ function ReportsPage() {
   const [from, setFrom] = useState(ymd(monthAgo));
   const [to, setTo] = useState(ymd(today));
 
+  const [repairFrom, setRepairFrom] = useState(ymd(monthAgo));
+  const [repairTo, setRepairTo] = useState(ymd(today));
+
   function setRange(days: number) {
     const t = new Date();
     const f = new Date();
@@ -50,12 +53,27 @@ function ReportsPage() {
     setTo(ymd(t));
   }
 
+  function setRepairRange(days: number) {
+    const t = new Date();
+    const f = new Date();
+    f.setDate(t.getDate() - (days - 1));
+    setRepairFrom(ymd(f));
+    setRepairTo(ymd(t));
+  }
+
   const fromISO = useMemo(() => new Date(from + "T00:00:00").toISOString(), [from]);
   const toISO = useMemo(() => {
     const d = new Date(to + "T00:00:00");
     d.setDate(d.getDate() + 1);
     return d.toISOString();
   }, [to]);
+
+  const repairFromISO = useMemo(() => new Date(repairFrom + "T00:00:00").toISOString(), [repairFrom]);
+  const repairToISO = useMemo(() => {
+    const d = new Date(repairTo + "T00:00:00");
+    d.setDate(d.getDate() + 1);
+    return d.toISOString();
+  }, [repairTo]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["reports", fromISO, toISO],
@@ -83,7 +101,7 @@ function ReportsPage() {
   });
 
   const { data: repairData } = useQuery({
-    queryKey: ["reports-repairs", fromISO, toISO],
+    queryKey: ["reports-repairs", repairFromISO, repairToISO],
     queryFn: async () => {
       const [ticketsRes, profilesRes] = await Promise.all([
         supabase
@@ -91,8 +109,8 @@ function ReportsPage() {
           .select(
             "id, ticket_code, created_at, picked_up_at, status, technician_id, labor_cost, final_price, estimated_price, repair_parts_used(qty, unit_cost, unit_price)"
           )
-          .gte("created_at", fromISO)
-          .lt("created_at", toISO)
+          .gte("created_at", repairFromISO)
+          .lt("created_at", repairToISO)
           .order("created_at", { ascending: true })
           .limit(5000),
         supabase.from("profiles").select("id, full_name"),
@@ -158,8 +176,8 @@ function ReportsPage() {
     }
 
     const dayList: { day: string; revenue: number; profit: number; labor: number; parts: number }[] = [];
-    const start = new Date(from + "T00:00:00");
-    const end = new Date(to + "T00:00:00");
+    const start = new Date(repairFrom + "T00:00:00");
+    const end = new Date(repairTo + "T00:00:00");
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const k = ymd(d);
       dayList.push(byDay.get(k) ?? { day: k, revenue: 0, profit: 0, labor: 0, parts: 0 });
@@ -176,7 +194,7 @@ function ReportsPage() {
       byDay: dayList,
       byTech: [...byTech.values()].sort((a, b) => b.revenue - a.revenue),
     };
-  }, [repairData, from, to]);
+  }, [repairData, repairFrom, repairTo]);
 
   const agg = useMemo(() => {
     if (!data) return null;
@@ -489,6 +507,35 @@ function ReportsPage() {
         </TabsContent>
 
         <TabsContent value="repairs" className="space-y-4">
+          <Card>
+            <CardContent className="pt-6 flex flex-wrap items-end gap-3">
+              <div className="space-y-1">
+                <Label>ຈາກວັນທີ (ງານສ້ອມ)</Label>
+                <Input type="date" value={repairFrom} onChange={(e) => setRepairFrom(e.target.value)} className="w-auto" />
+              </div>
+              <div className="space-y-1">
+                <Label>ຫາວັນທີ (ງານສ້ອມ)</Label>
+                <Input type="date" value={repairTo} onChange={(e) => setRepairTo(e.target.value)} className="w-auto" />
+              </div>
+              <div className="flex gap-2 ml-auto">
+                <Button variant="outline" size="sm" onClick={() => setRepairRange(7)}>7 ມື້</Button>
+                <Button variant="outline" size="sm" onClick={() => setRepairRange(30)}>30 ມື້</Button>
+                <Button variant="outline" size="sm" onClick={() => setRepairRange(90)}>90 ມື້</Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const t = new Date();
+                    setRepairFrom(ymd(new Date(t.getFullYear(), 0, 1)));
+                    setRepairTo(ymd(t));
+                  }}
+                >
+                  ປີນີ້
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <KPI label="ໃບສ້ອມລວມ" value={`${repairAgg?.count ?? 0} (${repairAgg?.completed ?? 0} ສຳເລັດ)`} icon={Wrench} color="text-blue-600" />
             <KPI label="ຍອດສ້ອມລວມ" value={formatLAK(repairAgg?.revenue ?? 0)} icon={DollarSign} color="text-blue-600" />
