@@ -176,8 +176,8 @@ function ReportsPage() {
     }
 
     const dayList: { day: string; revenue: number; profit: number; labor: number; parts: number }[] = [];
-    const start = new Date(from + "T00:00:00");
-    const end = new Date(to + "T00:00:00");
+    const start = new Date(repairFrom + "T00:00:00");
+    const end = new Date(repairTo + "T00:00:00");
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const k = ymd(d);
       dayList.push(byDay.get(k) ?? { day: k, revenue: 0, profit: 0, labor: 0, parts: 0 });
@@ -194,7 +194,7 @@ function ReportsPage() {
       byDay: dayList,
       byTech: [...byTech.values()].sort((a, b) => b.revenue - a.revenue),
     };
-  }, [repairData, from, to]);
+  }, [repairData, repairFrom, repairTo]);
 
   const agg = useMemo(() => {
     if (!data) return null;
