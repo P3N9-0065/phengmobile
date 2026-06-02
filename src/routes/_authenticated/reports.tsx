@@ -388,6 +388,7 @@ function ReportsPage() {
         <TabsList>
           <TabsTrigger value="products">ສິນຄ້າຂາຍດີ</TabsTrigger>
           <TabsTrigger value="cashiers">ຍອດຕາມພະນັກງານ</TabsTrigger>
+          <TabsTrigger value="repairs">ງານສ້ອມ</TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="space-y-4">
