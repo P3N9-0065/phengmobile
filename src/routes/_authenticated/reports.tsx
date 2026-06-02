@@ -507,6 +507,35 @@ function ReportsPage() {
         </TabsContent>
 
         <TabsContent value="repairs" className="space-y-4">
+          <Card>
+            <CardContent className="pt-6 flex flex-wrap items-end gap-3">
+              <div className="space-y-1">
+                <Label>ຈາກວັນທີ (ງານສ້ອມ)</Label>
+                <Input type="date" value={repairFrom} onChange={(e) => setRepairFrom(e.target.value)} className="w-auto" />
+              </div>
+              <div className="space-y-1">
+                <Label>ຫາວັນທີ (ງານສ້ອມ)</Label>
+                <Input type="date" value={repairTo} onChange={(e) => setRepairTo(e.target.value)} className="w-auto" />
+              </div>
+              <div className="flex gap-2 ml-auto">
+                <Button variant="outline" size="sm" onClick={() => setRepairRange(7)}>7 ມື້</Button>
+                <Button variant="outline" size="sm" onClick={() => setRepairRange(30)}>30 ມື້</Button>
+                <Button variant="outline" size="sm" onClick={() => setRepairRange(90)}>90 ມື້</Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const t = new Date();
+                    setRepairFrom(ymd(new Date(t.getFullYear(), 0, 1)));
+                    setRepairTo(ymd(t));
+                  }}
+                >
+                  ປີນີ້
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <KPI label="ໃບສ້ອມລວມ" value={`${repairAgg?.count ?? 0} (${repairAgg?.completed ?? 0} ສຳເລັດ)`} icon={Wrench} color="text-blue-600" />
             <KPI label="ຍອດສ້ອມລວມ" value={formatLAK(repairAgg?.revenue ?? 0)} icon={DollarSign} color="text-blue-600" />
