@@ -42,6 +42,9 @@ function ReportsPage() {
   const [from, setFrom] = useState(ymd(monthAgo));
   const [to, setTo] = useState(ymd(today));
 
+  const [repairFrom, setRepairFrom] = useState(ymd(monthAgo));
+  const [repairTo, setRepairTo] = useState(ymd(today));
+
   function setRange(days: number) {
     const t = new Date();
     const f = new Date();
@@ -50,12 +53,27 @@ function ReportsPage() {
     setTo(ymd(t));
   }
 
+  function setRepairRange(days: number) {
+    const t = new Date();
+    const f = new Date();
+    f.setDate(t.getDate() - (days - 1));
+    setRepairFrom(ymd(f));
+    setRepairTo(ymd(t));
+  }
+
   const fromISO = useMemo(() => new Date(from + "T00:00:00").toISOString(), [from]);
   const toISO = useMemo(() => {
     const d = new Date(to + "T00:00:00");
     d.setDate(d.getDate() + 1);
     return d.toISOString();
   }, [to]);
+
+  const repairFromISO = useMemo(() => new Date(repairFrom + "T00:00:00").toISOString(), [repairFrom]);
+  const repairToISO = useMemo(() => {
+    const d = new Date(repairTo + "T00:00:00");
+    d.setDate(d.getDate() + 1);
+    return d.toISOString();
+  }, [repairTo]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["reports", fromISO, toISO],
