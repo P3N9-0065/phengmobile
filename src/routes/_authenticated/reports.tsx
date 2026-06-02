@@ -101,7 +101,7 @@ function ReportsPage() {
   });
 
   const { data: repairData } = useQuery({
-    queryKey: ["reports-repairs", fromISO, toISO],
+    queryKey: ["reports-repairs", repairFromISO, repairToISO],
     queryFn: async () => {
       const [ticketsRes, profilesRes] = await Promise.all([
         supabase
@@ -109,8 +109,8 @@ function ReportsPage() {
           .select(
             "id, ticket_code, created_at, picked_up_at, status, technician_id, labor_cost, final_price, estimated_price, repair_parts_used(qty, unit_cost, unit_price)"
           )
-          .gte("created_at", fromISO)
-          .lt("created_at", toISO)
+          .gte("created_at", repairFromISO)
+          .lt("created_at", repairToISO)
           .order("created_at", { ascending: true })
           .limit(5000),
         supabase.from("profiles").select("id, full_name"),
