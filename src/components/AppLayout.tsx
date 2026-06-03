@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { ROLE_LABEL } from "@/lib/lao";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { LayoutDashboard, Wrench, Users, Package, LogOut, ShoppingCart, ReceiptText, Settings, Mail, UserCog, Menu, X, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Wrench, Users, Package, LogOut, ShoppingCart, ReceiptText, Settings, Mail, UserCog, Menu, X, BarChart3, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
 import { usePosSettings } from "@/lib/settings";
