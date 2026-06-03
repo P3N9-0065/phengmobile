@@ -19,6 +19,7 @@ const NAV = [
   { to: "/sales", label: "ບິນຂາຍ", icon: ReceiptText },
   { to: "/customers", label: "ລູກຄ້າ", icon: Users },
   { to: "/inventory", label: "ສະຕັອກ", icon: Package },
+  { to: "/suppliers", label: "ຜູ້ສະໜອງ", icon: Truck },
   { to: "/reports", label: "ລາຍງານ", icon: BarChart3, adminOnly: true },
   { to: "/users", label: "ຜູ້ໃຊ້ງານ", icon: UserCog, adminOnly: true },
   { to: "/settings", label: "ຕັ້ງຄ່າ", icon: Settings, adminOnly: true },
