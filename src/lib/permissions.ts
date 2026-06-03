@@ -12,7 +12,7 @@ export const ROLE_ROUTES: Record<AppRole, string[]> = {
     "/account-signups",
   ],
   technician: ["/dashboard", "/repairs"],
-  warehouse: ["/dashboard", "/inventory"],
+  warehouse: ["/dashboard", "/inventory", "/suppliers"],
 };
 
 export function canAccess(roles: AppRole[], path: string): boolean {
