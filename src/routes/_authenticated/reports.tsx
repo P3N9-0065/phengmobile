@@ -570,6 +570,27 @@ function ReportsPage() {
 
           <Card>
             <CardHeader>
+              <CardTitle>ຄ່າແຮງ vs ຄ່າອາໄຫຼ່ ຕາມຊ່າງ</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={repairAgg?.byTech ?? []}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <RTooltip formatter={(v: any) => formatLAK(Number(v))} />
+                    <Legend />
+                    <Bar dataKey="labor" name="ຄ່າແຮງ" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="parts" name="ຄ່າອາໄຫຼ່" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle className="text-base">ຍອດຕາມຊ່າງສ້ອມ</CardTitle>
             </CardHeader>
             <CardContent>
