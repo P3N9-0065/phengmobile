@@ -303,6 +303,107 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          line_total: number
+          po_id: string
+          qty: number
+          unit_cost: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          line_total?: number
+          po_id: string
+          qty: number
+          unit_cost?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          line_total?: number
+          po_id?: string
+          qty?: number
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_items_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_orders: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          discount: number
+          id: string
+          notes: string | null
+          po_code: string
+          received_at: string | null
+          received_by: string | null
+          status: Database["public"]["Enums"]["po_status"]
+          subtotal: number
+          supplier_id: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          discount?: number
+          id?: string
+          notes?: string | null
+          po_code?: string
+          received_at?: string | null
+          received_by?: string | null
+          status?: Database["public"]["Enums"]["po_status"]
+          subtotal?: number
+          supplier_id: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          discount?: number
+          id?: string
+          notes?: string | null
+          po_code?: string
+          received_at?: string | null
+          received_by?: string | null
+          status?: Database["public"]["Enums"]["po_status"]
+          subtotal?: number
+          supplier_id?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       repair_parts_used: {
         Row: {
           created_at: string
@@ -642,6 +743,39 @@ export type Database = {
           },
         ]
       }
+      suppliers: {
+        Row: {
+          address: string | null
+          contact_person: string | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          contact_person?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          contact_person?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -668,6 +802,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      gen_po_code: { Args: never; Returns: string }
       gen_ticket_code: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -677,6 +812,7 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      receive_purchase_order: { Args: { _po_id: string }; Returns: undefined }
       track_signup: {
         Args: { _id: string }
         Returns: {
@@ -718,6 +854,7 @@ export type Database = {
         | "sale"
         | "return"
       payment_method: "cash" | "qr" | "transfer" | "card"
+      po_status: "draft" | "received" | "cancelled"
       point_txn_type: "earn" | "redeem" | "adjust" | "expire"
       repair_status:
         | "received"
@@ -862,6 +999,7 @@ export const Constants = {
       item_category: ["part", "accessory", "tool", "phone_new", "phone_used"],
       movement_type: ["purchase", "repair_use", "adjustment", "sale", "return"],
       payment_method: ["cash", "qr", "transfer", "card"],
+      po_status: ["draft", "received", "cancelled"],
       point_txn_type: ["earn", "redeem", "adjust", "expire"],
       repair_status: [
         "received",
