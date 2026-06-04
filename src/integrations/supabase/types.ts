@@ -311,6 +311,7 @@ export type Database = {
           line_total: number
           po_id: string
           qty: number
+          received_qty: number
           unit_cost: number
         }
         Insert: {
@@ -320,6 +321,7 @@ export type Database = {
           line_total?: number
           po_id: string
           qty: number
+          received_qty?: number
           unit_cost?: number
         }
         Update: {
@@ -329,6 +331,7 @@ export type Database = {
           line_total?: number
           po_id?: string
           qty?: number
+          received_qty?: number
           unit_cost?: number
         }
         Relationships: [
@@ -813,6 +816,10 @@ export type Database = {
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       receive_purchase_order: { Args: { _po_id: string }; Returns: undefined }
+      receive_purchase_order_partial: {
+        Args: { _items: Json; _po_id: string }
+        Returns: undefined
+      }
       track_signup: {
         Args: { _id: string }
         Returns: {
@@ -854,7 +861,7 @@ export type Database = {
         | "sale"
         | "return"
       payment_method: "cash" | "qr" | "transfer" | "card"
-      po_status: "draft" | "received" | "cancelled"
+      po_status: "draft" | "partial" | "received" | "cancelled"
       point_txn_type: "earn" | "redeem" | "adjust" | "expire"
       repair_status:
         | "received"
@@ -999,7 +1006,7 @@ export const Constants = {
       item_category: ["part", "accessory", "tool", "phone_new", "phone_used"],
       movement_type: ["purchase", "repair_use", "adjustment", "sale", "return"],
       payment_method: ["cash", "qr", "transfer", "card"],
-      po_status: ["draft", "received", "cancelled"],
+      po_status: ["draft", "partial", "received", "cancelled"],
       point_txn_type: ["earn", "redeem", "adjust", "expire"],
       repair_status: [
         "received",
