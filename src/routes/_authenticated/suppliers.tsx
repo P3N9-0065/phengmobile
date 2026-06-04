@@ -576,7 +576,8 @@ function ViewPODialog({ poId, onClose }: { poId: string; onClose: () => void }) 
               <TableHeader>
                 <TableRow>
                   <TableHead>ສິນຄ້າ</TableHead>
-                  <TableHead className="text-right">ຈຳນວນ</TableHead>
+                  <TableHead className="text-right">ສັ່ງ</TableHead>
+                  <TableHead className="text-right">ຮັບແລ້ວ</TableHead>
                   <TableHead className="text-right">ທຶນ/ຊິ້ນ</TableHead>
                   <TableHead className="text-right">ລວມ</TableHead>
                 </TableRow>
@@ -586,6 +587,7 @@ function ViewPODialog({ poId, onClose }: { poId: string; onClose: () => void }) 
                   <TableRow key={it.id}>
                     <TableCell>{it.inventory_items?.name}{it.inventory_items?.sku && <span className="text-xs text-muted-foreground"> ({it.inventory_items.sku})</span>}</TableCell>
                     <TableCell className="text-right">{it.qty}</TableCell>
+                    <TableCell className="text-right">{it.received_qty ?? 0}</TableCell>
                     <TableCell className="text-right">{formatLAK(Number(it.unit_cost))}</TableCell>
                     <TableCell className="text-right">{formatLAK(Number(it.line_total))}</TableCell>
                   </TableRow>
