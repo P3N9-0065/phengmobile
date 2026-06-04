@@ -407,6 +407,80 @@ export type Database = {
           },
         ]
       }
+      purchase_receipt_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          qty: number
+          receipt_id: string
+          unit_cost: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          qty: number
+          receipt_id: string
+          unit_cost?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          qty?: number
+          receipt_id?: string
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_receipt_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_receipt_items_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_receipts: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          po_id: string
+          received_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          po_id: string
+          received_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          po_id?: string
+          received_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_receipts_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       repair_parts_used: {
         Row: {
           created_at: string
@@ -818,7 +892,7 @@ export type Database = {
       receive_purchase_order: { Args: { _po_id: string }; Returns: undefined }
       receive_purchase_order_partial: {
         Args: { _items: Json; _po_id: string }
-        Returns: undefined
+        Returns: string
       }
       track_signup: {
         Args: { _id: string }
