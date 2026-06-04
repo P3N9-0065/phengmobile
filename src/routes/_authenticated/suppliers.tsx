@@ -600,6 +600,8 @@ function ViewPODialog({ poId, onClose }: { poId: string; onClose: () => void }) 
               <p className="text-base">ສຸດທິ: <b>{formatLAK(Number(data.total))}</b></p>
             </div>
             {data.notes && <p className="text-sm text-muted-foreground border-t pt-2">ໝາຍເຫດ: {data.notes}</p>}
+
+            <ReceiptHistory poId={poId} />
           </div>
         )}
       </DialogContent>
