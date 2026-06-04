@@ -609,6 +609,60 @@ function ViewPODialog({ poId, onClose }: { poId: string; onClose: () => void }) 
   );
 }
 
+function ReceiptHistory({ poId }: { poId: string }) {
+  const { data: receipts } = useQuery({
+    queryKey: ["po-receipts", poId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("purchase_receipts")
+        .select("id, created_at, note, received_by, profiles:received_by(full_name), purchase_receipt_items(qty, unit_cost, inventory_items(name, sku))")
+        .eq("po_id", poId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  if (!receipts || receipts.length === 0) {
+    return (
+      <div className="border-t pt-3">
+        <p className="text-sm font-medium mb-1">ປະຫວັດການຮັບເຂົ້າ</p>
+        <p className="text-xs text-muted-foreground">ຍັງບໍ່ມີການຮັບເຂົ້າ</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-t pt-3 space-y-3">
+      <p className="text-sm font-medium">ປະຫວັດການຮັບເຂົ້າ ({receipts.length} ຮອບ)</p>
+      {receipts.map((r: any, idx: number) => {
+        const totalQty = r.purchase_receipt_items?.reduce((a: number, b: any) => a + (b.qty || 0), 0) ?? 0;
+        const totalCost = r.purchase_receipt_items?.reduce((a: number, b: any) => a + (b.qty || 0) * Number(b.unit_cost || 0), 0) ?? 0;
+        return (
+          <div key={r.id} className="border rounded-md p-2 text-sm">
+            <div className="flex justify-between items-center mb-1">
+              <div>
+                <span className="font-medium">ຮອບ #{receipts.length - idx}</span>
+                <span className="text-xs text-muted-foreground ml-2">{new Date(r.created_at).toLocaleString("lo-LA")}</span>
+                {r.profiles?.full_name && <span className="text-xs text-muted-foreground ml-2">ໂດຍ {r.profiles.full_name}</span>}
+              </div>
+              <div className="text-xs">{totalQty} ຊິ້ນ · {formatLAK(totalCost)}</div>
+            </div>
+            <div className="space-y-0.5">
+              {r.purchase_receipt_items?.map((it: any, i: number) => (
+                <div key={i} className="flex justify-between text-xs text-muted-foreground">
+                  <span>{it.inventory_items?.name}{it.inventory_items?.sku && ` (${it.inventory_items.sku})`}</span>
+                  <span>{it.qty} × {formatLAK(Number(it.unit_cost))}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function SuppliersPage() {
   return (
     <div className="space-y-6">
