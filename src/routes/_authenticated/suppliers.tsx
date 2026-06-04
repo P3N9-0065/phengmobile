@@ -152,31 +152,19 @@ function PurchaseOrdersTab() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [viewId, setViewId] = useState<string | null>(null);
+  const [receiveId, setReceiveId] = useState<string | null>(null);
 
   const { data: pos } = useQuery({
     queryKey: ["purchase_orders"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("purchase_orders")
-        .select("*, suppliers(name), purchase_order_items(qty)")
+        .select("*, suppliers(name), purchase_order_items(qty, received_qty)")
         .order("created_at", { ascending: false })
         .limit(200);
       if (error) throw error;
       return data ?? [];
     },
-  });
-
-  const recv = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.rpc("receive_purchase_order", { _po_id: id });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["purchase_orders"] });
-      qc.invalidateQueries({ queryKey: ["inventory"] });
-      toast.success("ຮັບເຂົ້າສະຕັອກສຳເລັດ");
-    },
-    onError: (e: any) => toast.error(e.message),
   });
 
   const cancel = useMutation({
@@ -197,6 +185,9 @@ function PurchaseOrdersTab() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const statusLabel = (s: string) =>
+    s === "draft" ? "ຮ່າງ" : s === "partial" ? "ຮັບບາງສ່ວນ" : s === "received" ? "ຮັບແລ້ວ" : "ຍົກເລີກ";
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
@@ -210,7 +201,7 @@ function PurchaseOrdersTab() {
                 <TableHead>ລະຫັດ</TableHead>
                 <TableHead>ຜູ້ສະໜອງ</TableHead>
                 <TableHead>ວັນທີ</TableHead>
-                <TableHead>ລາຍການ</TableHead>
+                <TableHead>ຄືບໜ້າ</TableHead>
                 <TableHead className="text-right">ລວມ</TableHead>
                 <TableHead>ສະຖານະ</TableHead>
                 <TableHead className="text-right">ການກະທຳ</TableHead>
@@ -218,18 +209,19 @@ function PurchaseOrdersTab() {
             </TableHeader>
             <TableBody>
               {pos?.map((p: any) => {
-                const lines = p.purchase_order_items?.length ?? 0;
                 const totalQty = p.purchase_order_items?.reduce((a: number, b: any) => a + (b.qty || 0), 0) ?? 0;
+                const recvQty = p.purchase_order_items?.reduce((a: number, b: any) => a + (b.received_qty || 0), 0) ?? 0;
+                const canReceive = (p.status === "draft" || p.status === "partial") && recvQty < totalQty;
                 return (
                   <TableRow key={p.id}>
                     <TableCell className="font-mono text-xs">{p.po_code}</TableCell>
                     <TableCell>{p.suppliers?.name ?? "-"}</TableCell>
                     <TableCell className="text-xs">{new Date(p.created_at).toLocaleDateString("lo-LA")}</TableCell>
-                    <TableCell className="text-xs">{lines} ລາຍການ / {totalQty} ຊິ້ນ</TableCell>
+                    <TableCell className="text-xs">{recvQty} / {totalQty} ຊິ້ນ</TableCell>
                     <TableCell className="text-right">{formatLAK(Number(p.total))}</TableCell>
                     <TableCell>
                       <Badge variant={p.status === "received" ? "default" : p.status === "cancelled" ? "destructive" : "secondary"}>
-                        {p.status === "draft" ? "ຮ່າງ" : p.status === "received" ? "ຮັບແລ້ວ" : "ຍົກເລີກ"}
+                        {statusLabel(p.status)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -237,17 +229,17 @@ function PurchaseOrdersTab() {
                         <Button size="sm" variant="outline" onClick={() => setViewId(p.id)}>
                           <FileText className="h-3.5 w-3.5" />
                         </Button>
-                        {p.status === "draft" && (
-                          <>
-                            <Button size="sm" onClick={() => { if (confirm("ຮັບເຂົ້າສະຕັອກ? ການກະທຳນີ້ຈະປັບປຸງສະຕັອກ ແລະ ລາຄາທຶນ")) recv.mutate(p.id); }}>
-                              <PackageCheck className="h-3.5 w-3.5 mr-1" />ຮັບເຂົ້າ
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => cancel.mutate(p.id)}>
-                              <X className="h-3.5 w-3.5" />
-                            </Button>
-                          </>
+                        {canReceive && (
+                          <Button size="sm" onClick={() => setReceiveId(p.id)}>
+                            <PackageCheck className="h-3.5 w-3.5 mr-1" />ຮັບເຂົ້າ
+                          </Button>
                         )}
-                        {p.status !== "received" && (
+                        {p.status === "draft" && (
+                          <Button size="sm" variant="outline" onClick={() => cancel.mutate(p.id)}>
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                        {p.status !== "received" && p.status !== "partial" && (
                           <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (confirm("ລຶບ PO?")) del.mutate(p.id); }}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
@@ -267,7 +259,119 @@ function PurchaseOrdersTab() {
 
       {open && <CreatePODialog onClose={() => setOpen(false)} />}
       {viewId && <ViewPODialog poId={viewId} onClose={() => setViewId(null)} />}
+      {receiveId && <ReceivePODialog poId={receiveId} onClose={() => setReceiveId(null)} />}
     </div>
+  );
+}
+
+function ReceivePODialog({ poId, onClose }: { poId: string; onClose: () => void }) {
+  const qc = useQueryClient();
+  const { data: lines, isLoading } = useQuery({
+    queryKey: ["po-receive", poId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("purchase_order_items")
+        .select("id, item_id, qty, received_qty, unit_cost, inventory_items(name, sku)")
+        .eq("po_id", poId);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const [qtyMap, setQtyMap] = useState<Record<string, number>>({});
+  const [initialized, setInitialized] = useState(false);
+  if (lines && !initialized) {
+    const next: Record<string, number> = {};
+    for (const l of lines as any[]) {
+      next[l.item_id] = Math.max(0, (l.qty || 0) - (l.received_qty || 0));
+    }
+    setQtyMap(next);
+    setInitialized(true);
+  }
+
+  const submit = useMutation({
+    mutationFn: async () => {
+      const items = Object.entries(qtyMap)
+        .filter(([, q]) => (q || 0) > 0)
+        .map(([item_id, qty]) => ({ item_id, qty }));
+      if (items.length === 0) throw new Error("ກະລຸນາໃສ່ຈຳນວນຮັບເຂົ້າຢ່າງໜ້ອຍ 1 ລາຍການ");
+      const { error } = await supabase.rpc("receive_purchase_order_partial", { _po_id: poId, _items: items });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["purchase_orders"] });
+      qc.invalidateQueries({ queryKey: ["inventory"] });
+      qc.invalidateQueries({ queryKey: ["po-detail", poId] });
+      toast.success("ບັນທຶກການຮັບເຂົ້າສຳເລັດ");
+      onClose();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>ຮັບເຂົ້າສະຕັອກ</DialogTitle>
+        </DialogHeader>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">ກຳລັງໂຫຼດ...</p>
+        ) : (
+          <>
+            <p className="text-xs text-muted-foreground">
+              ໃສ່ຈຳນວນທີ່ໄດ້ຮັບຈິງໃນຮອບນີ້. ສາມາດຮັບເຂົ້າຫຼາຍຮອບຕໍ່ໃບສັ່ງຊື້ໄດ້. ສະຕັອກ ແລະ ລາຄາທຶນຈະຖືກອັບເດດຕາມຈຳນວນທີ່ຮັບແຕ່ລະຮອບ.
+            </p>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ສິນຄ້າ</TableHead>
+                  <TableHead className="text-right w-20">ສັ່ງ</TableHead>
+                  <TableHead className="text-right w-20">ຮັບແລ້ວ</TableHead>
+                  <TableHead className="text-right w-20">ຍັງເຫຼືອ</TableHead>
+                  <TableHead className="w-28">ຮັບຮອບນີ້</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(lines as any[])?.map((l) => {
+                  const rem = (l.qty || 0) - (l.received_qty || 0);
+                  return (
+                    <TableRow key={l.id}>
+                      <TableCell className="text-sm">
+                        {l.inventory_items?.name}
+                        {l.inventory_items?.sku && <span className="text-xs text-muted-foreground"> ({l.inventory_items.sku})</span>}
+                      </TableCell>
+                      <TableCell className="text-right">{l.qty}</TableCell>
+                      <TableCell className="text-right">{l.received_qty}</TableCell>
+                      <TableCell className="text-right">{rem}</TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={rem}
+                          disabled={rem <= 0}
+                          value={qtyMap[l.item_id] ?? 0}
+                          onChange={(e) => {
+                            const v = Math.max(0, Math.min(rem, Number(e.target.value) || 0));
+                            setQtyMap({ ...qtyMap, [l.item_id]: v });
+                          }}
+                          className="h-8"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>ຍົກເລີກ</Button>
+          <Button onClick={() => submit.mutate()} disabled={submit.isPending || isLoading}>
+            {submit.isPending ? "ກຳລັງບັນທຶກ..." : "ບັນທຶກການຮັບເຂົ້າ"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
