@@ -704,6 +704,95 @@ export type Database = {
           },
         ]
       }
+      sale_return_items: {
+        Row: {
+          id: string
+          item_id: string | null
+          line_total: number
+          qty: number
+          return_id: string
+          sale_item_id: string
+          unit_price: number
+        }
+        Insert: {
+          id?: string
+          item_id?: string | null
+          line_total?: number
+          qty: number
+          return_id: string
+          sale_item_id: string
+          unit_price?: number
+        }
+        Update: {
+          id?: string
+          item_id?: string | null
+          line_total?: number
+          qty?: number
+          return_id?: string
+          sale_item_id?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_return_items_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "sale_returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_return_items_sale_item_id_fkey"
+            columns: ["sale_item_id"]
+            isOneToOne: false
+            referencedRelation: "sale_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_returns: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          reason: string | null
+          refund_amount: number
+          restock: boolean
+          return_code: string
+          sale_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          reason?: string | null
+          refund_amount?: number
+          restock?: boolean
+          return_code: string
+          sale_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          reason?: string | null
+          refund_amount?: number
+          restock?: boolean
+          return_code?: string
+          sale_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_returns_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales: {
         Row: {
           amount_paid: number
@@ -721,8 +810,12 @@ export type Database = {
           points_earned: number
           points_redeemed: number
           sale_code: string
+          status: string
           subtotal: number
           total: number
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
         }
         Insert: {
           amount_paid?: number
@@ -740,8 +833,12 @@ export type Database = {
           points_earned?: number
           points_redeemed?: number
           sale_code?: string
+          status?: string
           subtotal?: number
           total?: number
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
         }
         Update: {
           amount_paid?: number
@@ -759,8 +856,12 @@ export type Database = {
           points_earned?: number
           points_redeemed?: number
           sale_code?: string
+          status?: string
           subtotal?: number
           total?: number
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
         }
         Relationships: [
           {
@@ -880,6 +981,7 @@ export type Database = {
     }
     Functions: {
       gen_po_code: { Args: never; Returns: string }
+      gen_return_code: { Args: never; Returns: string }
       gen_ticket_code: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -892,6 +994,15 @@ export type Database = {
       receive_purchase_order: { Args: { _po_id: string }; Returns: undefined }
       receive_purchase_order_partial: {
         Args: { _items: Json; _po_id: string }
+        Returns: string
+      }
+      return_sale_items: {
+        Args: {
+          _items: Json
+          _reason?: string
+          _restock?: boolean
+          _sale_id: string
+        }
         Returns: string
       }
       track_signup: {
@@ -921,6 +1032,10 @@ export type Database = {
           ticket_code: string
           warranty_until: string
         }[]
+      }
+      void_sale: {
+        Args: { _reason?: string; _restock?: boolean; _sale_id: string }
+        Returns: string
       }
     }
     Enums: {
