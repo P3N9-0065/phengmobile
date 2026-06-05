@@ -1,12 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Printer, ReceiptText } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Printer, ReceiptText, Undo2, Ban } from "lucide-react";
+import { toast } from "sonner";
 import { formatLAK, formatDateTime } from "@/lib/format";
 import { PAYMENT_METHOD_LABEL, type Currency } from "@/lib/currency";
 import { Receipt, printReceipt, type ReceiptData } from "@/components/pos/Receipt";
@@ -16,7 +28,12 @@ export const Route = createFileRoute("/_authenticated/sales")({
 });
 
 function SalesPage() {
-  const [viewing, setViewing] = useState<ReceiptData | null>(null);
+  const qc = useQueryClient();
+  const { hasRole } = useAuth();
+  const isAdmin = hasRole("admin");
+  const [viewing, setViewing] = useState<any | null>(null);
+  const [receipt, setReceipt] = useState<ReceiptData | null>(null);
+  const [returnOpen, setReturnOpen] = useState(false);
 
   const { data: sales } = useQuery({
     queryKey: ["sales-list"],
@@ -27,8 +44,22 @@ function SalesPage() {
     },
   });
 
-  function openReceipt(s: any) {
-    setViewing({
+  const { data: returns } = useQuery({
+    queryKey: ["sale-returns", viewing?.id],
+    enabled: !!viewing?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("sale_returns")
+        .select("*, sale_return_items(*)")
+        .eq("sale_id", viewing.id)
+        .order("created_at", { ascending: true });
+      return data ?? [];
+    },
+  });
+
+  function openSale(s: any) {
+    setViewing(s);
+    setReceipt({
       sale_code: s.sale_code, created_at: s.created_at,
       cashier_email: null, customer_name: s.customers?.name ?? null,
       items: (s.sale_items ?? []).map((it: any) => ({
@@ -40,6 +71,30 @@ function SalesPage() {
     });
   }
 
+  function closeAll() {
+    setViewing(null);
+    setReceipt(null);
+  }
+
+  async function refreshAll() {
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["sales-list"] }),
+      qc.invalidateQueries({ queryKey: ["sale-returns"] }),
+      qc.invalidateQueries({ queryKey: ["inventory-items"] }),
+    ]);
+  }
+
+  async function voidSale(reason: string, restock: boolean) {
+    if (!viewing) return;
+    const { error } = await supabase.rpc("void_sale", {
+      _sale_id: viewing.id, _reason: reason || null, _restock: restock,
+    });
+    if (error) return toast.error(error.message);
+    toast.success("ຍົກເລີກບິນແລ້ວ");
+    await refreshAll();
+    closeAll();
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -49,13 +104,14 @@ function SalesPage() {
 
       <div className="space-y-2">
         {sales?.map((s: any) => (
-          <Card key={s.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => openReceipt(s)}>
+          <Card key={s.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => openSale(s)}>
             <CardContent className="pt-4 pb-4 flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-medium">{s.sale_code}</p>
                   <Badge variant="outline">{PAYMENT_METHOD_LABEL[s.payment_method]}</Badge>
                   {s.currency_paid !== "LAK" && <Badge variant="secondary">{s.currency_paid}</Badge>}
+                  {s.status === "voided" && <Badge variant="destructive">ຍົກເລີກ</Badge>}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {s.customers?.name ?? "ລູກຄ້າທົ່ວໄປ"} — {(s.sale_items ?? []).length} ລາຍການ
@@ -63,7 +119,7 @@ function SalesPage() {
                 <p className="text-xs text-muted-foreground">{formatDateTime(s.created_at)}</p>
               </div>
               <div className="text-right">
-                <p className="font-bold text-primary">{formatLAK(Number(s.total))}</p>
+                <p className={`font-bold ${s.status === "voided" ? "text-muted-foreground line-through" : "text-primary"}`}>{formatLAK(Number(s.total))}</p>
                 {Number(s.change_lak) > 0 && <p className="text-xs text-muted-foreground">ທອນ {formatLAK(Number(s.change_lak))}</p>}
               </div>
             </CardContent>
@@ -76,15 +132,198 @@ function SalesPage() {
         )}
       </div>
 
-      <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>ໃບເສັດ</DialogTitle></DialogHeader>
-          {viewing && <Receipt data={viewing} />}
-          <DialogFooter>
+      <Dialog open={!!viewing} onOpenChange={(o) => !o && closeAll()}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>ໃບເສັດ {viewing?.status === "voided" && <span className="text-destructive text-sm">(ຍົກເລີກແລ້ວ)</span>}</DialogTitle></DialogHeader>
+          {receipt && <Receipt data={receipt} />}
+
+          {(returns?.length ?? 0) > 0 && (
+            <div className="border-t pt-3 space-y-2">
+              <p className="text-sm font-semibold">ປະຫວັດການຄືນ</p>
+              {returns!.map((r: any) => (
+                <div key={r.id} className="rounded border p-2 text-xs space-y-1 bg-muted/40">
+                  <div className="flex justify-between font-medium">
+                    <span>{r.return_code} {r.kind === "void" && <Badge variant="destructive" className="ml-1">void</Badge>}</span>
+                    <span>{formatLAK(Number(r.refund_amount))}</span>
+                  </div>
+                  <p className="text-muted-foreground">{formatDateTime(r.created_at)}</p>
+                  {r.reason && <p>📝 {r.reason}</p>}
+                  <ul className="pl-3 list-disc">
+                    {(r.sale_return_items ?? []).map((it: any) => {
+                      const si = (viewing?.sale_items ?? []).find((s: any) => s.id === it.sale_item_id);
+                      return <li key={it.id}>{si?.name_snapshot ?? "—"} × {it.qty}</li>;
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            {isAdmin && viewing?.status !== "voided" && (
+              <>
+                <Button variant="outline" onClick={() => setReturnOpen(true)}>
+                  <Undo2 className="h-4 w-4 mr-2" />ຄືນສິນຄ້າ
+                </Button>
+                <VoidSaleButton onConfirm={voidSale} />
+              </>
+            )}
             <Button onClick={printReceipt}><Printer className="h-4 w-4 mr-2" />ພິມ</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {viewing && (
+        <ReturnItemsDialog
+          open={returnOpen}
+          onOpenChange={setReturnOpen}
+          sale={viewing}
+          existingReturns={returns ?? []}
+          onDone={async () => { setReturnOpen(false); await refreshAll(); }}
+        />
+      )}
     </div>
+  );
+}
+
+function VoidSaleButton({ onConfirm }: { onConfirm: (reason: string, restock: boolean) => void | Promise<void> }) {
+  const [reason, setReason] = useState("");
+  const [restock, setRestock] = useState(true);
+  const [open, setOpen] = useState(false);
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
+        <Button variant="destructive"><Ban className="h-4 w-4 mr-2" />ຍົກເລີກບິນ</Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>ຢືນຢັນຍົກເລີກບິນທັງໝົດ?</AlertDialogTitle>
+          <AlertDialogDescription>
+            ສິນຄ້າທີ່ຍັງບໍ່ໄດ້ຄືນຈະຖືກຄືນກັບ ແລະ ແຕ້ມສະສົມ/ໃຊ້ຈະຖືກປັບກັບສະພາບເດີມຕາມສ່ວນ.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>ເຫດຜົນ</Label>
+            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="..." />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox checked={restock} onCheckedChange={(v) => setRestock(!!v)} />
+            ຄືນສິນຄ້າເຂົ້າສະຕ໋ອກ
+          </label>
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel>ຍ້ອນກັບ</AlertDialogCancel>
+          <AlertDialogAction onClick={() => onConfirm(reason, restock)}>ຍົກເລີກບິນ</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+function ReturnItemsDialog({
+  open, onOpenChange, sale, existingReturns, onDone,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  sale: any;
+  existingReturns: any[];
+  onDone: () => void;
+}) {
+  const returnedMap = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const r of existingReturns) for (const it of (r.sale_return_items ?? [])) {
+      m[it.sale_item_id] = (m[it.sale_item_id] ?? 0) + it.qty;
+    }
+    return m;
+  }, [existingReturns]);
+
+  const [qtys, setQtys] = useState<Record<string, number>>({});
+  const [reason, setReason] = useState("");
+  const [restock, setRestock] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  const total = useMemo(() => {
+    let t = 0;
+    for (const si of (sale.sale_items ?? [])) {
+      const q = qtys[si.id] ?? 0;
+      t += q * Number(si.unit_price);
+    }
+    return t;
+  }, [qtys, sale]);
+
+  async function submit() {
+    const items = Object.entries(qtys)
+      .filter(([, q]) => q > 0)
+      .map(([sale_item_id, qty]) => ({ sale_item_id, qty }));
+    if (items.length === 0) return toast.error("ກະລຸນາໃສ່ຈຳນວນທີ່ຈະຄືນ");
+    setSubmitting(true);
+    const { error } = await supabase.rpc("return_sale_items", {
+      _sale_id: sale.id, _items: items, _reason: reason || null, _restock: restock,
+    });
+    setSubmitting(false);
+    if (error) return toast.error(error.message);
+    toast.success("ບັນທຶກການຄືນແລ້ວ");
+    setQtys({});
+    setReason("");
+    onDone();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>ຄືນສິນຄ້າບາງລາຍການ</DialogTitle>
+          <DialogDescription>ບິນ {sale.sale_code}</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-2">
+          {(sale.sale_items ?? []).map((si: any) => {
+            const returned = returnedMap[si.id] ?? 0;
+            const remaining = si.qty - returned;
+            const q = qtys[si.id] ?? 0;
+            return (
+              <div key={si.id} className="flex items-center gap-2 border rounded p-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{si.name_snapshot}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatLAK(Number(si.unit_price))} × ຄ້າງ {remaining}/{si.qty}
+                  </p>
+                </div>
+                <Input
+                  type="number" min={0} max={remaining}
+                  className="w-20" value={q || ""}
+                  disabled={remaining <= 0}
+                  onChange={(e) => {
+                    const v = Math.max(0, Math.min(remaining, Number(e.target.value) || 0));
+                    setQtys((p) => ({ ...p, [si.id]: v }));
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="space-y-2 pt-2 border-t">
+          <Label>ເຫດຜົນ</Label>
+          <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="..." rows={2} />
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox checked={restock} onCheckedChange={(v) => setRestock(!!v)} />
+            ຄືນສິນຄ້າເຂົ້າສະຕ໋ອກ
+          </label>
+          <div className="flex justify-between font-semibold pt-2">
+            <span>ຍອດຄືນ:</span>
+            <span className="text-primary">{formatLAK(total)}</span>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>ຍົກເລີກ</Button>
+          <Button onClick={submit} disabled={submitting || total <= 0}>
+            <Undo2 className="h-4 w-4 mr-2" />ບັນທຶກການຄືນ
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
