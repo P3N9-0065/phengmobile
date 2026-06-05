@@ -259,10 +259,10 @@ function ReturnItemsDialog({
     if (items.length === 0) return toast.error("ກະລຸນາໃສ່ຈຳນວນທີ່ຈະຄືນ");
     setSubmitting(true);
     const { error } = await supabase.rpc("return_sale_items", {
-      _sale_id: sale.id, _items: items, _reason: reason || null, _restock: restock,
+      _sale_id: sale.id, _items: items, _reason: reason || undefined, _restock: restock,
     });
     setSubmitting(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("ບັນທຶກການຄືນແລ້ວ");
     setQtys({});
     setReason("");
