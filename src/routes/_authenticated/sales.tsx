@@ -87,9 +87,9 @@ function SalesPage() {
   async function voidSale(reason: string, restock: boolean) {
     if (!viewing) return;
     const { error } = await supabase.rpc("void_sale", {
-      _sale_id: viewing.id, _reason: reason || null, _restock: restock,
+      _sale_id: viewing.id, _reason: reason || undefined, _restock: restock,
     });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("ຍົກເລີກບິນແລ້ວ");
     await refreshAll();
     closeAll();
