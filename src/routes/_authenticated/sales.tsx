@@ -231,7 +231,7 @@ function VoidSaleButton({ onConfirm, requireReason = true }: { onConfirm: (reaso
         </AlertDialogHeader>
         <div className="space-y-3">
           <div>
-            <Label>ເຫດຜົນ <span className="text-destructive">*</span></Label>
+            <Label>ເຫດຜົນ {requireReason && <span className="text-destructive">*</span>}</Label>
             <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="ລະບຸເຫດຜົນຍົກເລີກ..." />
           </div>
           <label className="flex items-center gap-2 text-sm">
@@ -242,9 +242,9 @@ function VoidSaleButton({ onConfirm, requireReason = true }: { onConfirm: (reaso
         <AlertDialogFooter>
           <AlertDialogCancel>ຍ້ອນກັບ</AlertDialogCancel>
           <AlertDialogAction
-            disabled={!reason.trim()}
+            disabled={requireReason && !reason.trim()}
             onClick={(e) => {
-              if (!reason.trim()) { e.preventDefault(); toast.error("ກະລຸນາລະບຸເຫດຜົນ"); return; }
+              if (requireReason && !reason.trim()) { e.preventDefault(); toast.error("ກະລຸນາລະບຸເຫດຜົນ"); return; }
               onConfirm(reason.trim(), restock);
             }}
           >ຍົກເລີກບິນ</AlertDialogAction>
