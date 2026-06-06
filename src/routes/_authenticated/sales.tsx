@@ -259,6 +259,25 @@ function ReturnItemsDialog({
     return m;
   }, [existingReturns]);
 
+  const itemIds = useMemo(
+    () => Array.from(new Set((sale.sale_items ?? []).map((si: any) => si.item_id).filter(Boolean))) as string[],
+    [sale]
+  );
+  const { data: catRows } = useQuery({
+    queryKey: ["sale-item-cats", sale.id],
+    enabled: itemIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase.from("inventory_items").select("id,category").in("id", itemIds);
+      return data ?? [];
+    },
+  });
+  const catMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const r of catRows ?? []) m[r.id] = r.category;
+    return m;
+  }, [catRows]);
+  const isPhone = (si: any) => si.item_id && (catMap[si.item_id] === "phone_new" || catMap[si.item_id] === "phone_used");
+
   const [qtys, setQtys] = useState<Record<string, number>>({});
   const [reason, setReason] = useState("");
   const [restock, setRestock] = useState(true);
@@ -274,13 +293,14 @@ function ReturnItemsDialog({
   }, [qtys, sale]);
 
   async function submit() {
+    if (!reason.trim()) return toast.error("ກະລຸນາລະບຸເຫດຜົນ");
     const items = Object.entries(qtys)
       .filter(([, q]) => q > 0)
       .map(([sale_item_id, qty]) => ({ sale_item_id, qty }));
     if (items.length === 0) return toast.error("ກະລຸນາໃສ່ຈຳນວນທີ່ຈະຄືນ");
     setSubmitting(true);
     const { error } = await supabase.rpc("return_sale_items", {
-      _sale_id: sale.id, _items: items, _reason: reason || undefined, _restock: restock,
+      _sale_id: sale.id, _items: items, _reason: reason.trim(), _restock: restock,
     });
     setSubmitting(false);
     if (error) { toast.error(error.message); return; }
