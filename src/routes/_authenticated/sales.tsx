@@ -32,6 +32,8 @@ function SalesPage() {
   const qc = useQueryClient();
   const { hasRole } = useAuth();
   const isAdmin = hasRole("admin");
+  const { data: policy } = useReturnPolicy();
+  const pol = policy ?? DEFAULT_RETURN_POLICY;
   const [viewing, setViewing] = useState<any | null>(null);
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const [returnOpen, setReturnOpen] = useState(false);
