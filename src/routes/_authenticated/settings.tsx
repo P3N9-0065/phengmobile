@@ -94,6 +94,31 @@ function SettingsPage() {
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const { data: retPol } = useReturnPolicy();
+  const [rp, setRp] = useState<ReturnPolicy>(DEFAULT_RETURN_POLICY);
+  useEffect(() => { if (retPol) setRp(retPol); }, [retPol]);
+  const saveReturnPolicy = useMutation({
+    mutationFn: async (next: ReturnPolicy) => {
+      const { error } = await supabase.from("return_policy_settings" as any).update({
+        max_days: next.max_days,
+        block_redeemed: next.block_redeemed,
+        block_discounted: next.block_discounted,
+        block_phone: next.block_phone,
+        require_reason: next.require_reason,
+        updated_at: new Date().toISOString(),
+      }).eq("id", 1);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["return-policy"] });
+      toast.success("ບັນທຶກນະໂຍບາຍການຄືນສຳເລັດ");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+  function updateRp<K extends keyof ReturnPolicy>(k: K, v: ReturnPolicy[K]) {
+    setRp((p) => ({ ...p, [k]: v }));
+  }
   function update<K extends keyof PosSettings>(k: K, v: PosSettings[K]) {
     setS((prev) => ({ ...prev, [k]: v }));
   }
