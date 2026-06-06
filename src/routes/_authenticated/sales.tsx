@@ -323,18 +323,21 @@ function ReturnItemsDialog({
             const returned = returnedMap[si.id] ?? 0;
             const remaining = si.qty - returned;
             const q = qtys[si.id] ?? 0;
+            const phone = isPhone(si);
+            const disabled = remaining <= 0 || phone;
             return (
-              <div key={si.id} className="flex items-center gap-2 border rounded p-2">
+              <div key={si.id} className={`flex items-center gap-2 border rounded p-2 ${phone ? "opacity-60" : ""}`}>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{si.name_snapshot}</p>
                   <p className="text-xs text-muted-foreground">
                     {formatLAK(Number(si.unit_price))} × ຄ້າງ {remaining}/{si.qty}
+                    {phone && <span className="text-destructive ml-2">ຄືນບໍ່ໄດ້ (ມືຖື)</span>}
                   </p>
                 </div>
                 <Input
                   type="number" min={0} max={remaining}
                   className="w-20" value={q || ""}
-                  disabled={remaining <= 0}
+                  disabled={disabled}
                   onChange={(e) => {
                     const v = Math.max(0, Math.min(remaining, Number(e.target.value) || 0));
                     setQtys((p) => ({ ...p, [si.id]: v }));
@@ -346,8 +349,8 @@ function ReturnItemsDialog({
         </div>
 
         <div className="space-y-2 pt-2 border-t">
-          <Label>ເຫດຜົນ</Label>
-          <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="..." rows={2} />
+          <Label>ເຫດຜົນ <span className="text-destructive">*</span></Label>
+          <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="ລະບຸເຫດຜົນການຄືນ..." rows={2} />
           <label className="flex items-center gap-2 text-sm">
             <Checkbox checked={restock} onCheckedChange={(v) => setRestock(!!v)} />
             ຄືນສິນຄ້າເຂົ້າສະຕ໋ອກ
@@ -360,7 +363,7 @@ function ReturnItemsDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>ຍົກເລີກ</Button>
-          <Button onClick={submit} disabled={submitting || total <= 0}>
+          <Button onClick={submit} disabled={submitting || total <= 0 || !reason.trim()}>
             <Undo2 className="h-4 w-4 mr-2" />ບັນທຶກການຄືນ
           </Button>
         </DialogFooter>
