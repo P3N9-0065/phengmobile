@@ -164,12 +164,12 @@ function SalesPage() {
 
           {viewing && isAdmin && viewing.status !== "voided" && (() => {
             const ageDays = (Date.now() - new Date(viewing.created_at).getTime()) / 86400000;
-            const expired = ageDays > 7;
-            const hasRedeem = Number(viewing.points_redeemed ?? 0) > 0;
-            const hasDiscount = Number(viewing.discount ?? 0) > 0;
+            const expired = pol.max_days > 0 && ageDays > pol.max_days;
+            const hasRedeem = pol.block_redeemed && Number(viewing.points_redeemed ?? 0) > 0;
+            const hasDiscount = pol.block_discounted && Number(viewing.discount ?? 0) > 0;
             const blocked = expired || hasRedeem || hasDiscount;
             const reasons: string[] = [];
-            if (expired) reasons.push("ເກີນ 7 ວັນ");
+            if (expired) reasons.push(`ເກີນ ${pol.max_days} ວັນ`);
             if (hasRedeem) reasons.push("ໃຊ້ແຕ້ມສະສົມ");
             if (hasDiscount) reasons.push("ມີສ່ວນຫຼຸດ");
             return blocked ? (
@@ -181,14 +181,17 @@ function SalesPage() {
           <DialogFooter className="flex-col sm:flex-row gap-2">
             {viewing && isAdmin && viewing.status !== "voided" && (() => {
               const ageDays = (Date.now() - new Date(viewing.created_at).getTime()) / 86400000;
-              const blocked = ageDays > 7 || Number(viewing.points_redeemed ?? 0) > 0 || Number(viewing.discount ?? 0) > 0;
+              const blocked =
+                (pol.max_days > 0 && ageDays > pol.max_days) ||
+                (pol.block_redeemed && Number(viewing.points_redeemed ?? 0) > 0) ||
+                (pol.block_discounted && Number(viewing.discount ?? 0) > 0);
               if (blocked) return null;
               return (
                 <>
                   <Button variant="outline" onClick={() => setReturnOpen(true)}>
                     <Undo2 className="h-4 w-4 mr-2" />ຄືນສິນຄ້າ
                   </Button>
-                  <VoidSaleButton onConfirm={voidSale} />
+                  <VoidSaleButton onConfirm={voidSale} requireReason={pol.require_reason} />
                 </>
               );
             })()}
