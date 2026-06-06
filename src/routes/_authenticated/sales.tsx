@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { formatLAK, formatDateTime } from "@/lib/format";
 import { PAYMENT_METHOD_LABEL, type Currency } from "@/lib/currency";
 import { Receipt, printReceipt, type ReceiptData } from "@/components/pos/Receipt";
+import { useReturnPolicy, DEFAULT_RETURN_POLICY } from "@/lib/return-policy";
 
 export const Route = createFileRoute("/_authenticated/sales")({
   component: SalesPage,
