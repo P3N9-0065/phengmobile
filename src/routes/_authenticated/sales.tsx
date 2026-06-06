@@ -213,7 +213,7 @@ function SalesPage() {
   );
 }
 
-function VoidSaleButton({ onConfirm }: { onConfirm: (reason: string, restock: boolean) => void | Promise<void> }) {
+function VoidSaleButton({ onConfirm, requireReason = true }: { onConfirm: (reason: string, restock: boolean) => void | Promise<void>; requireReason?: boolean }) {
   const [reason, setReason] = useState("");
   const [restock, setRestock] = useState(true);
   const [open, setOpen] = useState(false);
