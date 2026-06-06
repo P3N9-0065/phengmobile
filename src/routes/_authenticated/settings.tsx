@@ -346,6 +346,62 @@ function SettingsPage() {
           </Card>
 
           <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Undo2 className="h-5 w-5 text-destructive" />
+                ນະໂຍບາຍການຄືນສິນຄ້າ
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <Label>ຈຳນວນວັນທີ່ອະນຸຍາດໃຫ້ຄືນ (ນັບຈາກວັນຂາຍ)</Label>
+                <Input type="number" min={0} max={365} disabled={!isAdmin}
+                  value={rp.max_days}
+                  onChange={(e) => updateRp("max_days", Math.max(0, Number(e.target.value) || 0))} />
+                <p className="text-[11px] text-muted-foreground mt-1">ໃສ່ 0 = ບໍ່ຈຳກັດເວລາ</p>
+              </div>
+              <div className="flex items-center justify-between border rounded p-3">
+                <div>
+                  <p className="font-medium text-sm">ບລັອກບິນທີ່ໃຊ້ແຕ້ມສະສົມ</p>
+                  <p className="text-xs text-muted-foreground">ບໍ່ໃຫ້ຄືນ/ຍົກເລີກບິນທີ່ມີ points_redeemed &gt; 0</p>
+                </div>
+                <Switch checked={rp.block_redeemed} disabled={!isAdmin}
+                  onCheckedChange={(v) => updateRp("block_redeemed", v)} />
+              </div>
+              <div className="flex items-center justify-between border rounded p-3">
+                <div>
+                  <p className="font-medium text-sm">ບລັອກບິນທີ່ມີສ່ວນຫຼຸດ</p>
+                  <p className="text-xs text-muted-foreground">ບໍ່ໃຫ້ຄືນບິນທີ່ໃສ່ສ່ວນຫຼຸດ</p>
+                </div>
+                <Switch checked={rp.block_discounted} disabled={!isAdmin}
+                  onCheckedChange={(v) => updateRp("block_discounted", v)} />
+              </div>
+              <div className="flex items-center justify-between border rounded p-3">
+                <div>
+                  <p className="font-medium text-sm">ບລັອກສິນຄ້າມືຖື</p>
+                  <p className="text-xs text-muted-foreground">phone_new / phone_used ບໍ່ສາມາດຄືນໄດ້</p>
+                </div>
+                <Switch checked={rp.block_phone} disabled={!isAdmin}
+                  onCheckedChange={(v) => updateRp("block_phone", v)} />
+              </div>
+              <div className="flex items-center justify-between border rounded p-3">
+                <div>
+                  <p className="font-medium text-sm">ບັງຄັບໃສ່ເຫດຜົນ</p>
+                  <p className="text-xs text-muted-foreground">ຕ້ອງລະບຸເຫດຜົນທຸກຄັ້ງທີ່ຄືນ/ຍົກເລີກ</p>
+                </div>
+                <Switch checked={rp.require_reason} disabled={!isAdmin}
+                  onCheckedChange={(v) => updateRp("require_reason", v)} />
+              </div>
+              <Button className="w-full"
+                disabled={!isAdmin || saveReturnPolicy.isPending}
+                onClick={() => saveReturnPolicy.mutate(rp)}>
+                <Save className="h-4 w-4 mr-2" />ບັນທຶກນະໂຍບາຍການຄືນ
+              </Button>
+              {!isAdmin && <p className="text-xs text-muted-foreground text-center">ສະເພາະ admin ປັບແກ້ໄດ້</p>}
+            </CardContent>
+          </Card>
+
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>ຕົວຢ່າງໃບເສັດ</CardTitle>
               <Button variant="outline" size="sm" onClick={() => import("@/components/pos/Receipt").then((m) => m.printReceipt())}>
