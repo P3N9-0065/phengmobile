@@ -11,10 +11,11 @@ import { saveSettings, usePosSettings, DEFAULT_SETTINGS, type PosSettings } from
 import { CURRENCY_LABEL } from "@/lib/currency";
 import { Receipt } from "@/components/pos/Receipt";
 import { toast } from "sonner";
-import { Save, RotateCcw, Printer, Award } from "lucide-react";
+import { Save, RotateCcw, Printer, Award, Undo2 } from "lucide-react";
 import { Barcode } from "@/components/inventory/Barcode";
 import { formatLAK } from "@/lib/format";
 import { useLoyaltySettings, type LoyaltySettings } from "@/lib/loyalty";
+import { useReturnPolicy, DEFAULT_RETURN_POLICY, type ReturnPolicy } from "@/lib/return-policy";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
