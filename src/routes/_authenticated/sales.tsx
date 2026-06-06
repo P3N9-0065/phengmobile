@@ -159,15 +159,36 @@ function SalesPage() {
             </div>
           )}
 
+          {viewing && isAdmin && viewing.status !== "voided" && (() => {
+            const ageDays = (Date.now() - new Date(viewing.created_at).getTime()) / 86400000;
+            const expired = ageDays > 7;
+            const hasRedeem = Number(viewing.points_redeemed ?? 0) > 0;
+            const hasDiscount = Number(viewing.discount ?? 0) > 0;
+            const blocked = expired || hasRedeem || hasDiscount;
+            const reasons: string[] = [];
+            if (expired) reasons.push("ເກີນ 7 ວັນ");
+            if (hasRedeem) reasons.push("ໃຊ້ແຕ້ມສະສົມ");
+            if (hasDiscount) reasons.push("ມີສ່ວນຫຼຸດ");
+            return blocked ? (
+              <p className="text-xs text-destructive border border-destructive/30 rounded p-2 bg-destructive/5">
+                ບໍ່ສາມາດຄືນ/ຍົກເລີກບິນນີ້: {reasons.join(", ")}
+              </p>
+            ) : null;
+          })()}
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            {isAdmin && viewing?.status !== "voided" && (
-              <>
-                <Button variant="outline" onClick={() => setReturnOpen(true)}>
-                  <Undo2 className="h-4 w-4 mr-2" />ຄືນສິນຄ້າ
-                </Button>
-                <VoidSaleButton onConfirm={voidSale} />
-              </>
-            )}
+            {viewing && isAdmin && viewing.status !== "voided" && (() => {
+              const ageDays = (Date.now() - new Date(viewing.created_at).getTime()) / 86400000;
+              const blocked = ageDays > 7 || Number(viewing.points_redeemed ?? 0) > 0 || Number(viewing.discount ?? 0) > 0;
+              if (blocked) return null;
+              return (
+                <>
+                  <Button variant="outline" onClick={() => setReturnOpen(true)}>
+                    <Undo2 className="h-4 w-4 mr-2" />ຄືນສິນຄ້າ
+                  </Button>
+                  <VoidSaleButton onConfirm={voidSale} />
+                </>
+              );
+            })()}
             <Button onClick={printReceipt}><Printer className="h-4 w-4 mr-2" />ພິມ</Button>
           </DialogFooter>
         </DialogContent>
@@ -204,8 +225,8 @@ function VoidSaleButton({ onConfirm }: { onConfirm: (reason: string, restock: bo
         </AlertDialogHeader>
         <div className="space-y-3">
           <div>
-            <Label>ເຫດຜົນ</Label>
-            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="..." />
+            <Label>ເຫດຜົນ <span className="text-destructive">*</span></Label>
+            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="ລະບຸເຫດຜົນຍົກເລີກ..." />
           </div>
           <label className="flex items-center gap-2 text-sm">
             <Checkbox checked={restock} onCheckedChange={(v) => setRestock(!!v)} />
@@ -214,7 +235,13 @@ function VoidSaleButton({ onConfirm }: { onConfirm: (reason: string, restock: bo
         </div>
         <AlertDialogFooter>
           <AlertDialogCancel>ຍ້ອນກັບ</AlertDialogCancel>
-          <AlertDialogAction onClick={() => onConfirm(reason, restock)}>ຍົກເລີກບິນ</AlertDialogAction>
+          <AlertDialogAction
+            disabled={!reason.trim()}
+            onClick={(e) => {
+              if (!reason.trim()) { e.preventDefault(); toast.error("ກະລຸນາລະບຸເຫດຜົນ"); return; }
+              onConfirm(reason.trim(), restock);
+            }}
+          >ຍົກເລີກບິນ</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
@@ -238,6 +265,25 @@ function ReturnItemsDialog({
     return m;
   }, [existingReturns]);
 
+  const itemIds = useMemo(
+    () => Array.from(new Set((sale.sale_items ?? []).map((si: any) => si.item_id).filter(Boolean))) as string[],
+    [sale]
+  );
+  const { data: catRows } = useQuery({
+    queryKey: ["sale-item-cats", sale.id],
+    enabled: itemIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase.from("inventory_items").select("id,category").in("id", itemIds);
+      return data ?? [];
+    },
+  });
+  const catMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const r of catRows ?? []) m[r.id] = r.category;
+    return m;
+  }, [catRows]);
+  const isPhone = (si: any) => si.item_id && (catMap[si.item_id] === "phone_new" || catMap[si.item_id] === "phone_used");
+
   const [qtys, setQtys] = useState<Record<string, number>>({});
   const [reason, setReason] = useState("");
   const [restock, setRestock] = useState(true);
@@ -253,13 +299,14 @@ function ReturnItemsDialog({
   }, [qtys, sale]);
 
   async function submit() {
+    if (!reason.trim()) return toast.error("ກະລຸນາລະບຸເຫດຜົນ");
     const items = Object.entries(qtys)
       .filter(([, q]) => q > 0)
       .map(([sale_item_id, qty]) => ({ sale_item_id, qty }));
     if (items.length === 0) return toast.error("ກະລຸນາໃສ່ຈຳນວນທີ່ຈະຄືນ");
     setSubmitting(true);
     const { error } = await supabase.rpc("return_sale_items", {
-      _sale_id: sale.id, _items: items, _reason: reason || undefined, _restock: restock,
+      _sale_id: sale.id, _items: items, _reason: reason.trim(), _restock: restock,
     });
     setSubmitting(false);
     if (error) { toast.error(error.message); return; }
@@ -282,18 +329,21 @@ function ReturnItemsDialog({
             const returned = returnedMap[si.id] ?? 0;
             const remaining = si.qty - returned;
             const q = qtys[si.id] ?? 0;
+            const phone = isPhone(si);
+            const disabled = remaining <= 0 || phone;
             return (
-              <div key={si.id} className="flex items-center gap-2 border rounded p-2">
+              <div key={si.id} className={`flex items-center gap-2 border rounded p-2 ${phone ? "opacity-60" : ""}`}>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{si.name_snapshot}</p>
                   <p className="text-xs text-muted-foreground">
                     {formatLAK(Number(si.unit_price))} × ຄ້າງ {remaining}/{si.qty}
+                    {phone && <span className="text-destructive ml-2">ຄືນບໍ່ໄດ້ (ມືຖື)</span>}
                   </p>
                 </div>
                 <Input
                   type="number" min={0} max={remaining}
                   className="w-20" value={q || ""}
-                  disabled={remaining <= 0}
+                  disabled={disabled}
                   onChange={(e) => {
                     const v = Math.max(0, Math.min(remaining, Number(e.target.value) || 0));
                     setQtys((p) => ({ ...p, [si.id]: v }));
@@ -305,8 +355,8 @@ function ReturnItemsDialog({
         </div>
 
         <div className="space-y-2 pt-2 border-t">
-          <Label>ເຫດຜົນ</Label>
-          <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="..." rows={2} />
+          <Label>ເຫດຜົນ <span className="text-destructive">*</span></Label>
+          <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="ລະບຸເຫດຜົນການຄືນ..." rows={2} />
           <label className="flex items-center gap-2 text-sm">
             <Checkbox checked={restock} onCheckedChange={(v) => setRestock(!!v)} />
             ຄືນສິນຄ້າເຂົ້າສະຕ໋ອກ
@@ -319,7 +369,7 @@ function ReturnItemsDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>ຍົກເລີກ</Button>
-          <Button onClick={submit} disabled={submitting || total <= 0}>
+          <Button onClick={submit} disabled={submitting || total <= 0 || !reason.trim()}>
             <Undo2 className="h-4 w-4 mr-2" />ບັນທຶກການຄືນ
           </Button>
         </DialogFooter>
