@@ -11,10 +11,11 @@ import { saveSettings, usePosSettings, DEFAULT_SETTINGS, type PosSettings } from
 import { CURRENCY_LABEL } from "@/lib/currency";
 import { Receipt } from "@/components/pos/Receipt";
 import { toast } from "sonner";
-import { Save, RotateCcw, Printer, Award } from "lucide-react";
+import { Save, RotateCcw, Printer, Award, Undo2 } from "lucide-react";
 import { Barcode } from "@/components/inventory/Barcode";
 import { formatLAK } from "@/lib/format";
 import { useLoyaltySettings, type LoyaltySettings } from "@/lib/loyalty";
+import { useReturnPolicy, DEFAULT_RETURN_POLICY, type ReturnPolicy } from "@/lib/return-policy";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -93,6 +94,31 @@ function SettingsPage() {
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const { data: retPol } = useReturnPolicy();
+  const [rp, setRp] = useState<ReturnPolicy>(DEFAULT_RETURN_POLICY);
+  useEffect(() => { if (retPol) setRp(retPol); }, [retPol]);
+  const saveReturnPolicy = useMutation({
+    mutationFn: async (next: ReturnPolicy) => {
+      const { error } = await supabase.from("return_policy_settings" as any).update({
+        max_days: next.max_days,
+        block_redeemed: next.block_redeemed,
+        block_discounted: next.block_discounted,
+        block_phone: next.block_phone,
+        require_reason: next.require_reason,
+        updated_at: new Date().toISOString(),
+      }).eq("id", 1);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["return-policy"] });
+      toast.success("ບັນທຶກນະໂຍບາຍການຄືນສຳເລັດ");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+  function updateRp<K extends keyof ReturnPolicy>(k: K, v: ReturnPolicy[K]) {
+    setRp((p) => ({ ...p, [k]: v }));
+  }
   function update<K extends keyof PosSettings>(k: K, v: PosSettings[K]) {
     setS((prev) => ({ ...prev, [k]: v }));
   }
@@ -316,6 +342,62 @@ function SettingsPage() {
                   {!isAdmin && <p className="text-xs text-muted-foreground text-center">ສະເພາະ admin ປັບແກ້ໄດ້</p>}
                 </>
               )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Undo2 className="h-5 w-5 text-destructive" />
+                ນະໂຍບາຍການຄືນສິນຄ້າ
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <Label>ຈຳນວນວັນທີ່ອະນຸຍາດໃຫ້ຄືນ (ນັບຈາກວັນຂາຍ)</Label>
+                <Input type="number" min={0} max={365} disabled={!isAdmin}
+                  value={rp.max_days}
+                  onChange={(e) => updateRp("max_days", Math.max(0, Number(e.target.value) || 0))} />
+                <p className="text-[11px] text-muted-foreground mt-1">ໃສ່ 0 = ບໍ່ຈຳກັດເວລາ</p>
+              </div>
+              <div className="flex items-center justify-between border rounded p-3">
+                <div>
+                  <p className="font-medium text-sm">ບລັອກບິນທີ່ໃຊ້ແຕ້ມສະສົມ</p>
+                  <p className="text-xs text-muted-foreground">ບໍ່ໃຫ້ຄືນ/ຍົກເລີກບິນທີ່ມີ points_redeemed &gt; 0</p>
+                </div>
+                <Switch checked={rp.block_redeemed} disabled={!isAdmin}
+                  onCheckedChange={(v) => updateRp("block_redeemed", v)} />
+              </div>
+              <div className="flex items-center justify-between border rounded p-3">
+                <div>
+                  <p className="font-medium text-sm">ບລັອກບິນທີ່ມີສ່ວນຫຼຸດ</p>
+                  <p className="text-xs text-muted-foreground">ບໍ່ໃຫ້ຄືນບິນທີ່ໃສ່ສ່ວນຫຼຸດ</p>
+                </div>
+                <Switch checked={rp.block_discounted} disabled={!isAdmin}
+                  onCheckedChange={(v) => updateRp("block_discounted", v)} />
+              </div>
+              <div className="flex items-center justify-between border rounded p-3">
+                <div>
+                  <p className="font-medium text-sm">ບລັອກສິນຄ້າມືຖື</p>
+                  <p className="text-xs text-muted-foreground">phone_new / phone_used ບໍ່ສາມາດຄືນໄດ້</p>
+                </div>
+                <Switch checked={rp.block_phone} disabled={!isAdmin}
+                  onCheckedChange={(v) => updateRp("block_phone", v)} />
+              </div>
+              <div className="flex items-center justify-between border rounded p-3">
+                <div>
+                  <p className="font-medium text-sm">ບັງຄັບໃສ່ເຫດຜົນ</p>
+                  <p className="text-xs text-muted-foreground">ຕ້ອງລະບຸເຫດຜົນທຸກຄັ້ງທີ່ຄືນ/ຍົກເລີກ</p>
+                </div>
+                <Switch checked={rp.require_reason} disabled={!isAdmin}
+                  onCheckedChange={(v) => updateRp("require_reason", v)} />
+              </div>
+              <Button className="w-full"
+                disabled={!isAdmin || saveReturnPolicy.isPending}
+                onClick={() => saveReturnPolicy.mutate(rp)}>
+                <Save className="h-4 w-4 mr-2" />ບັນທຶກນະໂຍບາຍການຄືນ
+              </Button>
+              {!isAdmin && <p className="text-xs text-muted-foreground text-center">ສະເພາະ admin ປັບແກ້ໄດ້</p>}
             </CardContent>
           </Card>
 

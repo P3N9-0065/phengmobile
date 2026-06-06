@@ -653,6 +653,36 @@ export type Database = {
           },
         ]
       }
+      return_policy_settings: {
+        Row: {
+          block_discounted: boolean
+          block_phone: boolean
+          block_redeemed: boolean
+          id: number
+          max_days: number
+          require_reason: boolean
+          updated_at: string
+        }
+        Insert: {
+          block_discounted?: boolean
+          block_phone?: boolean
+          block_redeemed?: boolean
+          id?: number
+          max_days?: number
+          require_reason?: boolean
+          updated_at?: string
+        }
+        Update: {
+          block_discounted?: boolean
+          block_phone?: boolean
+          block_redeemed?: boolean
+          id?: number
+          max_days?: number
+          require_reason?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sale_items: {
         Row: {
           created_at: string

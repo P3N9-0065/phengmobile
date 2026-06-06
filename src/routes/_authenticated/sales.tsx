@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { formatLAK, formatDateTime } from "@/lib/format";
 import { PAYMENT_METHOD_LABEL, type Currency } from "@/lib/currency";
 import { Receipt, printReceipt, type ReceiptData } from "@/components/pos/Receipt";
+import { useReturnPolicy, DEFAULT_RETURN_POLICY } from "@/lib/return-policy";
 
 export const Route = createFileRoute("/_authenticated/sales")({
   component: SalesPage,
@@ -31,6 +32,8 @@ function SalesPage() {
   const qc = useQueryClient();
   const { hasRole } = useAuth();
   const isAdmin = hasRole("admin");
+  const { data: policy } = useReturnPolicy();
+  const pol = policy ?? DEFAULT_RETURN_POLICY;
   const [viewing, setViewing] = useState<any | null>(null);
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const [returnOpen, setReturnOpen] = useState(false);
@@ -161,12 +164,12 @@ function SalesPage() {
 
           {viewing && isAdmin && viewing.status !== "voided" && (() => {
             const ageDays = (Date.now() - new Date(viewing.created_at).getTime()) / 86400000;
-            const expired = ageDays > 7;
-            const hasRedeem = Number(viewing.points_redeemed ?? 0) > 0;
-            const hasDiscount = Number(viewing.discount ?? 0) > 0;
+            const expired = pol.max_days > 0 && ageDays > pol.max_days;
+            const hasRedeem = pol.block_redeemed && Number(viewing.points_redeemed ?? 0) > 0;
+            const hasDiscount = pol.block_discounted && Number(viewing.discount ?? 0) > 0;
             const blocked = expired || hasRedeem || hasDiscount;
             const reasons: string[] = [];
-            if (expired) reasons.push("ເກີນ 7 ວັນ");
+            if (expired) reasons.push(`ເກີນ ${pol.max_days} ວັນ`);
             if (hasRedeem) reasons.push("ໃຊ້ແຕ້ມສະສົມ");
             if (hasDiscount) reasons.push("ມີສ່ວນຫຼຸດ");
             return blocked ? (
@@ -178,14 +181,17 @@ function SalesPage() {
           <DialogFooter className="flex-col sm:flex-row gap-2">
             {viewing && isAdmin && viewing.status !== "voided" && (() => {
               const ageDays = (Date.now() - new Date(viewing.created_at).getTime()) / 86400000;
-              const blocked = ageDays > 7 || Number(viewing.points_redeemed ?? 0) > 0 || Number(viewing.discount ?? 0) > 0;
+              const blocked =
+                (pol.max_days > 0 && ageDays > pol.max_days) ||
+                (pol.block_redeemed && Number(viewing.points_redeemed ?? 0) > 0) ||
+                (pol.block_discounted && Number(viewing.discount ?? 0) > 0);
               if (blocked) return null;
               return (
                 <>
                   <Button variant="outline" onClick={() => setReturnOpen(true)}>
                     <Undo2 className="h-4 w-4 mr-2" />ຄືນສິນຄ້າ
                   </Button>
-                  <VoidSaleButton onConfirm={voidSale} />
+                  <VoidSaleButton onConfirm={voidSale} requireReason={pol.require_reason} />
                 </>
               );
             })()}
@@ -207,7 +213,7 @@ function SalesPage() {
   );
 }
 
-function VoidSaleButton({ onConfirm }: { onConfirm: (reason: string, restock: boolean) => void | Promise<void> }) {
+function VoidSaleButton({ onConfirm, requireReason = true }: { onConfirm: (reason: string, restock: boolean) => void | Promise<void>; requireReason?: boolean }) {
   const [reason, setReason] = useState("");
   const [restock, setRestock] = useState(true);
   const [open, setOpen] = useState(false);
@@ -225,7 +231,7 @@ function VoidSaleButton({ onConfirm }: { onConfirm: (reason: string, restock: bo
         </AlertDialogHeader>
         <div className="space-y-3">
           <div>
-            <Label>ເຫດຜົນ <span className="text-destructive">*</span></Label>
+            <Label>ເຫດຜົນ {requireReason && <span className="text-destructive">*</span>}</Label>
             <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="ລະບຸເຫດຜົນຍົກເລີກ..." />
           </div>
           <label className="flex items-center gap-2 text-sm">
@@ -236,9 +242,9 @@ function VoidSaleButton({ onConfirm }: { onConfirm: (reason: string, restock: bo
         <AlertDialogFooter>
           <AlertDialogCancel>ຍ້ອນກັບ</AlertDialogCancel>
           <AlertDialogAction
-            disabled={!reason.trim()}
+            disabled={requireReason && !reason.trim()}
             onClick={(e) => {
-              if (!reason.trim()) { e.preventDefault(); toast.error("ກະລຸນາລະບຸເຫດຜົນ"); return; }
+              if (requireReason && !reason.trim()) { e.preventDefault(); toast.error("ກະລຸນາລະບຸເຫດຜົນ"); return; }
               onConfirm(reason.trim(), restock);
             }}
           >ຍົກເລີກບິນ</AlertDialogAction>
