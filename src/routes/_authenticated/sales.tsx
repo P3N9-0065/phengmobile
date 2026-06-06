@@ -159,15 +159,36 @@ function SalesPage() {
             </div>
           )}
 
+          {viewing && isAdmin && viewing.status !== "voided" && (() => {
+            const ageDays = (Date.now() - new Date(viewing.created_at).getTime()) / 86400000;
+            const expired = ageDays > 7;
+            const hasRedeem = Number(viewing.points_redeemed ?? 0) > 0;
+            const hasDiscount = Number(viewing.discount ?? 0) > 0;
+            const blocked = expired || hasRedeem || hasDiscount;
+            const reasons: string[] = [];
+            if (expired) reasons.push("ເກີນ 7 ວັນ");
+            if (hasRedeem) reasons.push("ໃຊ້ແຕ້ມສະສົມ");
+            if (hasDiscount) reasons.push("ມີສ່ວນຫຼຸດ");
+            return blocked ? (
+              <p className="text-xs text-destructive border border-destructive/30 rounded p-2 bg-destructive/5">
+                ບໍ່ສາມາດຄືນ/ຍົກເລີກບິນນີ້: {reasons.join(", ")}
+              </p>
+            ) : null;
+          })()}
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            {isAdmin && viewing?.status !== "voided" && (
-              <>
-                <Button variant="outline" onClick={() => setReturnOpen(true)}>
-                  <Undo2 className="h-4 w-4 mr-2" />ຄືນສິນຄ້າ
-                </Button>
-                <VoidSaleButton onConfirm={voidSale} />
-              </>
-            )}
+            {viewing && isAdmin && viewing.status !== "voided" && (() => {
+              const ageDays = (Date.now() - new Date(viewing.created_at).getTime()) / 86400000;
+              const blocked = ageDays > 7 || Number(viewing.points_redeemed ?? 0) > 0 || Number(viewing.discount ?? 0) > 0;
+              if (blocked) return null;
+              return (
+                <>
+                  <Button variant="outline" onClick={() => setReturnOpen(true)}>
+                    <Undo2 className="h-4 w-4 mr-2" />ຄືນສິນຄ້າ
+                  </Button>
+                  <VoidSaleButton onConfirm={voidSale} />
+                </>
+              );
+            })()}
             <Button onClick={printReceipt}><Printer className="h-4 w-4 mr-2" />ພິມ</Button>
           </DialogFooter>
         </DialogContent>
