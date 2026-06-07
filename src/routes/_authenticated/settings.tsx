@@ -454,6 +454,7 @@ function diffPolicy(oldV: any, newV: any): string[] {
 }
 
 function ReturnPolicyAuditCard() {
+  const [detail, setDetail] = useState<any | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ["return-policy-audit"],
     queryFn: async () => {
@@ -498,6 +499,7 @@ function ReturnPolicyAuditCard() {
                   <TableHead>ເວລາ</TableHead>
                   <TableHead>ຜູ້ແກ້ໄຂ</TableHead>
                   <TableHead>ການປ່ຽນແປງ</TableHead>
+                  <TableHead className="w-20"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -518,6 +520,17 @@ function ReturnPolicyAuditCard() {
                           </ul>
                         )}
                       </TableCell>
+                      <TableCell className="align-top">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setDetail(r)}
+                          className="h-7 px-2 text-xs"
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          ລາຍລະອຽດ
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -526,6 +539,70 @@ function ReturnPolicyAuditCard() {
           </div>
         )}
       </CardContent>
+
+      <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>ລາຍລະອຽດການແກ້ໄຂນະໂຍບາຍ</DialogTitle>
+          </DialogHeader>
+          {detail && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <div className="text-muted-foreground text-xs">ເວລາ</div>
+                  <div>{new Date(detail.changed_at).toLocaleString("lo-LA")}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground text-xs">ຜູ້ແກ້ໄຂ</div>
+                  <div>{detail.changer_name}</div>
+                </div>
+                <div className="col-span-2">
+                  <div className="text-muted-foreground text-xs">ປະເພດ</div>
+                  <div>
+                    {detail.old_values ? (
+                      <Badge variant="secondary">ແກ້ໄຂ</Badge>
+                    ) : (
+                      <Badge>ສ້າງເລີ່ມຕົ້ນ</Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ຊ່ອງ</TableHead>
+                      <TableHead>ຄ່າເກົ່າ</TableHead>
+                      <TableHead>ຄ່າໃໝ່</TableHead>
+                      <TableHead className="w-16">ປ່ຽນ</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {POLICY_FIELDS.map((f) => {
+                      const a = detail.old_values?.[f.key];
+                      const b = detail.new_values?.[f.key];
+                      const changed = detail.old_values && a !== b;
+                      return (
+                        <TableRow key={f.key} className={changed ? "bg-amber-50 dark:bg-amber-950/20" : ""}>
+                          <TableCell className="text-xs font-medium">{f.label}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {detail.old_values ? fmtVal(a) : "—"}
+                          </TableCell>
+                          <TableCell className="text-xs font-medium">{fmtVal(b)}</TableCell>
+                          <TableCell>
+                            {changed ? <Badge variant="destructive" className="text-[10px]">✓</Badge> : null}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
