@@ -426,3 +426,104 @@ function SettingsPage() {
     </div>
   );
 }
+
+const POLICY_FIELDS: { key: keyof ReturnPolicy; label: string }[] = [
+  { key: "max_days", label: "ຈຳນວນວັນ" },
+  { key: "block_redeemed", label: "ບລັອກບິນໃຊ້ແຕ້ມ" },
+  { key: "block_discounted", label: "ບລັອກບິນສ່ວນຫຼຸດ" },
+  { key: "block_phone", label: "ບລັອກມືຖື" },
+  { key: "require_reason", label: "ບັງຄັບເຫດຜົນ" },
+];
+
+function fmtVal(v: any): string {
+  if (typeof v === "boolean") return v ? "ເປີດ" : "ປິດ";
+  if (v === null || v === undefined) return "—";
+  return String(v);
+}
+
+function diffPolicy(oldV: any, newV: any): string[] {
+  const out: string[] = [];
+  for (const f of POLICY_FIELDS) {
+    const a = oldV?.[f.key];
+    const b = newV?.[f.key];
+    if (a !== b) out.push(`${f.label}: ${fmtVal(a)} → ${fmtVal(b)}`);
+  }
+  return out;
+}
+
+function ReturnPolicyAuditCard() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["return-policy-audit"],
+    queryFn: async () => {
+      const { data: rows } = await supabase
+        .from("return_policy_audit" as any)
+        .select("*")
+        .order("changed_at", { ascending: false })
+        .limit(50);
+      const list = (rows ?? []) as any[];
+      const ids = Array.from(new Set(list.map((r) => r.changed_by).filter(Boolean)));
+      let names: Record<string, string> = {};
+      if (ids.length) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", ids);
+        names = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.full_name]));
+      }
+      return list.map((r) => ({ ...r, changer_name: r.changed_by ? names[r.changed_by] ?? "—" : "ລະບົບ" }));
+    },
+    staleTime: 30_000,
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <History className="h-5 w-5" />
+          ປະຫວັດການແກ້ໄຂນະໂຍບາຍການຄືນ
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">ກຳລັງໂຫຼດ...</p>
+        ) : !data || data.length === 0 ? (
+          <p className="text-sm text-muted-foreground">ຍັງບໍ່ມີປະຫວັດການແກ້ໄຂ</p>
+        ) : (
+          <div className="max-h-[420px] overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ເວລາ</TableHead>
+                  <TableHead>ຜູ້ແກ້ໄຂ</TableHead>
+                  <TableHead>ການປ່ຽນແປງ</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.map((r: any) => {
+                  const changes = r.old_values ? diffPolicy(r.old_values, r.new_values) : ["ສ້າງນະໂຍບາຍເລີ່ມຕົ້ນ"];
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell className="text-xs whitespace-nowrap align-top">
+                        {new Date(r.changed_at).toLocaleString("lo-LA")}
+                      </TableCell>
+                      <TableCell className="text-xs align-top">{r.changer_name}</TableCell>
+                      <TableCell className="text-xs">
+                        {changes.length === 0 ? (
+                          <span className="text-muted-foreground">ບໍ່ມີການປ່ຽນແປງ</span>
+                        ) : (
+                          <ul className="space-y-0.5">
+                            {changes.map((c, i) => <li key={i}>• {c}</li>)}
+                          </ul>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
