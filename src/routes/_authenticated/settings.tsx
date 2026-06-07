@@ -403,6 +403,10 @@ function SettingsPage() {
             </CardContent>
           </Card>
 
+          {isAdmin && <ReturnPolicyAuditCard />}
+
+
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>ຕົວຢ່າງໃບເສັດ</CardTitle>
