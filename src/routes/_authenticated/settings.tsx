@@ -16,9 +16,11 @@ import { Barcode } from "@/components/inventory/Barcode";
 import { formatLAK } from "@/lib/format";
 import { useLoyaltySettings, type LoyaltySettings } from "@/lib/loyalty";
 import { useReturnPolicy, DEFAULT_RETURN_POLICY, type ReturnPolicy } from "@/lib/return-policy";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { History } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const BARCODE_FORMATS: { value: PosSettings["barcode_format"]; label: string; hint: string }[] = [
   { value: "CODE128", label: "CODE128", hint: "ໃຊ້ໄດ້ກັບທຸກຕົວອັກສອນ/ຕົວເລກ" },
