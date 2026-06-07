@@ -19,8 +19,10 @@ import { useReturnPolicy, DEFAULT_RETURN_POLICY, type ReturnPolicy } from "@/lib
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { History } from "lucide-react";
+import { History, Eye } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 const BARCODE_FORMATS: { value: PosSettings["barcode_format"]; label: string; hint: string }[] = [
   { value: "CODE128", label: "CODE128", hint: "ໃຊ້ໄດ້ກັບທຸກຕົວອັກສອນ/ຕົວເລກ" },
