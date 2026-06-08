@@ -22,6 +22,8 @@ export const Route = createFileRoute("/_authenticated/customers/$id")({
 
 function CustomerDetailPage() {
   const { id } = Route.useParams();
+  const qc = useQueryClient();
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: customer } = useQuery({
     queryKey: ["customer", id],
@@ -29,6 +31,20 @@ function CustomerDetailPage() {
       const { data } = await supabase.from("customers").select("*").eq("id", id).single();
       return data;
     },
+  });
+
+  const updateCustomer = useMutation({
+    mutationFn: async (patch: { name: string; phone: string; email: string | null; address: string | null }) => {
+      const { error } = await supabase.from("customers").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["customer", id] });
+      qc.invalidateQueries({ queryKey: ["customers"] });
+      toast.success("ບັນທຶກລູກຄ້າສຳເລັດ");
+      setEditOpen(false);
+    },
+    onError: (e: any) => toast.error(e.message),
   });
 
   const { data: tickets } = useQuery({
