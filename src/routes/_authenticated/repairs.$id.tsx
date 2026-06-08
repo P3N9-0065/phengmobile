@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, Plus, Printer, ExternalLink, Download, Copy, Camera } from "lucide-react";
+import { ArrowLeft, Plus, Printer, ExternalLink, Download, Copy, Camera, MessageCircle, Send } from "lucide-react";
 import { toast } from "sonner";
 import { QRCodeCanvas } from "qrcode.react";
 import { STATUS_LABEL, STATUS_COLOR, STATUS_ORDER, ROLE_LABEL, type RepairStatus } from "@/lib/lao";
@@ -19,6 +19,9 @@ import { RepairReceipt } from "@/components/repair/RepairReceipt";
 import { BarcodeScanner } from "@/components/inventory/BarcodeScanner";
 import { fallbackLookup, type LookupItem } from "@/lib/barcode-lookup";
 import { clearScanCache } from "@/lib/scan-cache";
+import { waLink, readyMessage } from "@/lib/notify";
+import { sendRepairSms } from "@/lib/notify.functions";
+import { useServerFn } from "@tanstack/react-start";
 import { SignedImg } from "@/components/SignedImg";
 import { getSignedUrl } from "@/lib/signed-url";
 
