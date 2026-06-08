@@ -459,3 +459,69 @@ function RepairDetailPage() {
     </>
   );
 }
+
+function NotifyCustomerCard({ ticket, trackUrl }: { ticket: any; trackUrl: string }) {
+  const customer = ticket.customers as { name?: string; phone?: string } | null;
+  const phone = customer?.phone ?? "";
+  const [sending, setSending] = useState(false);
+  const sendSms = useServerFn(sendRepairSms);
+
+  const device = `${ticket.device_brand ?? ""} ${ticket.device_model ?? ""}`.trim() || "ເຄື່ອງຂອງທ່ານ";
+  const message = readyMessage({
+    customerName: customer?.name,
+    ticketCode: ticket.ticket_code,
+    device,
+    finalPrice: ticket.final_price ? Number(ticket.final_price) : null,
+    trackUrl,
+  });
+
+  const wa = phone ? waLink(phone, message) : null;
+  const isReady = ticket.status === "done";
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>ແຈ້ງລູກຄ້າ</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {!phone && <p className="text-sm text-muted-foreground">ບໍ່ມີເບີໂທລູກຄ້າ</p>}
+        {phone && (
+          <>
+            <p className="text-xs text-muted-foreground">
+              ສະຖານະປັດຈຸບັນ: <b>{STATUS_LABEL[ticket.status as RepairStatus]}</b>
+              {!isReady && " — ປ່ຽນເປັນ 'ສ້ອມສຳເລັດ' ກ່ອນແຈ້ງ"}
+            </p>
+            <Textarea defaultValue={message} readOnly rows={6} className="text-xs font-mono" id="notify-msg" />
+            <div className="grid grid-cols-2 gap-2">
+              <Button asChild size="sm" variant="outline" disabled={!wa}>
+                <a href={wa ?? "#"} target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="h-4 w-4 mr-1" />WhatsApp
+                </a>
+              </Button>
+              <Button
+                size="sm"
+                disabled={sending}
+                onClick={async () => {
+                  const ta = document.getElementById("notify-msg") as HTMLTextAreaElement | null;
+                  const text = ta?.value || message;
+                  setSending(true);
+                  try {
+                    const res = await sendSms({ data: { phone, message: text } });
+                    toast.success("ສົ່ງ SMS ສຳເລັດ → " + res.to);
+                  } catch (e: any) {
+                    toast.error(e?.message ?? "ສົ່ງ SMS ບໍ່ສຳເລັດ");
+                  } finally {
+                    setSending(false);
+                  }
+                }}
+              >
+                <Send className="h-4 w-4 mr-1" />{sending ? "ກຳລັງສົ່ງ..." : "ສົ່ງ SMS"}
+              </Button>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
