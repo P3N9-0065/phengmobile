@@ -24,6 +24,7 @@ import { sendRepairSms } from "@/lib/notify.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { SignedImg } from "@/components/SignedImg";
 import { getSignedUrl } from "@/lib/signed-url";
+import { usePosSettings } from "@/lib/settings";
 
 export const Route = createFileRoute("/_authenticated/repairs/$id")({
   component: RepairDetailPage,
@@ -350,6 +351,10 @@ function RepairDetailPage() {
           )}
 
           <NotifyCustomerCard ticket={ticket} trackUrl={trackUrl} />
+
+          <NotificationHistoryCard ticketId={ticket.id} />
+
+
 
 
 
