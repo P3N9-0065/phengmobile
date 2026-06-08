@@ -465,6 +465,8 @@ function NotifyCustomerCard({ ticket, trackUrl }: { ticket: any; trackUrl: strin
   const phone = customer?.phone ?? "";
   const [sending, setSending] = useState(false);
   const sendSms = useServerFn(sendRepairSms);
+  const qc = useQueryClient();
+  const shop = usePosSettings();
 
   const device = `${ticket.device_brand ?? ""} ${ticket.device_model ?? ""}`.trim() || "ເຄື່ອງຂອງທ່ານ";
   const message = readyMessage({
@@ -473,16 +475,31 @@ function NotifyCustomerCard({ ticket, trackUrl }: { ticket: any; trackUrl: strin
     device,
     finalPrice: ticket.final_price ? Number(ticket.final_price) : null,
     trackUrl,
+    shopName: shop.shop_name,
+    shopPhone: shop.shop_phone,
   });
 
   const wa = phone ? waLink(phone, message) : null;
   const isReady = ticket.status === "done";
 
+  const logWhatsApp = async () => {
+    const ta = document.getElementById("notify-msg") as HTMLTextAreaElement | null;
+    const text = ta?.value || message;
+    const { data: { user } } = await supabase.auth.getUser();
+    await supabase.from("notification_logs" as any).insert({
+      ticket_id: ticket.id,
+      channel: "whatsapp",
+      recipient: phone,
+      message: text,
+      status: "sent",
+      created_by: user?.id,
+    });
+    qc.invalidateQueries({ queryKey: ["ticket-notifications", ticket.id] });
+  };
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>ແຈ້ງລູກຄ້າ</CardTitle>
-      </CardHeader>
+      <CardHeader><CardTitle>ແຈ້ງລູກຄ້າ</CardTitle></CardHeader>
       <CardContent className="space-y-3">
         {!phone && <p className="text-sm text-muted-foreground">ບໍ່ມີເບີໂທລູກຄ້າ</p>}
         {phone && (
@@ -491,10 +508,10 @@ function NotifyCustomerCard({ ticket, trackUrl }: { ticket: any; trackUrl: strin
               ສະຖານະປັດຈຸບັນ: <b>{STATUS_LABEL[ticket.status as RepairStatus]}</b>
               {!isReady && " — ປ່ຽນເປັນ 'ສ້ອມສຳເລັດ' ກ່ອນແຈ້ງ"}
             </p>
-            <Textarea defaultValue={message} readOnly rows={6} className="text-xs font-mono" id="notify-msg" />
+            <Textarea defaultValue={message} rows={7} className="text-xs font-mono" id="notify-msg" />
             <div className="grid grid-cols-2 gap-2">
               <Button asChild size="sm" variant="outline" disabled={!wa}>
-                <a href={wa ?? "#"} target="_blank" rel="noopener noreferrer">
+                <a href={wa ?? "#"} target="_blank" rel="noopener noreferrer" onClick={() => { void logWhatsApp(); }}>
                   <MessageCircle className="h-4 w-4 mr-1" />WhatsApp
                 </a>
               </Button>
@@ -506,12 +523,13 @@ function NotifyCustomerCard({ ticket, trackUrl }: { ticket: any; trackUrl: strin
                   const text = ta?.value || message;
                   setSending(true);
                   try {
-                    const res = await sendSms({ data: { phone, message: text } });
+                    const res = await sendSms({ data: { phone, message: text, ticketId: ticket.id } });
                     toast.success("ສົ່ງ SMS ສຳເລັດ → " + res.to);
                   } catch (e: any) {
                     toast.error(e?.message ?? "ສົ່ງ SMS ບໍ່ສຳເລັດ");
                   } finally {
                     setSending(false);
+                    qc.invalidateQueries({ queryKey: ["ticket-notifications", ticket.id] });
                   }
                 }}
               >
@@ -519,6 +537,55 @@ function NotifyCustomerCard({ ticket, trackUrl }: { ticket: any; trackUrl: strin
               </Button>
             </div>
           </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function NotificationHistoryCard({ ticketId }: { ticketId: string }) {
+  const { data: logs } = useQuery({
+    queryKey: ["ticket-notifications", ticketId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("notification_logs" as any)
+        .select("*")
+        .eq("ticket_id", ticketId)
+        .order("created_at", { ascending: false });
+      return ((data ?? []) as any[]);
+    },
+  });
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>ປະຫວັດການແຈ້ງເຕືອນ ({logs?.length ?? 0})</CardTitle></CardHeader>
+      <CardContent>
+        {logs && logs.length > 0 ? (
+          <div className="space-y-2">
+            {logs.map((l) => {
+              const ok = l.status === "sent";
+              const Icon = l.channel === "whatsapp" ? MessageCircle : Send;
+              return (
+                <div key={l.id} className="border rounded-md p-2.5 text-sm space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Icon className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium capitalize">{l.channel}</span>
+                      <Badge variant="outline" className={ok ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-rose-50 text-rose-700 border-rose-200"}>
+                        {ok ? "ສຳເລັດ" : "ລົ້ມເຫຼວ"}
+                      </Badge>
+                    </div>
+                    <span className="text-[11px] text-muted-foreground">{formatDateTime(l.created_at)}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">→ {l.recipient}</p>
+                  <p className="text-xs whitespace-pre-wrap break-words">{l.message}</p>
+                  {l.error && <p className="text-xs text-rose-600">⚠ {l.error}</p>}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground text-center py-4">ຍັງບໍ່ມີການແຈ້ງເຕືອນ</p>
         )}
       </CardContent>
     </Card>
