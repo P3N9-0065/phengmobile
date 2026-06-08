@@ -349,6 +349,10 @@ function RepairDetailPage() {
             </Card>
           )}
 
+          <NotifyCustomerCard ticket={ticket} trackUrl={trackUrl} />
+
+
+
           <Card>
             <CardHeader><CardTitle>QR ຕິດຕາມສະຖານະ</CardTitle></CardHeader>
             <CardContent className="space-y-3">
