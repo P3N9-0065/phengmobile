@@ -1,10 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Phone, Mail, MapPin, Award, Apple, KeyRound, TrendingUp, TrendingDown, Settings as SettingsIcon } from "lucide-react";
+import { ArrowLeft, Phone, Mail, MapPin, Award, Apple, KeyRound, TrendingUp, TrendingDown, Settings as SettingsIcon, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { STATUS_LABEL, STATUS_COLOR } from "@/lib/lao";
 import { formatDate, formatLAK } from "@/lib/format";
 import { useLoyaltySettings, computeTier, TIER_LABEL, TIER_COLOR } from "@/lib/loyalty";
@@ -16,6 +22,8 @@ export const Route = createFileRoute("/_authenticated/customers/$id")({
 
 function CustomerDetailPage() {
   const { id } = Route.useParams();
+  const qc = useQueryClient();
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: customer } = useQuery({
     queryKey: ["customer", id],
@@ -23,6 +31,20 @@ function CustomerDetailPage() {
       const { data } = await supabase.from("customers").select("*").eq("id", id).single();
       return data;
     },
+  });
+
+  const updateCustomer = useMutation({
+    mutationFn: async (patch: { name: string; phone: string; email: string | null; address: string | null }) => {
+      const { error } = await supabase.from("customers").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["customer", id] });
+      qc.invalidateQueries({ queryKey: ["customers"] });
+      toast.success("ບັນທຶກລູກຄ້າສຳເລັດ");
+      setEditOpen(false);
+    },
+    onError: (e: any) => toast.error(e.message),
   });
 
   const { data: tickets } = useQuery({
@@ -77,7 +99,7 @@ function CustomerDetailPage() {
       <Link to="/customers"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-2" />ກັບຄືນ</Button></Link>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-start justify-between gap-2">
           <CardTitle className="flex items-center gap-3">
             {customer.name}
             {loyalty?.enabled && tier !== "none" && (
@@ -86,6 +108,36 @@ function CustomerDetailPage() {
               </Badge>
             )}
           </CardTitle>
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline"><Pencil className="h-3.5 w-3.5 mr-1" />ແກ້ໄຂ</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>ແກ້ໄຂຂໍ້ມູນລູກຄ້າ</DialogTitle></DialogHeader>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const fd = new FormData(e.currentTarget);
+                  updateCustomer.mutate({
+                    name: String(fd.get("name") || "").trim(),
+                    phone: String(fd.get("phone") || "").trim(),
+                    email: (fd.get("email") as string)?.trim() || null,
+                    address: (fd.get("address") as string)?.trim() || null,
+                  });
+                }}
+                className="space-y-3"
+              >
+                <div><Label>ຊື່ລູກຄ້າ *</Label><Input name="name" defaultValue={customer.name ?? ""} required /></div>
+                <div><Label>ເບີໂທ *</Label><Input name="phone" defaultValue={customer.phone ?? ""} required /></div>
+                <div><Label>ອີເມວ</Label><Input name="email" type="email" defaultValue={customer.email ?? ""} /></div>
+                <div><Label>ທີ່ຢູ່</Label><Textarea name="address" rows={2} defaultValue={customer.address ?? ""} /></div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>ຍົກເລີກ</Button>
+                  <Button type="submit" disabled={updateCustomer.isPending}>ບັນທຶກ</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" />{customer.phone}</p>
@@ -103,6 +155,7 @@ function CustomerDetailPage() {
           </div>
         </CardContent>
       </Card>
+
 
       {loyalty?.enabled && (
         <Card>

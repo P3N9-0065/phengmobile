@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 // Normalize phone to E.164 (default LA = +856)
 function toE164(raw: string, defaultCc = "856"): string | null {
@@ -12,25 +13,53 @@ function toE164(raw: string, defaultCc = "856"): string | null {
 }
 
 export const sendRepairSms = createServerFn({ method: "POST" })
-  .inputValidator((data: { phone: string; message: string }) => {
-    if (!data?.phone || !data?.message) throw new Error("phone and message are required");
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { phone: string; message: string; ticketId: string }) => {
+    if (!data?.phone || !data?.message || !data?.ticketId)
+      throw new Error("phone, message and ticketId are required");
     if (data.message.length > 1000) throw new Error("message too long");
     return data;
   })
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
     const TWILIO_API_KEY = process.env.TWILIO_API_KEY;
     const TWILIO_FROM = process.env.TWILIO_FROM_NUMBER;
+    const { supabase, userId } = context;
+
+    const log = async (
+      recipient: string,
+      status: "sent" | "failed",
+      extra: { error?: string; provider_sid?: string | null } = {},
+    ) => {
+      await supabase.from("notification_logs" as any).insert({
+        ticket_id: data.ticketId,
+        channel: "sms",
+        recipient,
+        message: data.message,
+        status,
+        error: extra.error ?? null,
+        provider_sid: extra.provider_sid ?? null,
+        created_by: userId,
+      });
+    };
 
     if (!LOVABLE_API_KEY || !TWILIO_API_KEY) {
-      throw new Error("ຍັງບໍ່ໄດ້ເຊື່ອມຕໍ່ Twilio — ກະລຸນາເຊື່ອມຕໍ່ໃນໜ້າ Connectors ກ່ອນ");
+      const err = "ຍັງບໍ່ໄດ້ເຊື່ອມຕໍ່ Twilio — ກະລຸນາເຊື່ອມຕໍ່ໃນໜ້າ Connectors ກ່ອນ";
+      await log(data.phone, "failed", { error: err });
+      throw new Error(err);
     }
     if (!TWILIO_FROM) {
-      throw new Error("ຍັງບໍ່ໄດ້ຕັ້ງເບີສົ່ງ (TWILIO_FROM_NUMBER)");
+      const err = "ຍັງບໍ່ໄດ້ຕັ້ງເບີສົ່ງ (TWILIO_FROM_NUMBER)";
+      await log(data.phone, "failed", { error: err });
+      throw new Error(err);
     }
 
     const to = toE164(data.phone);
-    if (!to) throw new Error("ເບີໂທບໍ່ຖືກຕ້ອງ");
+    if (!to) {
+      const err = "ເບີໂທບໍ່ຖືກຕ້ອງ";
+      await log(data.phone, "failed", { error: err });
+      throw new Error(err);
+    }
 
     const res = await fetch("https://connector-gateway.lovable.dev/twilio/Messages.json", {
       method: "POST",
@@ -43,7 +72,11 @@ export const sendRepairSms = createServerFn({ method: "POST" })
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) {
-      throw new Error(`Twilio error [${res.status}]: ${body?.message || JSON.stringify(body)}`);
+      const err = `Twilio error [${res.status}]: ${body?.message || JSON.stringify(body)}`;
+      await log(to, "failed", { error: err });
+      throw new Error(err);
     }
+
+    await log(to, "sent", { provider_sid: body.sid ?? null });
     return { sid: body.sid as string, to };
   });
