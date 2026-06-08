@@ -234,6 +234,53 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_logs: {
+        Row: {
+          channel: string
+          created_at: string
+          created_by: string | null
+          error: string | null
+          id: string
+          message: string
+          provider_sid: string | null
+          recipient: string
+          status: string
+          ticket_id: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          message: string
+          provider_sid?: string | null
+          recipient: string
+          status: string
+          ticket_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          message?: string
+          provider_sid?: string | null
+          recipient?: string
+          status?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_logs_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "repair_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       point_transactions: {
         Row: {
           created_at: string
