@@ -99,7 +99,7 @@ function CustomerDetailPage() {
       <Link to="/customers"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-2" />ກັບຄືນ</Button></Link>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-start justify-between gap-2">
           <CardTitle className="flex items-center gap-3">
             {customer.name}
             {loyalty?.enabled && tier !== "none" && (
@@ -108,6 +108,36 @@ function CustomerDetailPage() {
               </Badge>
             )}
           </CardTitle>
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline"><Pencil className="h-3.5 w-3.5 mr-1" />ແກ້ໄຂ</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>ແກ້ໄຂຂໍ້ມູນລູກຄ້າ</DialogTitle></DialogHeader>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const fd = new FormData(e.currentTarget);
+                  updateCustomer.mutate({
+                    name: String(fd.get("name") || "").trim(),
+                    phone: String(fd.get("phone") || "").trim(),
+                    email: (fd.get("email") as string)?.trim() || null,
+                    address: (fd.get("address") as string)?.trim() || null,
+                  });
+                }}
+                className="space-y-3"
+              >
+                <div><Label>ຊື່ລູກຄ້າ *</Label><Input name="name" defaultValue={customer.name ?? ""} required /></div>
+                <div><Label>ເບີໂທ *</Label><Input name="phone" defaultValue={customer.phone ?? ""} required /></div>
+                <div><Label>ອີເມວ</Label><Input name="email" type="email" defaultValue={customer.email ?? ""} /></div>
+                <div><Label>ທີ່ຢູ່</Label><Textarea name="address" rows={2} defaultValue={customer.address ?? ""} /></div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>ຍົກເລີກ</Button>
+                  <Button type="submit" disabled={updateCustomer.isPending}>ບັນທຶກ</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" />{customer.phone}</p>
@@ -125,6 +155,7 @@ function CustomerDetailPage() {
           </div>
         </CardContent>
       </Card>
+
 
       {loyalty?.enabled && (
         <Card>
