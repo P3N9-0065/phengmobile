@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, AlertTriangle, Package as PackageIcon, Pencil, Upload, X, Barcode as BarcodeIcon, Printer, Camera } from "lucide-react";
+import { Plus, Search, AlertTriangle, Package as PackageIcon, Pencil, Upload, X, Barcode as BarcodeIcon, Printer, Camera, Star } from "lucide-react";
 import { toast } from "sonner";
 import { CATEGORY_LABEL, type ItemCategory } from "@/lib/lao";
 import { formatLAK } from "@/lib/format";
@@ -342,6 +342,25 @@ function InventoryPage() {
                     {item.barcode && <p className="text-xs text-muted-foreground font-mono">{item.barcode}</p>}
                   </div>
                   <div className="flex flex-col gap-1 shrink-0">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7"
+                      title={item.is_featured ? "ເອົາອອກຈາກໜ້າເວັບ" : "ສະແດງໃນໜ້າເວັບ"}
+                      onClick={async () => {
+                        const { error } = await supabase
+                          .from("inventory_items")
+                          .update({ is_featured: !item.is_featured })
+                          .eq("id", item.id);
+                        if (error) toast.error(error.message);
+                        else {
+                          toast.success(!item.is_featured ? "ສະແດງໃນເວັບແລ້ວ" : "ເອົາອອກແລ້ວ");
+                          qc.invalidateQueries({ queryKey: ["inventory"] });
+                        }
+                      }}
+                    >
+                      <Star className={`h-3.5 w-3.5 ${item.is_featured ? "fill-amber-400 text-amber-500" : ""}`} />
+                    </Button>
                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(item)}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
