@@ -18,6 +18,7 @@ export const Route = createFileRoute("/_authenticated/customers")({
 function CustomersPage() {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
+  const [editCustomer, setEditCustomer] = useState<any>(null);
   const qc = useQueryClient();
 
   const { data: customers } = useQuery({
@@ -43,6 +44,19 @@ function CustomersPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const update = useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: any }) => {
+      const { error } = await supabase.from("customers").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["customers"] });
+      toast.success("ອັບເດດຂໍ້ມູນລູກຄ້າສຳເລັດ");
+      setEditCustomer(null);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
@@ -51,6 +65,21 @@ function CustomersPage() {
       phone: fd.get("phone"),
       email: fd.get("email") || null,
       address: fd.get("address") || null,
+    });
+  }
+
+  function handleEditSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!editCustomer) return;
+    const fd = new FormData(e.currentTarget);
+    update.mutate({
+      id: editCustomer.id,
+      patch: {
+        name: String(fd.get("name") || "").trim(),
+        phone: String(fd.get("phone") || "").trim(),
+        email: (fd.get("email") as string)?.trim() || null,
+        address: (fd.get("address") as string)?.trim() || null,
+      },
     });
   }
 
