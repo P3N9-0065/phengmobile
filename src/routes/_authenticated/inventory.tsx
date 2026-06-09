@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, AlertTriangle, Package as PackageIcon, Pencil, Upload, X, Barcode as BarcodeIcon, Printer, Camera } from "lucide-react";
+import { Plus, Search, AlertTriangle, Package as PackageIcon, Pencil, Upload, X, Barcode as BarcodeIcon, Printer, Camera, Star } from "lucide-react";
 import { toast } from "sonner";
 import { CATEGORY_LABEL, type ItemCategory } from "@/lib/lao";
 import { formatLAK } from "@/lib/format";
