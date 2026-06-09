@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Search, Phone, User } from "lucide-react";
+import { Plus, Search, Phone, User, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/customers")({
@@ -18,6 +18,7 @@ export const Route = createFileRoute("/_authenticated/customers")({
 function CustomersPage() {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
+  const [editCustomer, setEditCustomer] = useState<any>(null);
   const qc = useQueryClient();
 
   const { data: customers } = useQuery({
@@ -43,6 +44,19 @@ function CustomersPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const update = useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: any }) => {
+      const { error } = await supabase.from("customers").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["customers"] });
+      toast.success("ອັບເດດຂໍ້ມູນລູກຄ້າສຳເລັດ");
+      setEditCustomer(null);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
@@ -51,6 +65,21 @@ function CustomersPage() {
       phone: fd.get("phone"),
       email: fd.get("email") || null,
       address: fd.get("address") || null,
+    });
+  }
+
+  function handleEditSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!editCustomer) return;
+    const fd = new FormData(e.currentTarget);
+    update.mutate({
+      id: editCustomer.id,
+      patch: {
+        name: String(fd.get("name") || "").trim(),
+        phone: String(fd.get("phone") || "").trim(),
+        email: (fd.get("email") as string)?.trim() || null,
+        address: (fd.get("address") as string)?.trim() || null,
+      },
     });
   }
 
@@ -92,11 +121,11 @@ function CustomersPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {customers?.map((c) => (
-          <Link key={c.id} to="/customers/$id" params={{ id: c.id }}>
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardContent className="pt-4">
-                <div className="flex items-start gap-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <Card key={c.id} className="hover:shadow-md transition-shadow">
+            <CardContent className="pt-4">
+              <div className="flex items-start gap-3">
+                <Link to="/customers/$id" params={{ id: c.id }} className="flex items-start gap-3 flex-1 min-w-0">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <User className="h-5 w-5 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -108,15 +137,45 @@ function CustomersPage() {
                       <p className="text-xs text-amber-600 mt-1">{c.points} ແຕ້ມ</p>
                     )}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
+                </Link>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="shrink-0"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setEditCustomer(c);
+                  }}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ))}
         {customers?.length === 0 && (
           <p className="text-center text-muted-foreground col-span-full py-8">ບໍ່ພົບລູກຄ້າ</p>
         )}
       </div>
+
+      <Dialog open={!!editCustomer} onOpenChange={(v) => !v && setEditCustomer(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>ແກ້ໄຂຂໍ້ມູນລູກຄ້າ</DialogTitle></DialogHeader>
+          {editCustomer && (
+            <form onSubmit={handleEditSubmit} className="space-y-3">
+              <div><Label>ຊື່ລູກຄ້າ *</Label><Input name="name" defaultValue={editCustomer.name ?? ""} required /></div>
+              <div><Label>ເບີໂທ *</Label><Input name="phone" defaultValue={editCustomer.phone ?? ""} required /></div>
+              <div><Label>ອີເມວ</Label><Input name="email" type="email" defaultValue={editCustomer.email ?? ""} /></div>
+              <div><Label>ທີ່ຢູ່</Label><Textarea name="address" rows={2} defaultValue={editCustomer.address ?? ""} /></div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditCustomer(null)}>ຍົກເລີກ</Button>
+                <Button type="submit" disabled={update.isPending}>ບັນທຶກ</Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
