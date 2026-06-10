@@ -977,6 +977,99 @@ export type Database = {
           },
         ]
       }
+      shop_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string | null
+          line_total: number
+          name_snapshot: string
+          order_id: string
+          qty: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          line_total: number
+          name_snapshot: string
+          order_id: string
+          qty: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          line_total?: number
+          name_snapshot?: string
+          order_id?: string
+          qty?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_order_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "shop_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_orders: {
+        Row: {
+          address: string | null
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          delivery_method: Database["public"]["Enums"]["shop_delivery_method"]
+          id: string
+          note: string | null
+          order_code: string
+          slip_url: string | null
+          status: Database["public"]["Enums"]["shop_order_status"]
+          subtotal: number
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          customer_name: string
+          customer_phone: string
+          delivery_method?: Database["public"]["Enums"]["shop_delivery_method"]
+          id?: string
+          note?: string | null
+          order_code?: string
+          slip_url?: string | null
+          status?: Database["public"]["Enums"]["shop_order_status"]
+          subtotal?: number
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string
+          delivery_method?: Database["public"]["Enums"]["shop_delivery_method"]
+          id?: string
+          note?: string | null
+          order_code?: string
+          slip_url?: string | null
+          status?: Database["public"]["Enums"]["shop_order_status"]
+          subtotal?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       stock_movements: {
         Row: {
           created_at: string
@@ -1086,6 +1179,7 @@ export type Database = {
     Functions: {
       gen_po_code: { Args: never; Returns: string }
       gen_return_code: { Args: never; Returns: string }
+      gen_shop_order_code: { Args: never; Returns: string }
       gen_ticket_code: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -1165,6 +1259,13 @@ export type Database = {
         | "done"
         | "picked_up"
         | "closed"
+        | "cancelled"
+      shop_delivery_method: "pickup" | "delivery"
+      shop_order_status:
+        | "pending"
+        | "confirmed"
+        | "ready"
+        | "completed"
         | "cancelled"
     }
     CompositeTypes: {
@@ -1310,6 +1411,14 @@ export const Constants = {
         "done",
         "picked_up",
         "closed",
+        "cancelled",
+      ],
+      shop_delivery_method: ["pickup", "delivery"],
+      shop_order_status: [
+        "pending",
+        "confirmed",
+        "ready",
+        "completed",
         "cancelled",
       ],
     },
