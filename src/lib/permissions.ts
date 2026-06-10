@@ -8,6 +8,7 @@ export const ROLE_ROUTES: Record<AppRole, string[]> = {
     "/pos",
     "/repairs",
     "/sales",
+    "/orders",
     "/customers",
     "/account-signups",
   ],
