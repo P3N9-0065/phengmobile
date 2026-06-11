@@ -93,6 +93,7 @@ function OrdersPage() {
         </Select>
       </div>
 
+      {isAdmin && <BankSettingsCard />}
       {isAdmin && <ShippingSettingsCard />}
 
       {isLoading && <p className="text-muted-foreground">ກຳລັງໂຫລດ...</p>}
