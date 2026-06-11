@@ -71,6 +71,9 @@ function OrdersPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const { hasRole } = useAuth();
+  const isAdmin = hasRole("admin");
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -87,6 +90,8 @@ function OrdersPage() {
           </SelectContent>
         </Select>
       </div>
+
+      {isAdmin && <ShippingSettingsCard />}
 
       {isLoading && <p className="text-muted-foreground">ກຳລັງໂຫລດ...</p>}
       {!isLoading && (orders?.length ?? 0) === 0 && (
