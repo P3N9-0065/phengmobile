@@ -173,7 +173,10 @@ export function AppLayout() {
         </aside>
 
         <main className="flex-1 overflow-auto">
-          <div className="p-6 max-w-7xl mx-auto">
+          <div className="flex justify-end px-6 pt-3 max-w-7xl mx-auto">
+            <NotificationsBell />
+          </div>
+          <div className="px-6 pb-6 max-w-7xl mx-auto">
             <Outlet />
           </div>
         </main>
