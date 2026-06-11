@@ -146,6 +146,8 @@ function OrdersPage() {
                 </div>
               </div>
 
+              {o.slip_url && <SlipVerifyPanel order={o} />}
+
               <div className="flex items-center gap-2 flex-wrap">
                 {o.slip_url && (
                   <Button size="sm" variant="outline" onClick={() => setSlipPath(o.slip_url)}>
