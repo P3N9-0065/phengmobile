@@ -59,11 +59,12 @@ export const verifySlip = createServerFn({ method: "POST" })
     const dataUrl = `data:${mime};base64,${b64}`;
 
     // Fetch shop bank for matching context
-    const { data: bank } = await supabaseAdmin
+    const { data: bankRow } = await supabaseAdmin
       .from("shop_bank_settings" as any)
       .select("bank_name, account_name, account_number")
       .eq("id", 1)
       .maybeSingle();
+    const bank = bankRow as { bank_name?: string | null; account_name?: string | null; account_number?: string | null } | null;
 
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("Missing LOVABLE_API_KEY");
