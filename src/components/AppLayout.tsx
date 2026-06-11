@@ -10,6 +10,7 @@ import { Logo } from "@/components/Logo";
 import { usePosSettings } from "@/lib/settings";
 import { canAccess } from "@/lib/permissions";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { NotificationsBell } from "@/components/NotificationsBell";
 
 const NAV = [
   { to: "/dashboard", label: "ໜ້າລວມ", icon: LayoutDashboard },
