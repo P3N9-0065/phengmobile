@@ -399,6 +399,11 @@ function SuccessDialog({ code, onClose }: { code: string | null; onClose: () => 
           <p className="text-sm">ຮ້ານຈະຕິດຕໍ່ກັບໄປຫາທ່ານໄວໆນີ້</p>
         </div>
         <DialogFooter className="flex-col gap-2 sm:flex-col">
+          {code && (
+            <Button asChild variant="secondary" className="w-full">
+              <Link to="/track-order/$code" params={{ code }}>ຕິດຕາມສະຖານະໃບສັ່ງຊື້</Link>
+            </Button>
+          )}
           {waLink && (
             <Button asChild className="w-full bg-green-600 hover:bg-green-700">
               <a href={waLink} target="_blank" rel="noopener noreferrer">
