@@ -306,9 +306,21 @@ function CheckoutDialog({ open, onOpenChange, onSuccess }: { open: boolean; onOp
                 <span>{formatLAK(i.price * i.qty)}</span>
               </div>
             ))}
-            <div className="flex justify-between font-bold border-t pt-1 mt-1">
-              <span>ລວມ</span><span className="text-primary">{formatLAK(cart.subtotal)}</span>
+            <div className="flex justify-between text-muted-foreground border-t pt-1 mt-1">
+              <span>ລວມສິນຄ້າ</span><span>{formatLAK(cart.subtotal)}</span>
             </div>
+            {method === "delivery" && (
+              <div className="flex justify-between text-muted-foreground">
+                <span className="flex items-center gap-1"><Truck className="h-3 w-3" />ຄ່າສົ່ງ{shippingFee === 0 && ship.enabled ? " (ຟຣີ)" : ""}</span>
+                <span>{formatLAK(shippingFee)}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold text-base border-t pt-1">
+              <span>ລວມຈ່າຍ</span><span className="text-primary">{formatLAK(total)}</span>
+            </div>
+            {method === "delivery" && shippingFee > 0 && ship.free_threshold > cart.subtotal && (
+              <p className="text-[11px] text-muted-foreground">ຊື້ເພີ່ມ {formatLAK(ship.free_threshold - cart.subtotal)} ເພື່ອຮັບສ່ວນສົ່ງຟຣີ</p>
+            )}
           </div>
 
           <div className="space-y-1">
