@@ -1,16 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatLAK } from "@/lib/format";
-import { ShoppingBag, Phone, MapPin, Image as ImageIcon, FileText } from "lucide-react";
+import { ShoppingBag, Phone, MapPin, Image as ImageIcon, FileText, Truck, ChevronDown, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useSignedUrl } from "@/lib/signed-url";
+import { useAuth } from "@/lib/auth";
+import { useShippingSettings, DEFAULT_SHIPPING } from "@/lib/shipping";
 
 export const Route = createFileRoute("/_authenticated/orders")({
   component: OrdersPage,
