@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrackCodeRouteImport } from './routes/track.$code'
+import { Route as TrackOrderCodeRouteImport } from './routes/track-order.$code'
 import { Route as SignupIdRouteImport } from './routes/signup.$id'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedSuppliersRouteImport } from './routes/_authenticated/suppliers'
@@ -53,6 +54,11 @@ const IndexRoute = IndexRouteImport.update({
 const TrackCodeRoute = TrackCodeRouteImport.update({
   id: '/track/$code',
   path: '/track/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrackOrderCodeRoute = TrackOrderCodeRouteImport.update({
+  id: '/track-order/$code',
+  path: '/track-order/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupIdRoute = SignupIdRouteImport.update({
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/suppliers': typeof AuthenticatedSuppliersRoute
   '/users': typeof AuthenticatedUsersRoute
   '/signup/$id': typeof SignupIdRoute
+  '/track-order/$code': typeof TrackOrderCodeRoute
   '/track/$code': typeof TrackCodeRoute
   '/customers/$id': typeof AuthenticatedCustomersIdRoute
   '/repairs/$id': typeof AuthenticatedRepairsIdRoute
@@ -177,6 +184,7 @@ export interface FileRoutesByTo {
   '/suppliers': typeof AuthenticatedSuppliersRoute
   '/users': typeof AuthenticatedUsersRoute
   '/signup/$id': typeof SignupIdRoute
+  '/track-order/$code': typeof TrackOrderCodeRoute
   '/track/$code': typeof TrackCodeRoute
   '/customers/$id': typeof AuthenticatedCustomersIdRoute
   '/repairs/$id': typeof AuthenticatedRepairsIdRoute
@@ -201,6 +209,7 @@ export interface FileRoutesById {
   '/_authenticated/suppliers': typeof AuthenticatedSuppliersRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/signup/$id': typeof SignupIdRoute
+  '/track-order/$code': typeof TrackOrderCodeRoute
   '/track/$code': typeof TrackCodeRoute
   '/_authenticated/customers/$id': typeof AuthenticatedCustomersIdRoute
   '/_authenticated/repairs/$id': typeof AuthenticatedRepairsIdRoute
@@ -225,6 +234,7 @@ export interface FileRouteTypes {
     | '/suppliers'
     | '/users'
     | '/signup/$id'
+    | '/track-order/$code'
     | '/track/$code'
     | '/customers/$id'
     | '/repairs/$id'
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
     | '/suppliers'
     | '/users'
     | '/signup/$id'
+    | '/track-order/$code'
     | '/track/$code'
     | '/customers/$id'
     | '/repairs/$id'
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '/_authenticated/suppliers'
     | '/_authenticated/users'
     | '/signup/$id'
+    | '/track-order/$code'
     | '/track/$code'
     | '/_authenticated/customers/$id'
     | '/_authenticated/repairs/$id'
@@ -283,6 +295,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ShopRoute: typeof ShopRoute
   SignupIdRoute: typeof SignupIdRoute
+  TrackOrderCodeRoute: typeof TrackOrderCodeRoute
   TrackCodeRoute: typeof TrackCodeRoute
 }
 
@@ -321,6 +334,13 @@ declare module '@tanstack/react-router' {
       path: '/track/$code'
       fullPath: '/track/$code'
       preLoaderRoute: typeof TrackCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/track-order/$code': {
+      id: '/track-order/$code'
+      path: '/track-order/$code'
+      fullPath: '/track-order/$code'
+      preLoaderRoute: typeof TrackOrderCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup/$id': {
@@ -496,18 +516,9 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ShopRoute: ShopRoute,
   SignupIdRoute: SignupIdRoute,
+  TrackOrderCodeRoute: TrackOrderCodeRoute,
   TrackCodeRoute: TrackCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

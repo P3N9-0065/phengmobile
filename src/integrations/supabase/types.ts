@@ -977,6 +977,30 @@ export type Database = {
           },
         ]
       }
+      shipping_settings: {
+        Row: {
+          enabled: boolean
+          flat_rate: number
+          free_threshold: number
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          flat_rate?: number
+          free_threshold?: number
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          flat_rate?: number
+          free_threshold?: number
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       shop_order_items: {
         Row: {
           created_at: string
@@ -1035,9 +1059,12 @@ export type Database = {
           id: string
           note: string | null
           order_code: string
+          shipping_fee: number
           slip_url: string | null
           status: Database["public"]["Enums"]["shop_order_status"]
+          stock_deducted: boolean
           subtotal: number
+          total: number
           updated_at: string
         }
         Insert: {
@@ -1049,9 +1076,12 @@ export type Database = {
           id?: string
           note?: string | null
           order_code?: string
+          shipping_fee?: number
           slip_url?: string | null
           status?: Database["public"]["Enums"]["shop_order_status"]
+          stock_deducted?: boolean
           subtotal?: number
+          total?: number
           updated_at?: string
         }
         Update: {
@@ -1063,10 +1093,46 @@ export type Database = {
           id?: string
           note?: string | null
           order_code?: string
+          shipping_fee?: number
           slip_url?: string | null
           status?: Database["public"]["Enums"]["shop_order_status"]
+          stock_deducted?: boolean
           subtotal?: number
+          total?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      staff_notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          read: boolean
+          ref_id: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read?: boolean
+          ref_id?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read?: boolean
+          ref_id?: string | null
+          title?: string
+          type?: string
         }
         Relationships: []
       }
@@ -1202,6 +1268,21 @@ export type Database = {
           _sale_id: string
         }
         Returns: string
+      }
+      track_shop_order: {
+        Args: { _code: string }
+        Returns: {
+          address: string
+          created_at: string
+          customer_name: string
+          delivery_method: Database["public"]["Enums"]["shop_delivery_method"]
+          items: Json
+          order_code: string
+          shipping_fee: number
+          status: Database["public"]["Enums"]["shop_order_status"]
+          subtotal: number
+          total: number
+        }[]
       }
       track_signup: {
         Args: { _id: string }

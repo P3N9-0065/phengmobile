@@ -10,6 +10,7 @@ import { Logo } from "@/components/Logo";
 import { usePosSettings } from "@/lib/settings";
 import { canAccess } from "@/lib/permissions";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { NotificationsBell } from "@/components/NotificationsBell";
 
 const NAV = [
   { to: "/dashboard", label: "ໜ້າລວມ", icon: LayoutDashboard },
@@ -173,7 +174,10 @@ export function AppLayout() {
         </aside>
 
         <main className="flex-1 overflow-auto">
-          <div className="p-6 max-w-7xl mx-auto">
+          <div className="flex justify-end px-6 pt-3 max-w-7xl mx-auto">
+            <NotificationsBell />
+          </div>
+          <div className="px-6 pb-6 max-w-7xl mx-auto">
             <Outlet />
           </div>
         </main>

@@ -11,11 +11,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Package as PackageIcon, Search, MessageCircle, Phone, Store, ShoppingCart, Plus, Minus, Trash2, Upload, CheckCircle2 } from "lucide-react";
+import { Package as PackageIcon, Search, MessageCircle, Phone, Store, ShoppingCart, Plus, Minus, Trash2, Upload, CheckCircle2, Truck } from "lucide-react";
 import { formatLAK } from "@/lib/format";
 import { CATEGORY_LABEL, type ItemCategory } from "@/lib/lao";
 import { DEFAULT_SETTINGS, loadSettings } from "@/lib/settings";
 import { useCart, addToCart, updateQty, removeFromCart, clearCart } from "@/lib/cart";
+import { useShippingSettings, calcShipping, DEFAULT_SHIPPING } from "@/lib/shipping";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/shop")({
@@ -218,6 +220,8 @@ function ShopPage() {
 function CheckoutDialog({ open, onOpenChange, onSuccess }: { open: boolean; onOpenChange: (v: boolean) => void; onSuccess: (code: string) => void }) {
   const cart = useCart();
   const settings = typeof window !== "undefined" ? loadSettings() : DEFAULT_SETTINGS;
+  const { data: shipCfg } = useShippingSettings();
+  const ship = (shipCfg as any) || DEFAULT_SHIPPING;
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [method, setMethod] = useState<"pickup" | "delivery">("pickup");
@@ -225,6 +229,9 @@ function CheckoutDialog({ open, onOpenChange, onSuccess }: { open: boolean; onOp
   const [note, setNote] = useState("");
   const [slipFile, setSlipFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const shippingFee = calcShipping(cart.subtotal, method, ship);
+  const total = cart.subtotal + shippingFee;
 
   const handleSubmit = async () => {
     if (!name.trim() || !phone.trim()) {
@@ -256,8 +263,10 @@ function CheckoutDialog({ open, onOpenChange, onSuccess }: { open: boolean; onOp
           address: method === "delivery" ? address.trim() : null,
           note: note.trim() || null,
           subtotal: cart.subtotal,
+          shipping_fee: shippingFee,
+          total,
           slip_url: slipUrl,
-        })
+        } as any)
         .select("id,order_code")
         .single();
       if (orderErr) throw orderErr;
@@ -297,9 +306,21 @@ function CheckoutDialog({ open, onOpenChange, onSuccess }: { open: boolean; onOp
                 <span>{formatLAK(i.price * i.qty)}</span>
               </div>
             ))}
-            <div className="flex justify-between font-bold border-t pt-1 mt-1">
-              <span>ລວມ</span><span className="text-primary">{formatLAK(cart.subtotal)}</span>
+            <div className="flex justify-between text-muted-foreground border-t pt-1 mt-1">
+              <span>ລວມສິນຄ້າ</span><span>{formatLAK(cart.subtotal)}</span>
             </div>
+            {method === "delivery" && (
+              <div className="flex justify-between text-muted-foreground">
+                <span className="flex items-center gap-1"><Truck className="h-3 w-3" />ຄ່າສົ່ງ{shippingFee === 0 && ship.enabled ? " (ຟຣີ)" : ""}</span>
+                <span>{formatLAK(shippingFee)}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold text-base border-t pt-1">
+              <span>ລວມຈ່າຍ</span><span className="text-primary">{formatLAK(total)}</span>
+            </div>
+            {method === "delivery" && shippingFee > 0 && ship.free_threshold > cart.subtotal && (
+              <p className="text-[11px] text-muted-foreground">ຊື້ເພີ່ມ {formatLAK(ship.free_threshold - cart.subtotal)} ເພື່ອຮັບສ່ວນສົ່ງຟຣີ</p>
+            )}
           </div>
 
           <div className="space-y-1">
@@ -378,6 +399,11 @@ function SuccessDialog({ code, onClose }: { code: string | null; onClose: () => 
           <p className="text-sm">ຮ້ານຈະຕິດຕໍ່ກັບໄປຫາທ່ານໄວໆນີ້</p>
         </div>
         <DialogFooter className="flex-col gap-2 sm:flex-col">
+          {code && (
+            <Button asChild variant="secondary" className="w-full">
+              <Link to="/track-order/$code" params={{ code }}>ຕິດຕາມສະຖານະໃບສັ່ງຊື້</Link>
+            </Button>
+          )}
           {waLink && (
             <Button asChild className="w-full bg-green-600 hover:bg-green-700">
               <a href={waLink} target="_blank" rel="noopener noreferrer">
