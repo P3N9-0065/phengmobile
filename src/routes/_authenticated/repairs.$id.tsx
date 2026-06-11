@@ -24,6 +24,7 @@ import { sendRepairSms } from "@/lib/notify.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { SignedImg } from "@/components/SignedImg";
 import { getSignedUrl } from "@/lib/signed-url";
+import { PhotoUploader } from "@/components/PhotoUploader";
 import { usePosSettings } from "@/lib/settings";
 
 export const Route = createFileRoute("/_authenticated/repairs/$id")({
