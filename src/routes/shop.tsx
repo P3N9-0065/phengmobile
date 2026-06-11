@@ -220,6 +220,8 @@ function ShopPage() {
 function CheckoutDialog({ open, onOpenChange, onSuccess }: { open: boolean; onOpenChange: (v: boolean) => void; onSuccess: (code: string) => void }) {
   const cart = useCart();
   const settings = typeof window !== "undefined" ? loadSettings() : DEFAULT_SETTINGS;
+  const { data: shipCfg } = useShippingSettings();
+  const ship = (shipCfg as any) || DEFAULT_SHIPPING;
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [method, setMethod] = useState<"pickup" | "delivery">("pickup");
@@ -227,6 +229,9 @@ function CheckoutDialog({ open, onOpenChange, onSuccess }: { open: boolean; onOp
   const [note, setNote] = useState("");
   const [slipFile, setSlipFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const shippingFee = calcShipping(cart.subtotal, method, ship);
+  const total = cart.subtotal + shippingFee;
 
   const handleSubmit = async () => {
     if (!name.trim() || !phone.trim()) {
@@ -258,8 +263,10 @@ function CheckoutDialog({ open, onOpenChange, onSuccess }: { open: boolean; onOp
           address: method === "delivery" ? address.trim() : null,
           note: note.trim() || null,
           subtotal: cart.subtotal,
+          shipping_fee: shippingFee,
+          total,
           slip_url: slipUrl,
-        })
+        } as any)
         .select("id,order_code")
         .single();
       if (orderErr) throw orderErr;
