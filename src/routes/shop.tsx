@@ -11,11 +11,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Package as PackageIcon, Search, MessageCircle, Phone, Store, ShoppingCart, Plus, Minus, Trash2, Upload, CheckCircle2 } from "lucide-react";
+import { Package as PackageIcon, Search, MessageCircle, Phone, Store, ShoppingCart, Plus, Minus, Trash2, Upload, CheckCircle2, Truck } from "lucide-react";
 import { formatLAK } from "@/lib/format";
 import { CATEGORY_LABEL, type ItemCategory } from "@/lib/lao";
 import { DEFAULT_SETTINGS, loadSettings } from "@/lib/settings";
 import { useCart, addToCart, updateQty, removeFromCart, clearCart } from "@/lib/cart";
+import { useShippingSettings, calcShipping, DEFAULT_SHIPPING } from "@/lib/shipping";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/shop")({
