@@ -100,7 +100,7 @@ export function NotificationsBell() {
             );
             if (n.link) {
               return (
-                <Link key={n.id} to={n.link} onClick={() => !n.read && markOne.mutate(n.id)} className="block">
+                <Link key={n.id} to={n.link as any} onClick={() => !n.read && markOne.mutate(n.id)} className="block">
                   {body}
                 </Link>
               );
