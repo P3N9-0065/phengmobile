@@ -256,3 +256,95 @@ function SlipDialog({ path, onClose }: { path: string | null; onClose: () => voi
     </Dialog>
   );
 }
+
+const VERIFY_LABEL: Record<string, { label: string; cls: string; Icon: any }> = {
+  matched:    { label: "ສະລິບກົງ",       cls: "bg-green-100 text-green-800 border-green-300",  Icon: ShieldCheck },
+  mismatch:   { label: "ຍອດບໍ່ກົງ",      cls: "bg-amber-100 text-amber-800 border-amber-300",  Icon: ShieldAlert },
+  duplicate:  { label: "ສະລິບຊ້ຳ",       cls: "bg-red-100 text-red-800 border-red-300",        Icon: ShieldAlert },
+  unreadable: { label: "ອ່ານສະລິບບໍ່ໄດ້", cls: "bg-muted text-muted-foreground border-border",  Icon: ShieldQuestion },
+  not_slip:   { label: "ບໍ່ແມ່ນສະລິບ",   cls: "bg-red-100 text-red-800 border-red-300",        Icon: ShieldAlert },
+  error:      { label: "ກວດບໍ່ໄດ້",      cls: "bg-muted text-muted-foreground border-border",  Icon: ShieldQuestion },
+  pending:    { label: "ກຳລັງກວດ",        cls: "bg-muted text-muted-foreground border-border",  Icon: Loader2 },
+};
+
+function SlipVerifyPanel({ order }: { order: any }) {
+  const qc = useQueryClient();
+  const verifyFn = useServerFn(verifySlip);
+  const status: string = order.slip_verify_status || "pending";
+  const meta = VERIFY_LABEL[status] || VERIFY_LABEL.pending;
+  const Icon = meta.Icon;
+
+  const verify = useMutation({
+    mutationFn: () => verifyFn({ data: { orderId: order.id, force: true } }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["shop-orders"] }); toast.success("ກວດສະລິບສຳເລັດ"); },
+    onError: (e: any) => toast.error(e.message || "ກວດສະລິບບໍ່ສຳເລັດ"),
+  });
+
+  return (
+    <div className="border rounded p-2 space-y-1 text-xs bg-muted/30">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border ${meta.cls}`}>
+          <Icon className={`h-3 w-3 ${verify.isPending ? "animate-spin" : ""}`} />
+          OCR: {meta.label}
+        </span>
+        <Button size="sm" variant="ghost" onClick={() => verify.mutate()} disabled={verify.isPending}>
+          {verify.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "ກວດສະລິບໃໝ່"}
+        </Button>
+      </div>
+      {order.slip_verify_note && <p className="text-muted-foreground">{order.slip_verify_note}</p>}
+      {(order.slip_amount || order.slip_ref || order.slip_bank) && (
+        <div className="grid grid-cols-2 gap-x-2 text-muted-foreground">
+          {order.slip_amount && <span>ຈຳນວນ: {Number(order.slip_amount).toLocaleString()} LAK</span>}
+          {order.slip_bank && <span>ທະນາຄານ: {order.slip_bank}</span>}
+          {order.slip_ref && <span className="col-span-2 truncate">Ref: {order.slip_ref}</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BankSettingsCard() {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ bank_name: "", account_name: "", account_number: "" });
+  const { data } = useQuery({
+    queryKey: ["shop-bank"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("shop_bank_settings" as any).select("*").eq("id", 1).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  useEffect(() => { if (data) setForm({ bank_name: (data as any).bank_name || "", account_name: (data as any).account_name || "", account_number: (data as any).account_number || "" }); }, [data]);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("shop_bank_settings" as any).update({ ...form, updated_at: new Date().toISOString() }).eq("id", 1);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["shop-bank"] }); toast.success("ບັນທຶກແລ້ວ"); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <Card>
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger asChild>
+          <button className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition">
+            <span className="flex items-center gap-2 font-medium text-sm"><Landmark className="h-4 w-4" />ບັນຊີຮ້ານ (ສຳລັບກວດສະລິບ OCR)</span>
+            <ChevronDown className={`h-4 w-4 transition ${open ? "rotate-180" : ""}`} />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="space-y-3 pt-0">
+            <div className="space-y-1"><Label>ທະນາຄານ</Label><Input value={form.bank_name} onChange={(e) => setForm((f) => ({ ...f, bank_name: e.target.value }))} placeholder="BCEL / LDB / JDB" /></div>
+            <div className="space-y-1"><Label>ຊື່ບັນຊີ</Label><Input value={form.account_name} onChange={(e) => setForm((f) => ({ ...f, account_name: e.target.value }))} /></div>
+            <div className="space-y-1"><Label>ເລກບັນຊີ</Label><Input value={form.account_number} onChange={(e) => setForm((f) => ({ ...f, account_number: e.target.value }))} /></div>
+            <Button onClick={() => save.mutate()} disabled={save.isPending}>ບັນທຶກ</Button>
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
+  );
+}
+
