@@ -67,6 +67,34 @@ function CustomerDetailPage() {
     },
   });
 
+  const { data: sales } = useQuery({
+    queryKey: ["customer-sales", id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("sales")
+        .select("id, sale_code, total, status, created_at")
+        .eq("customer_id", id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      return data ?? [];
+    },
+  });
+
+  const { data: shopOrders } = useQuery({
+    queryKey: ["customer-shop-orders", id, customer?.phone],
+    queryFn: async () => {
+      if (!customer?.phone) return [];
+      const { data } = await supabase
+        .from("shop_orders")
+        .select("id, order_code, status, total, subtotal, created_at, delivery_method")
+        .eq("customer_phone", customer.phone)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      return data ?? [];
+    },
+    enabled: !!customer?.phone,
+  });
+
   const { data: pointHistory } = useQuery({
     queryKey: ["customer-points", id],
     queryFn: async () => {
