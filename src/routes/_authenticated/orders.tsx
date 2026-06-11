@@ -12,11 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatLAK } from "@/lib/format";
-import { ShoppingBag, Phone, MapPin, Image as ImageIcon, FileText, Truck, ChevronDown, MessageCircle } from "lucide-react";
+import { ShoppingBag, Phone, MapPin, Image as ImageIcon, FileText, Truck, ChevronDown, MessageCircle, ShieldCheck, ShieldAlert, ShieldQuestion, Loader2, Landmark } from "lucide-react";
 import { toast } from "sonner";
 import { useSignedUrl } from "@/lib/signed-url";
 import { useAuth } from "@/lib/auth";
 import { useShippingSettings, DEFAULT_SHIPPING } from "@/lib/shipping";
+import { useServerFn } from "@tanstack/react-start";
+import { verifySlip } from "@/lib/slip-ocr.functions";
 
 export const Route = createFileRoute("/_authenticated/orders")({
   component: OrdersPage,
