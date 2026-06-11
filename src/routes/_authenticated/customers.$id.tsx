@@ -260,6 +260,54 @@ function CustomerDetailPage() {
       </Card>
 
       <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><ShoppingCart className="h-4 w-4" />ປະຫວັດການຊື້ POS ({sales?.length ?? 0})</CardTitle></CardHeader>
+        <CardContent>
+          {sales && sales.length > 0 ? (
+            <div className="space-y-2">
+              {sales.map((s: any) => (
+                <div key={s.id} className="flex items-center justify-between p-3 rounded border">
+                  <div>
+                    <p className="font-medium text-sm">{s.sale_code}</p>
+                    <p className="text-xs text-muted-foreground">{formatDate(s.created_at)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-sm">{formatLAK(Number(s.total))}</p>
+                    {s.status === "voided" && <Badge variant="destructive" className="text-[10px]">ຍົກເລີກ</Badge>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-6">ຍັງບໍ່ມີການຊື້</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><ShoppingBag className="h-4 w-4" />ສັ່ງຊື້ອອນລາຍ ({shopOrders?.length ?? 0})</CardTitle></CardHeader>
+        <CardContent>
+          {shopOrders && shopOrders.length > 0 ? (
+            <div className="space-y-2">
+              {shopOrders.map((o: any) => (
+                <Link key={o.id} to="/orders" className="flex items-center justify-between p-3 rounded border hover:bg-accent">
+                  <div>
+                    <p className="font-medium text-sm">{o.order_code}</p>
+                    <p className="text-xs text-muted-foreground">{o.delivery_method === "pickup" ? "ມາຮັບ" : "ສົ່ງ"} • {formatDate(o.created_at)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-sm">{formatLAK(Number(o.total || o.subtotal))}</p>
+                    <Badge variant="outline" className="text-[10px]">{o.status}</Badge>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-6">ຍັງບໍ່ມີການສັ່ງຊື້ອອນລາຍ</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>ປະຫວັດການສະໝັກບັນຊີ ({signups?.length ?? 0})</CardTitle>
           <Link to="/account-signups"><Button variant="outline" size="sm">ເບິ່ງທັງໝົດ</Button></Link>
