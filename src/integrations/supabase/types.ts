@@ -1007,6 +1007,30 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_bank_settings: {
+        Row: {
+          account_name: string | null
+          account_number: string | null
+          bank_name: string | null
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_number?: string | null
+          bank_name?: string | null
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string | null
+          account_number?: string | null
+          bank_name?: string | null
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       shop_order_items: {
         Row: {
           created_at: string
@@ -1066,7 +1090,16 @@ export type Database = {
           note: string | null
           order_code: string
           shipping_fee: number
+          slip_amount: number | null
+          slip_bank: string | null
+          slip_date: string | null
+          slip_hash: string | null
+          slip_ocr: Json | null
+          slip_ref: string | null
           slip_url: string | null
+          slip_verified_at: string | null
+          slip_verify_note: string | null
+          slip_verify_status: string | null
           status: Database["public"]["Enums"]["shop_order_status"]
           stock_deducted: boolean
           subtotal: number
@@ -1083,7 +1116,16 @@ export type Database = {
           note?: string | null
           order_code?: string
           shipping_fee?: number
+          slip_amount?: number | null
+          slip_bank?: string | null
+          slip_date?: string | null
+          slip_hash?: string | null
+          slip_ocr?: Json | null
+          slip_ref?: string | null
           slip_url?: string | null
+          slip_verified_at?: string | null
+          slip_verify_note?: string | null
+          slip_verify_status?: string | null
           status?: Database["public"]["Enums"]["shop_order_status"]
           stock_deducted?: boolean
           subtotal?: number
@@ -1100,7 +1142,16 @@ export type Database = {
           note?: string | null
           order_code?: string
           shipping_fee?: number
+          slip_amount?: number | null
+          slip_bank?: string | null
+          slip_date?: string | null
+          slip_hash?: string | null
+          slip_ocr?: Json | null
+          slip_ref?: string | null
           slip_url?: string | null
+          slip_verified_at?: string | null
+          slip_verify_note?: string | null
+          slip_verify_status?: string | null
           status?: Database["public"]["Enums"]["shop_order_status"]
           stock_deducted?: boolean
           subtotal?: number

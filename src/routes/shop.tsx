@@ -282,6 +282,13 @@ function CheckoutDialog({ open, onOpenChange, onSuccess }: { open: boolean; onOp
       const { error: itemsErr } = await supabase.from("shop_order_items").insert(itemsPayload);
       if (itemsErr) throw itemsErr;
 
+      // Fire-and-forget OCR verification of the uploaded slip
+      if (slipUrl) {
+        import("@/lib/slip-ocr.functions")
+          .then(({ verifySlip }) => verifySlip({ data: { orderId: order.id } }))
+          .catch(() => {});
+      }
+
       clearCart();
       setName(""); setPhone(""); setAddress(""); setNote(""); setSlipFile(null); setMethod("pickup");
       onSuccess(order.order_code);
