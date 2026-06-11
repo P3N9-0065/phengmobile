@@ -24,6 +24,7 @@ import { sendRepairSms } from "@/lib/notify.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { SignedImg } from "@/components/SignedImg";
 import { getSignedUrl } from "@/lib/signed-url";
+import { PhotoUploader } from "@/components/PhotoUploader";
 import { usePosSettings } from "@/lib/settings";
 
 export const Route = createFileRoute("/_authenticated/repairs/$id")({
@@ -171,7 +172,7 @@ function RepairDetailPage() {
 
           {ticket.photo_urls && ticket.photo_urls.length > 0 && (
             <Card>
-              <CardHeader><CardTitle>ຮູບເຄື່ອງ</CardTitle></CardHeader>
+              <CardHeader><CardTitle>ຮູບເຄື່ອງຕອນຮັບ</CardTitle></CardHeader>
               <CardContent>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                   {ticket.photo_urls.map((url, i) => (
@@ -191,6 +192,24 @@ function RepairDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          <Card>
+            <CardHeader><CardTitle>ຮູບກ່ອນ-ຫຼັງສ້ອມ</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <PhotoUploader
+                bucket="repair-photos"
+                label="ກ່ອນສ້ອມ (Before)"
+                urls={(ticket as any).before_repair_photo_urls ?? []}
+                onChange={(urls) => updateTicket.mutate({ before_repair_photo_urls: urls })}
+              />
+              <PhotoUploader
+                bucket="repair-photos"
+                label="ຫຼັງສ້ອມ (After)"
+                urls={(ticket as any).after_repair_photo_urls ?? []}
+                onChange={(urls) => updateTicket.mutate({ after_repair_photo_urls: urls })}
+              />
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">

@@ -617,6 +617,8 @@ export type Database = {
       repair_tickets: {
         Row: {
           accessories: string[] | null
+          after_repair_photo_urls: string[]
+          before_repair_photo_urls: string[]
           created_at: string
           created_by: string | null
           customer_id: string
@@ -643,6 +645,8 @@ export type Database = {
         }
         Insert: {
           accessories?: string[] | null
+          after_repair_photo_urls?: string[]
+          before_repair_photo_urls?: string[]
           created_at?: string
           created_by?: string | null
           customer_id: string
@@ -669,6 +673,8 @@ export type Database = {
         }
         Update: {
           accessories?: string[] | null
+          after_repair_photo_urls?: string[]
+          before_repair_photo_urls?: string[]
           created_at?: string
           created_by?: string | null
           customer_id?: string

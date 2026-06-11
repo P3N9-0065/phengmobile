@@ -4,7 +4,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Phone, Mail, MapPin, Award, Apple, KeyRound, TrendingUp, TrendingDown, Settings as SettingsIcon, Pencil } from "lucide-react";
+import { ArrowLeft, Phone, Mail, MapPin, Award, Apple, KeyRound, TrendingUp, TrendingDown, Settings as SettingsIcon, Pencil, ShoppingCart, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,6 +65,34 @@ function CustomerDetailPage() {
         .order("created_at", { ascending: false });
       return data ?? [];
     },
+  });
+
+  const { data: sales } = useQuery({
+    queryKey: ["customer-sales", id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("sales")
+        .select("id, sale_code, total, status, created_at")
+        .eq("customer_id", id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      return data ?? [];
+    },
+  });
+
+  const { data: shopOrders } = useQuery({
+    queryKey: ["customer-shop-orders", id, customer?.phone],
+    queryFn: async () => {
+      if (!customer?.phone) return [];
+      const { data } = await supabase
+        .from("shop_orders")
+        .select("id, order_code, status, total, subtotal, created_at, delivery_method")
+        .eq("customer_phone", customer.phone)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      return data ?? [];
+    },
+    enabled: !!customer?.phone,
   });
 
   const { data: pointHistory } = useQuery({
@@ -227,6 +255,54 @@ function CustomerDetailPage() {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground text-center py-6">ຍັງບໍ່ມີປະຫວັດການສ້ອມ</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><ShoppingCart className="h-4 w-4" />ປະຫວັດການຊື້ POS ({sales?.length ?? 0})</CardTitle></CardHeader>
+        <CardContent>
+          {sales && sales.length > 0 ? (
+            <div className="space-y-2">
+              {sales.map((s: any) => (
+                <div key={s.id} className="flex items-center justify-between p-3 rounded border">
+                  <div>
+                    <p className="font-medium text-sm">{s.sale_code}</p>
+                    <p className="text-xs text-muted-foreground">{formatDate(s.created_at)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-sm">{formatLAK(Number(s.total))}</p>
+                    {s.status === "voided" && <Badge variant="destructive" className="text-[10px]">ຍົກເລີກ</Badge>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-6">ຍັງບໍ່ມີການຊື້</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><ShoppingBag className="h-4 w-4" />ສັ່ງຊື້ອອນລາຍ ({shopOrders?.length ?? 0})</CardTitle></CardHeader>
+        <CardContent>
+          {shopOrders && shopOrders.length > 0 ? (
+            <div className="space-y-2">
+              {shopOrders.map((o: any) => (
+                <Link key={o.id} to="/orders" className="flex items-center justify-between p-3 rounded border hover:bg-accent">
+                  <div>
+                    <p className="font-medium text-sm">{o.order_code}</p>
+                    <p className="text-xs text-muted-foreground">{o.delivery_method === "pickup" ? "ມາຮັບ" : "ສົ່ງ"} • {formatDate(o.created_at)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-sm">{formatLAK(Number(o.total || o.subtotal))}</p>
+                    <Badge variant="outline" className="text-[10px]">{o.status}</Badge>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-6">ຍັງບໍ່ມີການສັ່ງຊື້ອອນລາຍ</p>
           )}
         </CardContent>
       </Card>
