@@ -393,6 +393,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "purchase_order_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "public_shop_items"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "purchase_order_items_po_id_fkey"
             columns: ["po_id"]
             isOneToOne: false
@@ -491,6 +498,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "purchase_receipt_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "public_shop_items"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "purchase_receipt_items_receipt_id_fkey"
             columns: ["receipt_id"]
             isOneToOne: false
@@ -568,6 +582,13 @@ export type Database = {
             columns: ["item_id"]
             isOneToOne: false
             referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "repair_parts_used_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "public_shop_items"
             referencedColumns: ["id"]
           },
           {
@@ -803,6 +824,13 @@ export type Database = {
             columns: ["item_id"]
             isOneToOne: false
             referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "public_shop_items"
             referencedColumns: ["id"]
           },
           {
@@ -1071,6 +1099,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "shop_order_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "public_shop_items"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "shop_order_items_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
@@ -1233,6 +1268,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "stock_movements_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "public_shop_items"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "stock_movements_ref_ticket_id_fkey"
             columns: ["ref_ticket_id"]
             isOneToOne: false
@@ -1297,7 +1339,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_shop_items: {
+        Row: {
+          category: Database["public"]["Enums"]["item_category"] | null
+          description: string | null
+          id: string | null
+          image_url: string | null
+          in_stock: boolean | null
+          name: string | null
+          sell_price: number | null
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["item_category"] | null
+          description?: string | null
+          id?: string | null
+          image_url?: string | null
+          in_stock?: never
+          name?: string | null
+          sell_price?: number | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["item_category"] | null
+          description?: string | null
+          id?: string | null
+          image_url?: string | null
+          in_stock?: never
+          name?: string | null
+          sell_price?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       gen_po_code: { Args: never; Returns: string }
