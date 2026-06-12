@@ -91,7 +91,7 @@ function SignupTrackPage() {
           </Card>
         )}
       </div>
-    </div>
+    </main>
   );
 }
 
