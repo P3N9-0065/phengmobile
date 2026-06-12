@@ -60,7 +60,8 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+    <main className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+      <h1 className="sr-only">Sign In to Pheng Mobile</h1>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-3 h-20 w-20 rounded-xl bg-black p-2 flex items-center justify-center">
