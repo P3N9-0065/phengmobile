@@ -46,13 +46,12 @@ function ShopPage() {
   const { data: items, isLoading } = useQuery({
     queryKey: ["shop-featured"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("inventory_items")
-        .select("id,name,category,sell_price,stock_qty,image_url,description")
-        .eq("is_featured", true)
+      const { data, error } = await (supabase as any)
+        .from("public_shop_items")
+        .select("id,name,category,sell_price,image_url,description,in_stock")
         .order("name");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []).map((i: any) => ({ ...i, stock_qty: i.in_stock ? 1 : 0 }));
     },
   });
 
@@ -245,15 +244,7 @@ function CheckoutDialog({ open, onOpenChange, onSuccess }: { open: boolean; onOp
     if (cart.items.length === 0) return;
     setSubmitting(true);
     try {
-      let slipUrl: string | null = null;
-      if (slipFile) {
-        const ext = slipFile.name.split(".").pop() || "jpg";
-        const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-        const { error: upErr } = await supabase.storage.from("payment-slips").upload(path, slipFile);
-        if (upErr) throw upErr;
-        slipUrl = path;
-      }
-
+      // 1. Create order first so we have an order_code prefix for the slip upload path.
       const { data: order, error: orderErr } = await supabase
         .from("shop_orders")
         .insert({
@@ -265,7 +256,7 @@ function CheckoutDialog({ open, onOpenChange, onSuccess }: { open: boolean; onOp
           subtotal: cart.subtotal,
           shipping_fee: shippingFee,
           total,
-          slip_url: slipUrl,
+          slip_url: null,
         } as any)
         .select("id,order_code")
         .single();
@@ -282,7 +273,17 @@ function CheckoutDialog({ open, onOpenChange, onSuccess }: { open: boolean; onOp
       const { error: itemsErr } = await supabase.from("shop_order_items").insert(itemsPayload);
       if (itemsErr) throw itemsErr;
 
-      // Fire-and-forget OCR verification of the uploaded slip
+      // 2. Upload slip under <order_code>/ so storage policy can validate it.
+      let slipUrl: string | null = null;
+      if (slipFile) {
+        const ext = slipFile.name.split(".").pop() || "jpg";
+        const path = `${order.order_code}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const { error: upErr } = await supabase.storage.from("payment-slips").upload(path, slipFile);
+        if (upErr) throw upErr;
+        slipUrl = path;
+        await supabase.from("shop_orders").update({ slip_url: slipUrl } as any).eq("id", order.id);
+      }
+
       if (slipUrl) {
         import("@/lib/slip-ocr.functions")
           .then(({ verifySlip }) => verifySlip({ data: { orderId: order.id } }))
