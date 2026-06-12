@@ -1,0 +1,8 @@
+# Pheng Mobile (ເພັງ ໂມບາຍ)
+
+> Mobile phone shop and repair service in Laos — online store for phones, accessories, and parts, plus a repair tracking portal for customers.
+
+## Pages
+
+- [Shop](/shop): Browse phones, accessories, and parts with online ordering, pickup, or delivery.
+- [Sign in](/login): Staff sign-in for the POS and management dashboard.
