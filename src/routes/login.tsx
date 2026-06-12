@@ -9,6 +9,16 @@ import { toast } from "sonner";
 import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/login")({
+  head: () => ({
+    meta: [
+      { title: "Sign In — Pheng Mobile Staff POS" },
+      { name: "description", content: "Sign in to the Pheng Mobile staff POS to manage repairs, inventory, sales, and customers." },
+      { property: "og:title", content: "Sign In — Pheng Mobile Staff POS" },
+      { property: "og:description", content: "Staff sign-in for Pheng Mobile point-of-sale, repair tracking, and inventory." },
+      { property: "og:url", content: "https://phengmobile.lovable.app/login" },
+    ],
+    links: [{ rel: "canonical", href: "https://phengmobile.lovable.app/login" }],
+  }),
   component: LoginPage,
 });
 

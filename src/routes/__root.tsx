@@ -93,6 +93,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "LocalBusiness",
+          name: "Pheng Mobile",
+          alternateName: "ເພັງ ໂມບາຍ",
+          description:
+            "Mobile phone shop and repair service in Laos — phones, accessories, parts, and on-site repair.",
+          url: "https://phengmobile.lovable.app",
+          image:
+            "https://storage.googleapis.com/gpt-engineer-file-uploads/751uYDFwsiRpIyuGJ9hWSbVfsjB3/social-images/social-1779108826938-ChatGPT_Image_May_11,_2026,_12_21_06_AM.webp",
+          areaServed: "LA",
+          priceRange: "$$",
+        }),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
