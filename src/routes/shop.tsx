@@ -43,7 +43,16 @@ function ShopPage() {
   const [successCode, setSuccessCode] = useState<string | null>(null);
   const cart = useCart();
 
-  const { data: items, isLoading } = useQuery({
+  type ShopItem = {
+    id: string;
+    name: string;
+    category: ItemCategory;
+    sell_price: number;
+    image_url: string | null;
+    description: string | null;
+    stock_qty: number;
+  };
+  const { data: items, isLoading } = useQuery<ShopItem[]>({
     queryKey: ["shop-featured"],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
@@ -51,7 +60,15 @@ function ShopPage() {
         .select("id,name,category,sell_price,image_url,description,in_stock")
         .order("name");
       if (error) throw error;
-      return (data ?? []).map((i: any) => ({ ...i, stock_qty: i.in_stock ? 1 : 0 }));
+      return (data ?? []).map((i: any) => ({
+        id: i.id,
+        name: i.name,
+        category: i.category as ItemCategory,
+        sell_price: Number(i.sell_price),
+        image_url: i.image_url,
+        description: i.description,
+        stock_qty: i.in_stock ? 1 : 0,
+      }));
     },
   });
 
