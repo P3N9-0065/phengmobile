@@ -7,6 +7,17 @@ import { ShoppingBag, Package as PackageIcon, MapPin, Clock, CheckCircle2, XCirc
 import { formatLAK, formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/track-order/$code")({
+  head: ({ params }) => ({
+    meta: [
+      { title: `Order ${params.code} Status — Pheng Mobile` },
+      { name: "description", content: `Check delivery status, items, and payment for Pheng Mobile online order ${params.code}.` },
+      { property: "og:title", content: `Order ${params.code} Status — Pheng Mobile` },
+      { property: "og:description", content: `Live delivery and payment status for Pheng Mobile order ${params.code}.` },
+      { property: "og:url", content: `https://phengmobile.lovable.app/track-order/${params.code}` },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: `https://phengmobile.lovable.app/track-order/${params.code}` }],
+  }),
   component: TrackOrderPage,
 });
 
@@ -47,11 +58,11 @@ function TrackOrderPage() {
   });
 
   return (
-    <div className="min-h-screen bg-muted/30 p-4">
+    <main className="min-h-screen bg-muted/30 p-4">
       <div className="max-w-2xl mx-auto pt-6">
         <div className="flex items-center gap-2 mb-6">
           <ShoppingBag className="h-6 w-6 text-primary" />
-          <h1 className="text-xl font-bold">ຕິດຕາມໃບສັ່ງຊື້</h1>
+          <h1 className="text-xl font-bold">Track Order — ຕິດຕາມໃບສັ່ງຊື້</h1>
         </div>
 
         {isLoading && <p className="text-center py-12 text-muted-foreground">ກຳລັງໂຫລດ...</p>}
@@ -120,6 +131,6 @@ function TrackOrderPage() {
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

@@ -8,6 +8,17 @@ import { STATUS_LABEL, STATUS_COLOR, type RepairStatus } from "@/lib/lao";
 import { formatDateTime, formatDate } from "@/lib/format";
 
 export const Route = createFileRoute("/track/$code")({
+  head: ({ params }) => ({
+    meta: [
+      { title: `Track Repair ${params.code} — Pheng Mobile` },
+      { name: "description", content: `Check the live status, history, and warranty of Pheng Mobile repair ticket ${params.code}.` },
+      { property: "og:title", content: `Track Repair ${params.code} — Pheng Mobile` },
+      { property: "og:description", content: `Live status and history for Pheng Mobile repair ticket ${params.code}.` },
+      { property: "og:url", content: `https://phengmobile.lovable.app/track/${params.code}` },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: `https://phengmobile.lovable.app/track/${params.code}` }],
+  }),
   component: TrackPage,
 });
 
@@ -35,11 +46,11 @@ function TrackPage() {
   });
 
   return (
-    <div className="min-h-screen bg-muted/30 p-4">
+    <main className="min-h-screen bg-muted/30 p-4">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-2 mb-6 pt-6">
           <Smartphone className="h-6 w-6 text-primary" />
-          <h1 className="text-xl font-bold">ເພັງ ໂມບາຍ Pheng Mobile</h1>
+          <h1 className="text-xl font-bold">Track Repair — ເພັງ ໂມບາຍ Pheng Mobile</h1>
         </div>
 
         {isLoading && <p className="text-center py-12 text-muted-foreground">ກຳລັງໂຫຼດ...</p>}
@@ -100,6 +111,6 @@ function TrackPage() {
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

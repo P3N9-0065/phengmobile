@@ -7,6 +7,17 @@ import { Smartphone, CheckCircle2 } from "lucide-react";
 import { formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/signup/$id")({
+  head: ({ params }) => ({
+    meta: [
+      { title: `Account Information — Pheng Mobile` },
+      { name: "description", content: `Secure account setup details for Pheng Mobile signup ${params.id}.` },
+      { property: "og:title", content: `Account Information — Pheng Mobile` },
+      { property: "og:description", content: `Customer account information for a Pheng Mobile signup record.` },
+      { property: "og:url", content: `https://phengmobile.lovable.app/signup/${params.id}` },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: `https://phengmobile.lovable.app/signup/${params.id}` }],
+  }),
   component: SignupTrackPage,
 });
 
@@ -29,11 +40,11 @@ function SignupTrackPage() {
   });
 
   return (
-    <div className="min-h-screen bg-muted/30 p-4">
+    <main className="min-h-screen bg-muted/30 p-4">
       <div className="max-w-xl mx-auto">
         <div className="flex items-center gap-2 mb-6 pt-6">
           <Smartphone className="h-6 w-6 text-primary" />
-          <h1 className="text-xl font-bold">ເພັງ ໂມບາຍ Pheng Mobile</h1>
+          <h1 className="text-xl font-bold">Account Information — ເພັງ ໂມບາຍ Pheng Mobile</h1>
         </div>
 
         {isLoading && <p className="text-center py-12 text-muted-foreground">ກຳລັງໂຫຼດ...</p>}
