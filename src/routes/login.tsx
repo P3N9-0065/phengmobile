@@ -9,6 +9,16 @@ import { toast } from "sonner";
 import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/login")({
+  head: () => ({
+    meta: [
+      { title: "Sign In — Pheng Mobile Staff POS" },
+      { name: "description", content: "Sign in to the Pheng Mobile staff POS to manage repairs, inventory, sales, and customers." },
+      { property: "og:title", content: "Sign In — Pheng Mobile Staff POS" },
+      { property: "og:description", content: "Staff sign-in for Pheng Mobile point-of-sale, repair tracking, and inventory." },
+      { property: "og:url", content: "https://phengmobile.lovable.app/login" },
+    ],
+    links: [{ rel: "canonical", href: "https://phengmobile.lovable.app/login" }],
+  }),
   component: LoginPage,
 });
 
@@ -50,7 +60,8 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+    <main className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+      <h1 className="sr-only">Sign In to Pheng Mobile</h1>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-3 h-20 w-20 rounded-xl bg-black p-2 flex items-center justify-center">
@@ -95,6 +106,6 @@ function LoginPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }

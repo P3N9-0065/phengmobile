@@ -23,10 +23,30 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/shop")({
   head: () => ({
     meta: [
-      { title: "ສິນຄ້າຮ້ານເພັງ ໂມບາຍ" },
-      { name: "description", content: "ມືຖື ອຸປະກອນເສີມ ແລະ ອາໄຫຼ່ ລາຄາພິເສດ - ສັ່ງຊື້ອອນລາຍ" },
-      { property: "og:title", content: "ສິນຄ້າຮ້ານເພັງ ໂມບາຍ" },
-      { property: "og:description", content: "ມືຖື ອຸປະກອນເສີມ ແລະ ອາໄຫຼ່ - ສັ່ງຊື້ອອນລາຍ" },
+      { title: "Shop Phones, Accessories & Parts — Pheng Mobile" },
+      { name: "description", content: "Browse Pheng Mobile's online store for new and used phones, accessories, parts, and tools — order with pickup or delivery in Laos." },
+      { property: "og:title", content: "Shop Phones, Accessories & Parts — Pheng Mobile" },
+      { property: "og:description", content: "Order phones, cases, chargers, parts and tools from Pheng Mobile — pay by transfer, pick up at the shop or get delivery in Laos." },
+      { property: "og:url", content: "https://phengmobile.lovable.app/shop" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [{ rel: "canonical", href: "https://phengmobile.lovable.app/shop" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "Pheng Mobile Online Shop",
+          description: "Phones, accessories, parts and tools sold by Pheng Mobile in Laos.",
+          url: "https://phengmobile.lovable.app/shop",
+          isPartOf: {
+            "@type": "WebSite",
+            name: "Pheng Mobile",
+            url: "https://phengmobile.lovable.app",
+          },
+        }),
+      },
     ],
   }),
   component: ShopPage,
@@ -132,10 +152,10 @@ function ShopPage() {
                       <p className="text-sm font-medium line-clamp-2">{it.name}</p>
                       <p className="text-primary font-bold text-sm">{formatLAK(it.price)}</p>
                       <div className="flex items-center gap-1 mt-1">
-                        <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQty(it.id, it.qty - 1)}><Minus className="h-3 w-3" /></Button>
-                        <span className="w-8 text-center text-sm">{it.qty}</span>
-                        <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQty(it.id, it.qty + 1)} disabled={it.qty >= it.stock_qty}><Plus className="h-3 w-3" /></Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 ml-auto text-destructive" onClick={() => removeFromCart(it.id)}><Trash2 className="h-3 w-3" /></Button>
+                        <Button size="icon" variant="outline" className="h-7 w-7" aria-label={`Decrease quantity of ${it.name}`} onClick={() => updateQty(it.id, it.qty - 1)}><Minus className="h-3 w-3" /></Button>
+                        <span className="w-8 text-center text-sm" aria-label={`Quantity: ${it.qty}`}>{it.qty}</span>
+                        <Button size="icon" variant="outline" className="h-7 w-7" aria-label={`Increase quantity of ${it.name}`} onClick={() => updateQty(it.id, it.qty + 1)} disabled={it.qty >= it.stock_qty}><Plus className="h-3 w-3" /></Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 ml-auto text-destructive" aria-label={`Remove ${it.name} from cart`} onClick={() => removeFromCart(it.id)}><Trash2 className="h-3 w-3" /></Button>
                       </div>
                     </div>
                   </div>

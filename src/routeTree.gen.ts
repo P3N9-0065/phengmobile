@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
@@ -32,6 +33,11 @@ import { Route as AuthenticatedRepairsNewRouteImport } from './routes/_authentic
 import { Route as AuthenticatedRepairsIdRouteImport } from './routes/_authenticated/repairs.$id'
 import { Route as AuthenticatedCustomersIdRouteImport } from './routes/_authenticated/customers.$id'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShopRoute = ShopRouteImport.update({
   id: '/shop',
   path: '/shop',
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/shop': typeof ShopRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account-signups': typeof AuthenticatedAccountSignupsRoute
   '/customers': typeof AuthenticatedCustomersRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/shop': typeof ShopRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account-signups': typeof AuthenticatedAccountSignupsRoute
   '/customers': typeof AuthenticatedCustomersRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -197,6 +205,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/shop': typeof ShopRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/account-signups': typeof AuthenticatedAccountSignupsRoute
   '/_authenticated/customers': typeof AuthenticatedCustomersRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -222,6 +231,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/shop'
+    | '/sitemap.xml'
     | '/account-signups'
     | '/customers'
     | '/dashboard'
@@ -245,6 +255,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/shop'
+    | '/sitemap.xml'
     | '/account-signups'
     | '/customers'
     | '/dashboard'
@@ -269,6 +280,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/login'
     | '/shop'
+    | '/sitemap.xml'
     | '/_authenticated/account-signups'
     | '/_authenticated/customers'
     | '/_authenticated/dashboard'
@@ -294,6 +306,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
   ShopRoute: typeof ShopRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SignupIdRoute: typeof SignupIdRoute
   TrackOrderCodeRoute: typeof TrackOrderCodeRoute
   TrackCodeRoute: typeof TrackCodeRoute
@@ -301,6 +314,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shop': {
       id: '/shop'
       path: '/shop'
@@ -515,6 +535,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
   ShopRoute: ShopRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SignupIdRoute: SignupIdRoute,
   TrackOrderCodeRoute: TrackOrderCodeRoute,
   TrackCodeRoute: TrackCodeRoute,
