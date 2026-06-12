@@ -106,6 +106,6 @@ function LoginPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }
