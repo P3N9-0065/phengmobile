@@ -1,19 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Camera, X, CheckCircle, AlertTriangle } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Camera, X, CheckCircle, AlertTriangle, Repeat } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 
 const SCAN_COOLDOWN_MS = 1500;
+const CONTINUOUS_COOLDOWN_MS = 900;
 
 type Props = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onScan: (code: string) => void;
   title?: string;
+  /** เริ่มเปิดในโหมดสแกนต่อเนื่อง (ผู้ใช้สลับโหมดในกล่องได้) */
+  continuous?: boolean;
 };
 
-export function BarcodeScanner({ open, onOpenChange, onScan, title = "ສະແກນບາໂຄດ" }: Props) {
+export function BarcodeScanner({ open, onOpenChange, onScan, title = "ສະແກນບາໂຄດ", continuous: continuousInit = false }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<{ stop: () => void } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +27,19 @@ export function BarcodeScanner({ open, onOpenChange, onScan, title = "ສະແ�
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [deviceId, setDeviceId] = useState<string | undefined>(undefined);
   const [lastScan, setLastScan] = useState<string | null>(null);
+  const [continuous, setContinuous] = useState(continuousInit);
+  const [history, setHistory] = useState<string[]>([]);
   const cooldownRef = useRef(false);
+  const continuousRef = useRef(continuous);
+
+  useEffect(() => { continuousRef.current = continuous; }, [continuous]);
+
+  useEffect(() => {
+    if (open) {
+      setContinuous(continuousInit);
+      setHistory([]);
+    }
+  }, [open, continuousInit]);
 
   useEffect(() => {
     if (!open) return;
@@ -33,7 +51,6 @@ export function BarcodeScanner({ open, onOpenChange, onScan, title = "ສະແ�
 
     (async () => {
       try {
-        // ตรวจ secure context (กล้องต้องการ HTTPS หรือ localhost)
         if (typeof window !== "undefined" && !window.isSecureContext) {
           throw new Error("ຕ້ອງເປີດຜ່ານ HTTPS ຈຶ່ງຈະໃຊ້ກ້ອງໄດ້");
         }
@@ -41,12 +58,10 @@ export function BarcodeScanner({ open, onOpenChange, onScan, title = "ສະແ�
           throw new Error("ບຣາວເຊີນີ້ບໍ່ຮອງຮັບກ້ອງ (mediaDevices ບໍ່ມີ)");
         }
 
-        // ขอ permission ก่อน เพื่อให้ enumerateDevices มี labels และเลือกกล้องหลังได้
         const probeStream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: "environment" } },
           audio: false,
         });
-        // ปิด probe stream ทันที zxing จะเปิดใหม่เอง
         probeStream.getTracks().forEach((t) => t.stop());
         if (cancelled) return;
 
@@ -72,13 +87,23 @@ export function BarcodeScanner({ open, onOpenChange, onScan, title = "ສະແ�
           const text = result.getText().trim();
           if (!text) return;
 
+          const isContinuous = continuousRef.current;
           cooldownRef.current = true;
           setLastScan(text);
           onScan(text);
 
+          if (isContinuous) {
+            setHistory((h) => [text, ...h.filter((x) => x !== text)].slice(0, 6));
+            try {
+              if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(30);
+            } catch { /* ignore */ }
+          }
+
           setTimeout(() => {
             cooldownRef.current = false;
-          }, SCAN_COOLDOWN_MS);
+            // ในโหมดต่อเนื่อง — เคลียร์ overlay ไวๆ พร้อมสแกนตัวถัดไป
+            if (continuousRef.current) setLastScan(null);
+          }, isContinuous ? CONTINUOUS_COOLDOWN_MS : SCAN_COOLDOWN_MS);
         });
         if (cancelled) {
           try { controls.stop(); } catch { /* ignore */ }
@@ -123,8 +148,24 @@ export function BarcodeScanner({ open, onOpenChange, onScan, title = "ສະແ�
           <DialogTitle className="flex items-center gap-2">
             <Camera className="h-4 w-4" />
             {title}
+            {continuous && (
+              <Badge className="ml-1 bg-emerald-600 hover:bg-emerald-600 text-white gap-1">
+                <Repeat className="h-3 w-3" />ຕໍ່ເນື່ອງ
+              </Badge>
+            )}
           </DialogTitle>
         </DialogHeader>
+
+        <div className="flex items-center justify-between rounded-md border bg-slate-50 px-3 py-2">
+          <div className="flex items-center gap-2">
+            <Repeat className="h-4 w-4 text-emerald-600" />
+            <Label htmlFor="continuous-scan" className="text-sm cursor-pointer">
+              ໂໝດສະແກນຕໍ່ເນື່ອງ
+            </Label>
+          </div>
+          <Switch id="continuous-scan" checked={continuous} onCheckedChange={setContinuous} />
+        </div>
+
         <div className="relative bg-black rounded-md overflow-hidden aspect-[4/3]">
           <video ref={videoRef} className="w-full h-full object-cover" muted playsInline autoPlay />
           <div className="absolute inset-x-6 top-1/2 -translate-y-1/2 h-0.5 bg-red-500/80 shadow-[0_0_8px_rgba(255,0,0,0.6)]" />
@@ -134,12 +175,25 @@ export function BarcodeScanner({ open, onOpenChange, onScan, title = "ສະແ�
               ກຳລັງເປີດກ້ອງ...
             </div>
           )}
+          {continuous && (
+            <div className="absolute top-2 left-2 bg-emerald-600 text-white text-xs font-semibold px-2 py-1 rounded-md shadow">
+              ສະແກນແລ້ວ {history.length}
+            </div>
+          )}
           {lastScan && (
-            <div className="absolute inset-2 bg-emerald-600/60 rounded-md flex items-center justify-center animate-in fade-in duration-200">
-              <div className="text-white flex items-center gap-2 text-lg font-bold">
-                <CheckCircle className="h-6 w-6" />
-                {lastScan}
-              </div>
+            <div className={
+              continuous
+                ? "absolute bottom-2 right-2 bg-emerald-600/90 text-white px-3 py-1.5 rounded-md flex items-center gap-2 text-sm font-semibold animate-in fade-in duration-150"
+                : "absolute inset-2 bg-emerald-600/60 rounded-md flex items-center justify-center animate-in fade-in duration-200"
+            }>
+              {continuous ? (
+                <><CheckCircle className="h-4 w-4" />{lastScan}</>
+              ) : (
+                <div className="text-white flex items-center gap-2 text-lg font-bold">
+                  <CheckCircle className="h-6 w-6" />
+                  {lastScan}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -163,9 +217,23 @@ export function BarcodeScanner({ open, onOpenChange, onScan, title = "ສະແ�
             ))}
           </div>
         )}
+
+        {continuous && history.length > 0 && (
+          <div className="rounded-md border bg-slate-50 p-2">
+            <p className="text-[11px] text-slate-500 mb-1">ລາຍການຫຼ້າສຸດ</p>
+            <div className="flex flex-wrap gap-1">
+              {history.map((h, i) => (
+                <Badge key={i} variant="outline" className="font-mono text-[11px]">{h}</Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
         <p className="text-xs text-muted-foreground text-center">
-          ຫັນກ້ອງໄປໃສ່ບາໂຄດ ລະບົບຈະອ່ານອັດຕະໂນມັດ
-          {lastScan && <span className="block mt-1 text-emerald-500">ສະແກນໄດ້: {lastScan}</span>}
+          {continuous
+            ? "ຫັນກ້ອງໄປໃສ່ບາໂຄດ — ລະບົບຈະເພີ່ມສິນຄ້າເຂົ້າບິນທັນທີ ບໍ່ຕ້ອງປິດກ້ອງ"
+            : "ຫັນກ້ອງໄປໃສ່ບາໂຄດ ລະບົບຈະອ່ານອັດຕະໂນມັດ"}
+          {!continuous && lastScan && <span className="block mt-1 text-emerald-500">ສະແກນໄດ້: {lastScan}</span>}
         </p>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
