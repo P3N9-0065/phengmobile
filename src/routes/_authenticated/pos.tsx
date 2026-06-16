@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   ScanLine, Plus, Minus, Trash2, Printer, Receipt as ReceiptIcon,
-  Settings, User, Pause, ListChecks, Package, Eraser, Camera,
+  Settings, User, Pause, ListChecks, Package, Eraser, Camera, Repeat,
 } from "lucide-react";
 import { BarcodeScanner } from "@/components/inventory/BarcodeScanner";
 import { toast } from "sonner";
@@ -64,6 +64,7 @@ function POSPage() {
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const [showPay, setShowPay] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
+  const [scanContinuous, setScanContinuous] = useState(false);
   const [scanResults, setScanResults] = useState<LookupItem[] | null>(null);
   const [scanCode, setScanCode] = useState("");
   const scanRef = useRef<HTMLInputElement>(null);
@@ -128,16 +129,23 @@ function POSPage() {
 
   function removeLine(item_id: string) { setCart((c) => c.filter((l) => l.item_id !== item_id)); }
 
-  async function lookupAndAdd(code: string) {
+  async function lookupAndAdd(code: string, opts?: { auto?: boolean }) {
     const c = code.trim();
     if (!c) return;
     const results = await fallbackLookup(c);
     if (results.length === 1) {
-      addToCart(results[ 0 ]);
+      addToCart(results[0]);
       toast.success("ເພີ່ມ: " + results[0].name);
     } else if (results.length > 1) {
-      setScanCode(c);
-      setScanResults(results);
+      if (opts?.auto) {
+        // โหมดต่อเนื่อง: เลือกตัวที่ตรงกับ barcode ก่อน ถ้าไม่มีใช้ตัวแรก
+        const exact = results.find((r) => (r as any).barcode === c) ?? results[0];
+        addToCart(exact);
+        toast.success("ເພີ່ມ: " + exact.name);
+      } else {
+        setScanCode(c);
+        setScanResults(results);
+      }
     } else {
       toast.error("ບໍ່ພົບສິນຄ້າລະຫັດ: " + c);
     }
@@ -287,8 +295,17 @@ function POSPage() {
                 onKeyDown={handleScan}
               />
             </div>
-            <Button size="sm" variant="outline" onClick={() => setScanOpen(true)} title="ສະແກນດ້ວຍກ້ອງ">
+            <Button size="sm" variant="outline" onClick={() => { setScanContinuous(false); setScanOpen(true); }} title="ສະແກນດ້ວຍກ້ອງ">
               <Camera className="h-4 w-4 mr-1" />ກ້ອງ
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-emerald-500 text-emerald-700 hover:bg-emerald-50"
+              onClick={() => { setScanContinuous(true); setScanOpen(true); }}
+              title="ສະແກນຫຼາຍລາຍການຕໍ່ກັນ"
+            >
+              <Repeat className="h-4 w-4 mr-1" />ຕໍ່ເນື່ອງ
             </Button>
             <div className="text-xs text-slate-600">
               ສິນຄ້າ <span className="font-bold text-slate-900">{items?.length ?? 0}</span> ລາຍການ
@@ -534,8 +551,9 @@ function POSPage() {
       <BarcodeScanner
         open={scanOpen}
         onOpenChange={setScanOpen}
-        title="ສະແກນບາໂຄດເພື່ອເພີ່ມສິນຄ້າ"
-        onScan={(code) => lookupAndAdd(code)}
+        title={scanContinuous ? "ສະແກນຕໍ່ເນື່ອງເພື່ອເພີ່ມຫຼາຍລາຍການ" : "ສະແກນບາໂຄດເພື່ອເພີ່ມສິນຄ້າ"}
+        continuous={scanContinuous}
+        onScan={(code) => lookupAndAdd(code, { auto: scanContinuous })}
       />
 
       {/* Fallback scan results */}
