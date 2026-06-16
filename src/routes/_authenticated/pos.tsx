@@ -336,18 +336,16 @@ function POSPage() {
               <button
                 key={it.id}
                 onClick={() => addToCart(it as any)}
-                className="group text-left bg-white border border-slate-200 rounded-md overflow-hidden hover:border-emerald-500 hover:shadow-md transition-all"
+                className="group text-left bg-white border border-slate-200 rounded-md overflow-hidden hover:border-emerald-500 hover:shadow-md transition-all flex flex-col"
               >
-                <div className="aspect-square bg-slate-50 flex items-center justify-center text-slate-300 relative">
-                  <Package className="h-12 w-12" />
+                <div className="relative bg-slate-50 flex items-center justify-center text-slate-300 h-20 shrink-0">
+                  <Package className="h-10 w-10" />
                   <Badge className="absolute top-1 right-1 bg-emerald-600 text-white text-[10px]">×{it.stock_qty}</Badge>
-                  <div className="absolute bottom-1 left-1 bg-slate-900/80 text-amber-300 text-[11px] font-bold px-1.5 py-0.5 rounded">
-                    {formatLAK(Number(it.sell_price))}
-                  </div>
                 </div>
-                <div className="bg-sky-100 group-hover:bg-emerald-100 px-2 py-1.5 text-center">
-                  <p className="text-xs font-medium line-clamp-2 min-h-[2rem] text-slate-800">{it.name}</p>
+                <div className="px-2 py-2 flex-1 flex flex-col gap-1 bg-white">
+                  <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem] text-slate-900 leading-tight">{it.name}</p>
                   {it.sku && <p className="text-[10px] text-slate-500 truncate">{it.sku}</p>}
+                  <p className="text-sm font-bold text-emerald-700 mt-auto">{formatLAK(Number(it.sell_price))}</p>
                 </div>
               </button>
             ))}
