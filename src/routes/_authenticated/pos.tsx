@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   ScanLine, Plus, Minus, Trash2, Printer, Receipt as ReceiptIcon,
-  Settings, User, Pause, ListChecks, Package, Eraser, Camera,
+  Settings, User, Pause, ListChecks, Package, Eraser, Camera, Repeat,
 } from "lucide-react";
 import { BarcodeScanner } from "@/components/inventory/BarcodeScanner";
 import { toast } from "sonner";
