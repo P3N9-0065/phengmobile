@@ -77,7 +77,7 @@ function POSPage() {
   const { data: items } = useQuery({
     queryKey: ["pos-items", search, activeCat],
     queryFn: async () => {
-      let q = supabase.from("inventory_items").select("id,name,sku,barcode,sell_price,stock_qty,category").gt("stock_qty", 0).order("name").limit(120);
+      let q = supabase.from("inventory_items").select("id,name,sku,barcode,sell_price,stock_qty,category,description,cost_price,low_stock_threshold,image_url").gt("stock_qty", 0).order("name").limit(120);
       if (activeCat !== "all") q = q.eq("category", activeCat);
       if (search.trim()) q = q.or(`name.ilike.%${search}%,sku.ilike.%${search}%,barcode.ilike.%${search}%`);
       const { data } = await q;
