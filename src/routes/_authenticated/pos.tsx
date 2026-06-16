@@ -68,6 +68,8 @@ function POSPage() {
   const [scanResults, setScanResults] = useState<LookupItem[] | null>(null);
   const [scanCode, setScanCode] = useState("");
   const scanRef = useRef<HTMLInputElement>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { data: loyalty } = useLoyaltySettings();
 
   useEffect(() => { setRate(settings.rates[currency]); setAmountPaid(0); }, [currency, settings.rates]);
