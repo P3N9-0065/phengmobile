@@ -147,9 +147,10 @@ function POSPage() {
     if (e.key !== "Enter") return;
     const code = e.currentTarget.value.trim();
     if (!code) return;
-    await lookupAndAdd(code);
     e.currentTarget.value = "";
     setSearch("");
+    setScanCode("");
+    await lookupAndAdd(code);
   }
 
   function resetSale() {
