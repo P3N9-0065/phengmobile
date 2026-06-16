@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Logo } from "@/components/Logo";
 import {
   ArrowLeft, Upload, X, Smartphone, User, Wrench, Camera,
-  PenLine, FileText, Search, UserPlus, Check, Eraser, Save,
+  PenLine, FileText, Search, UserPlus, Check, Eraser, Save, AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatLAK } from "@/lib/format";
@@ -213,7 +213,7 @@ function NewRepairPage() {
         customer_id: selectedCustomer.id,
         device_brand: brand.trim(),
         device_model: model.trim(),
-        device_imei: imei.trim() || null,
+        device_imei: imei.replace(/\D/g, "").slice(0, 17) || null,
         device_color: color.trim() || null,
         problem_description: fullProblem,
         lock_code: lockCode.trim() || null,
@@ -415,25 +415,28 @@ function NewRepairPage() {
                   ))}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>ຍີ່ຫໍ້ *</Label>
-                  <Input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="iPhone, Samsung..." aria-invalid={!!errors.brand} className={errors.brand ? "border-destructive" : ""} />
+                  <Input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="iPhone, Samsung..." className={`h-11 ${errors.brand ? "border-destructive" : ""}`} aria-invalid={!!errors.brand} />
                   {errors.brand && <p className="text-xs text-destructive mt-1">{errors.brand}</p>}
                 </div>
                 <div>
                   <Label>ຮຸ່ນ *</Label>
-                  <Input value={model} onChange={(e) => setModel(e.target.value)} placeholder="13 Pro, A52..." aria-invalid={!!errors.model} className={errors.model ? "border-destructive" : ""} />
+                  <Input value={model} onChange={(e) => setModel(e.target.value)} placeholder="13 Pro, A52..." className={`h-11 ${errors.model ? "border-destructive" : ""}`} aria-invalid={!!errors.model} />
                   {errors.model && <p className="text-xs text-destructive mt-1">{errors.model}</p>}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>IMEI / Serial</Label><Input value={imei} onChange={(e) => setImei(e.target.value)} /></div>
-                <div><Label>ສີ</Label><Input value={color} onChange={(e) => setColor(e.target.value)} /></div>
-              </div>
-              <div>
-                <Label>ລະຫັດປົດລ໋ອກ / Pattern</Label>
-                <Input value={lockCode} onChange={(e) => setLockCode(e.target.value)} placeholder="ຖ້າມີ ກະລຸນາລະບຸເພື່ອທົດສອບ" />
+              <ImeiField imei={imei} setImei={setImei} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label>ສີ</Label>
+                  <Input value={color} onChange={(e) => setColor(e.target.value)} className="h-11" placeholder="ດຳ, ຂາວ, ທອງ..." />
+                </div>
+                <div>
+                  <Label>ລະຫັດປົດລ໋ອກ / Pattern</Label>
+                  <Input value={lockCode} onChange={(e) => setLockCode(e.target.value)} className="h-11" placeholder="ຖ້າມີ ກະລຸນາລະບຸ" />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -618,6 +621,74 @@ function SummaryRow({ label, value }: { label: string; value: string | null | un
       <span className={`text-right truncate ${value ? "font-medium" : "text-muted-foreground/60 italic"}`}>
         {value || "ຍັງບໍ່ໄດ້ລະບຸ"}
       </span>
+    </div>
+  );
+}
+
+// IMEI format: 15 digits (or up to 17 for serials). Auto-strip non-digits,
+// Luhn-check at 15 digits, show live preview + validity hint.
+function luhnValid(num: string) {
+  if (num.length !== 15) return false;
+  let sum = 0;
+  for (let i = 0; i < 15; i++) {
+    let d = num.charCodeAt(14 - i) - 48;
+    if (d < 0 || d > 9) return false;
+    if (i % 2 === 1) { d *= 2; if (d > 9) d -= 9; }
+    sum += d;
+  }
+  return sum % 10 === 0;
+}
+
+function ImeiField({ imei, setImei }: { imei: string; setImei: (v: string) => void }) {
+  const cleaned = imei.replace(/\D/g, "").slice(0, 17);
+  const formatted = cleaned.length <= 15
+    ? cleaned.replace(/(\d{2})(\d{0,6})(\d{0,6})(\d{0,1}).*/, (_, a, b, c, d) =>
+        [a, b, c, d].filter(Boolean).join("-"))
+    : cleaned;
+  const isFull = cleaned.length === 15;
+  const isValid = isFull && luhnValid(cleaned);
+  const showWarn = isFull && !isValid;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <Label>IMEI / Serial</Label>
+        <span className="text-[11px] text-muted-foreground tabular-nums">
+          {cleaned.length}/15
+        </span>
+      </div>
+      <div className="relative">
+        <Input
+          value={imei}
+          onChange={(e) => setImei(e.target.value.replace(/[^\d\s-]/g, "").slice(0, 20))}
+          placeholder="ກົດ *#06# ເພື່ອເບິ່ງ IMEI"
+          inputMode="numeric"
+          autoComplete="off"
+          className={`h-11 pr-9 tracking-wider tabular-nums ${
+            isValid ? "border-emerald-500 focus-visible:ring-emerald-500" :
+            showWarn ? "border-amber-500 focus-visible:ring-amber-500" : ""
+          }`}
+        />
+        {isFull && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            {isValid
+              ? <Check className="h-4 w-4 text-emerald-600" />
+              : <AlertCircle className="h-4 w-4 text-amber-500" />}
+          </div>
+        )}
+      </div>
+      {cleaned.length > 0 && (
+        <p className={`text-[11px] mt-1 ${
+          isValid ? "text-emerald-600" :
+          showWarn ? "text-amber-600" : "text-muted-foreground"
+        }`}>
+          {isValid
+            ? `✓ ຮູບແບບຖືກຕ້ອງ: ${formatted}`
+            : showWarn
+              ? "ຮູບແບບ IMEI ບໍ່ຜ່ານການກວດ (ໃຊ້ໄດ້ຖ້າເປັນ Serial)"
+              : `ຕົວຢ່າງ: ${formatted}`}
+        </p>
+      )}
     </div>
   );
 }
