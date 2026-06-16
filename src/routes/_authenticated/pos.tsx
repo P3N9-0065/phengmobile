@@ -551,8 +551,9 @@ function POSPage() {
       <BarcodeScanner
         open={scanOpen}
         onOpenChange={setScanOpen}
-        title="ສະແກນບາໂຄດເພື່ອເພີ່ມສິນຄ້າ"
-        onScan={(code) => lookupAndAdd(code)}
+        title={scanContinuous ? "ສະແກນຕໍ່ເນື່ອງເພື່ອເພີ່ມຫຼາຍລາຍການ" : "ສະແກນບາໂຄດເພື່ອເພີ່ມສິນຄ້າ"}
+        continuous={scanContinuous}
+        onScan={(code) => lookupAndAdd(code, { auto: scanContinuous })}
       />
 
       {/* Fallback scan results */}
