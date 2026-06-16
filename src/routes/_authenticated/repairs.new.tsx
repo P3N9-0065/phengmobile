@@ -624,3 +624,71 @@ function SummaryRow({ label, value }: { label: string; value: string | null | un
     </div>
   );
 }
+
+// IMEI format: 15 digits (or up to 17 for serials). Auto-strip non-digits,
+// Luhn-check at 15 digits, show live preview + validity hint.
+function luhnValid(num: string) {
+  if (num.length !== 15) return false;
+  let sum = 0;
+  for (let i = 0; i < 15; i++) {
+    let d = num.charCodeAt(14 - i) - 48;
+    if (d < 0 || d > 9) return false;
+    if (i % 2 === 1) { d *= 2; if (d > 9) d -= 9; }
+    sum += d;
+  }
+  return sum % 10 === 0;
+}
+
+function ImeiField({ imei, setImei }: { imei: string; setImei: (v: string) => void }) {
+  const cleaned = imei.replace(/\D/g, "").slice(0, 17);
+  const formatted = cleaned.length <= 15
+    ? cleaned.replace(/(\d{2})(\d{0,6})(\d{0,6})(\d{0,1}).*/, (_, a, b, c, d) =>
+        [a, b, c, d].filter(Boolean).join("-"))
+    : cleaned;
+  const isFull = cleaned.length === 15;
+  const isValid = isFull && luhnValid(cleaned);
+  const showWarn = isFull && !isValid;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <Label>IMEI / Serial</Label>
+        <span className="text-[11px] text-muted-foreground tabular-nums">
+          {cleaned.length}/15
+        </span>
+      </div>
+      <div className="relative">
+        <Input
+          value={imei}
+          onChange={(e) => setImei(e.target.value.replace(/[^\d\s-]/g, "").slice(0, 20))}
+          placeholder="ກົດ *#06# ເພື່ອເບິ່ງ IMEI"
+          inputMode="numeric"
+          autoComplete="off"
+          className={`h-11 pr-9 tracking-wider tabular-nums ${
+            isValid ? "border-emerald-500 focus-visible:ring-emerald-500" :
+            showWarn ? "border-amber-500 focus-visible:ring-amber-500" : ""
+          }`}
+        />
+        {isFull && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            {isValid
+              ? <Check className="h-4 w-4 text-emerald-600" />
+              : <AlertCircle className="h-4 w-4 text-amber-500" />}
+          </div>
+        )}
+      </div>
+      {cleaned.length > 0 && (
+        <p className={`text-[11px] mt-1 ${
+          isValid ? "text-emerald-600" :
+          showWarn ? "text-amber-600" : "text-muted-foreground"
+        }`}>
+          {isValid
+            ? `✓ ຮູບແບບຖືກຕ້ອງ: ${formatted}`
+            : showWarn
+              ? "ຮູບແບບ IMEI ບໍ່ຜ່ານການກວດ (ໃຊ້ໄດ້ຖ້າເປັນ Serial)"
+              : `ຕົວຢ່າງ: ${formatted}`}
+        </p>
+      )}
+    </div>
+  );
+}
