@@ -213,7 +213,7 @@ function NewRepairPage() {
         customer_id: selectedCustomer.id,
         device_brand: brand.trim(),
         device_model: model.trim(),
-        device_imei: imei.trim() || null,
+        device_imei: imei.replace(/\D/g, "").slice(0, 17) || null,
         device_color: color.trim() || null,
         problem_description: fullProblem,
         lock_code: lockCode.trim() || null,
