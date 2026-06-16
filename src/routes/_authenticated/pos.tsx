@@ -64,6 +64,7 @@ function POSPage() {
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const [showPay, setShowPay] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
+  const [scanContinuous, setScanContinuous] = useState(false);
   const [scanResults, setScanResults] = useState<LookupItem[] | null>(null);
   const [scanCode, setScanCode] = useState("");
   const scanRef = useRef<HTMLInputElement>(null);
