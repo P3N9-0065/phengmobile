@@ -129,16 +129,23 @@ function POSPage() {
 
   function removeLine(item_id: string) { setCart((c) => c.filter((l) => l.item_id !== item_id)); }
 
-  async function lookupAndAdd(code: string) {
+  async function lookupAndAdd(code: string, opts?: { auto?: boolean }) {
     const c = code.trim();
     if (!c) return;
     const results = await fallbackLookup(c);
     if (results.length === 1) {
-      addToCart(results[ 0 ]);
+      addToCart(results[0]);
       toast.success("ເພີ່ມ: " + results[0].name);
     } else if (results.length > 1) {
-      setScanCode(c);
-      setScanResults(results);
+      if (opts?.auto) {
+        // โหมดต่อเนื่อง: เลือกตัวที่ตรงกับ barcode ก่อน ถ้าไม่มีใช้ตัวแรก
+        const exact = results.find((r) => (r as any).barcode === c) ?? results[0];
+        addToCart(exact);
+        toast.success("ເພີ່ມ: " + exact.name);
+      } else {
+        setScanCode(c);
+        setScanResults(results);
+      }
     } else {
       toast.error("ບໍ່ພົບສິນຄ້າລະຫັດ: " + c);
     }
