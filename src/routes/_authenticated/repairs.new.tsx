@@ -415,25 +415,28 @@ function NewRepairPage() {
                   ))}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>ຍີ່ຫໍ້ *</Label>
-                  <Input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="iPhone, Samsung..." aria-invalid={!!errors.brand} className={errors.brand ? "border-destructive" : ""} />
+                  <Input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="iPhone, Samsung..." className={`h-11 ${errors.brand ? "border-destructive" : ""}`} aria-invalid={!!errors.brand} />
                   {errors.brand && <p className="text-xs text-destructive mt-1">{errors.brand}</p>}
                 </div>
                 <div>
                   <Label>ຮຸ່ນ *</Label>
-                  <Input value={model} onChange={(e) => setModel(e.target.value)} placeholder="13 Pro, A52..." aria-invalid={!!errors.model} className={errors.model ? "border-destructive" : ""} />
+                  <Input value={model} onChange={(e) => setModel(e.target.value)} placeholder="13 Pro, A52..." className={`h-11 ${errors.model ? "border-destructive" : ""}`} aria-invalid={!!errors.model} />
                   {errors.model && <p className="text-xs text-destructive mt-1">{errors.model}</p>}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>IMEI / Serial</Label><Input value={imei} onChange={(e) => setImei(e.target.value)} /></div>
-                <div><Label>ສີ</Label><Input value={color} onChange={(e) => setColor(e.target.value)} /></div>
-              </div>
-              <div>
-                <Label>ລະຫັດປົດລ໋ອກ / Pattern</Label>
-                <Input value={lockCode} onChange={(e) => setLockCode(e.target.value)} placeholder="ຖ້າມີ ກະລຸນາລະບຸເພື່ອທົດສອບ" />
+              <ImeiField imei={imei} setImei={setImei} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label>ສີ</Label>
+                  <Input value={color} onChange={(e) => setColor(e.target.value)} className="h-11" placeholder="ດຳ, ຂາວ, ທອງ..." />
+                </div>
+                <div>
+                  <Label>ລະຫັດປົດລ໋ອກ / Pattern</Label>
+                  <Input value={lockCode} onChange={(e) => setLockCode(e.target.value)} className="h-11" placeholder="ຖ້າມີ ກະລຸນາລະບຸ" />
+                </div>
               </div>
             </CardContent>
           </Card>
