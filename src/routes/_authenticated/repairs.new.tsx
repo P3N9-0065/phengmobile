@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Logo } from "@/components/Logo";
 import {
   ArrowLeft, Upload, X, Smartphone, User, Wrench, Camera,
-  PenLine, FileText, Search, UserPlus, Check, Eraser, Save,
+  PenLine, FileText, Search, UserPlus, Check, Eraser, Save, AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatLAK } from "@/lib/format";
