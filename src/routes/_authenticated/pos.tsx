@@ -77,7 +77,7 @@ function POSPage() {
   useEffect(() => { scanRef.current?.focus(); }, []);
   useEffect(() => { setPointsToRedeem(0); }, [customerId]);
 
-  const { data: items } = useQuery({
+  const { data: items, isLoading: itemsLoading } = useQuery({
     queryKey: ["pos-items", search, activeCat],
     queryFn: async () => {
       let q = supabase.from("inventory_items").select("id,name,sku,barcode,sell_price,stock_qty,category,description,cost_price,low_stock_threshold,image_url").gt("stock_qty", 0).order("name").limit(120);
