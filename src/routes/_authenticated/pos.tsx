@@ -338,8 +338,28 @@ function POSPage() {
           </div>
 
           {/* Product grid */}
-          <div className="p-3 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 overflow-auto" style={{ maxHeight: "calc(100vh - 16rem)" }}>
-            {items?.map((it) => (
+          <div
+            className="p-3 grid gap-3 overflow-auto grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8"
+            style={{ maxHeight: "calc(100vh - 16rem)" }}
+          >
+            {itemsLoading && !items && Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden flex flex-col animate-pulse" style={{ height: 220 }}>
+                <div className="h-[140px] bg-slate-100 dark:bg-slate-800" />
+                <div className="p-2 flex-1 flex flex-col gap-1.5">
+                  <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-11/12" />
+                  <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-2/3" />
+                  <div className="mt-auto h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+            {items?.map((it) => {
+              const lowT = it.low_stock_threshold ?? 5;
+              const stock = it.stock_qty;
+              const stockTone =
+                stock <= 0 ? "bg-rose-500 text-white"
+                : stock <= lowT ? "bg-amber-400 text-slate-900"
+                : "bg-emerald-500 text-white";
+              return (
               <button
                 key={it.id}
                 onClick={() => addToCart(it as any)}
@@ -351,14 +371,21 @@ function POSPage() {
                   if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
                   setHoveredId(null);
                 }}
-                className="group text-left bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-amber-400 hover:shadow-lg transition-all flex flex-col relative"
+                disabled={stock <= 0}
+                className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-0.5 hover:border-amber-400 transition-all duration-150 flex flex-col relative animate-in fade-in disabled:opacity-60 disabled:cursor-not-allowed"
+                style={{ height: 220 }}
               >
+                {/* Stock badge */}
+                <span className={cn("absolute top-1.5 right-1.5 z-10 text-[10px] font-bold px-2 py-0.5 rounded-full shadow", stockTone)}>
+                  {stock <= 0 ? "ໝົດ" : stock}
+                </span>
+
                 {/* Hover popup */}
                 {hoveredId === it.id && (
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-30 w-64 bg-slate-900 text-white rounded-lg shadow-xl p-3 animate-in fade-in zoom-in-95 duration-150 pointer-events-none">
                     <div className="flex items-start gap-2">
                       {it.image_url ? (
-                        <img src={it.image_url} alt={it.name} className="h-14 w-14 rounded object-cover shrink-0 bg-slate-700" />
+                        <SignedImg src={it.image_url} alt={it.name} className="h-14 w-14 rounded object-contain bg-white shrink-0" />
                       ) : (
                         <div className="h-14 w-14 rounded bg-slate-700 flex items-center justify-center shrink-0">
                           <Package className="h-6 w-6 text-slate-400" />
@@ -376,37 +403,36 @@ function POSPage() {
                       {it.cost_price ? <p className="flex justify-between"><span className="text-slate-400">ຕົ້ນທຶນ</span> <span className="font-mono text-slate-200">{formatLAK(Number(it.cost_price))}</span></p> : null}
                       <p className="flex justify-between">
                         <span className="text-slate-400">ສະຕັອກ</span>
-                        <span className={it.stock_qty <= (it.low_stock_threshold ?? 5) ? "text-amber-400 font-semibold" : "text-slate-200"}>
-                          {it.stock_qty} {it.stock_qty <= (it.low_stock_threshold ?? 5) ? "(ໃກ້ໝົດ)" : ""}
+                        <span className={stock <= lowT ? "text-amber-400 font-semibold" : "text-slate-200"}>
+                          {stock} {stock <= lowT ? "(ໃກ້ໝົດ)" : ""}
                         </span>
                       </p>
                     </div>
                     {it.description && <p className="mt-2 text-[11px] text-slate-400 line-clamp-2 border-t border-slate-700 pt-1.5">{it.description}</p>}
-                    {/* Arrow */}
                     <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 rotate-45" />
                   </div>
                 )}
-                <div className="relative bg-slate-100 flex items-center justify-center text-slate-300 h-32 shrink-0 overflow-hidden">
+
+                {/* Image — contain, no crop, white bg */}
+                <div className="relative bg-white dark:bg-slate-100 flex items-center justify-center shrink-0 overflow-hidden" style={{ height: 140 }}>
                   {it.image_url ? (
-                    <SignedImg src={it.image_url} alt={it.name} className="h-full w-full object-cover" />
+                    <SignedImg src={it.image_url} alt={it.name} loading="lazy" decoding="async" className="h-full w-full object-contain p-1" />
                   ) : (
-                    <Package className="h-20 w-20 text-slate-300" />
+                    <Package className="h-16 w-16 text-slate-300" />
                   )}
                 </div>
-                <div className="px-3 py-2.5 flex-1 flex flex-col gap-0.5 bg-white relative">
-                  <p className="text-sm font-bold text-slate-900 leading-tight line-clamp-2 min-h-[2.25rem]">{it.name}</p>
-                  <p className="text-[11px] text-slate-500">{CATEGORY_LABEL[it.category as ItemCategory] ?? it.category}</p>
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-sm font-bold text-amber-600">{formatLAK(Number(it.sell_price))}</p>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-100 text-rose-600 font-medium">
-                      ສະຕ໋ອກ: {it.stock_qty}
-                    </span>
-                  </div>
+
+                {/* Info */}
+                <div className="px-2 py-1.5 flex-1 flex flex-col bg-white dark:bg-slate-900">
+                  <p className="text-[13px] font-semibold text-slate-900 dark:text-slate-100 leading-tight line-clamp-2 min-h-[2.1rem]">{it.name}</p>
+                  <p className="mt-auto text-sm font-bold text-amber-600 dark:text-amber-400">{formatLAK(Number(it.sell_price))}</p>
                 </div>
               </button>
-            ))}
-            {items?.length === 0 && <p className="col-span-full text-center text-sm text-muted-foreground py-12">ບໍ່ພົບສິນຄ້າ</p>}
+              );
+            })}
+            {!itemsLoading && items?.length === 0 && <p className="col-span-full text-center text-sm text-muted-foreground py-12">ບໍ່ພົບສິນຄ້າ</p>}
           </div>
+
         </div>
 
         {/* RIGHT — cart panel */}
