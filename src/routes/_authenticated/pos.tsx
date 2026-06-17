@@ -382,8 +382,12 @@ function POSPage() {
                     <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 rotate-45" />
                   </div>
                 )}
-                <div className="relative bg-slate-50 flex items-center justify-center text-slate-300 h-20 shrink-0">
-                  <Package className="h-10 w-10" />
+                <div className="relative bg-slate-50 flex items-center justify-center text-slate-300 h-28 shrink-0 overflow-hidden">
+                  {it.image_url ? (
+                    <SignedImg src={it.image_url} alt={it.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <Package className="h-10 w-10" />
+                  )}
                   <Badge className="absolute top-1 right-1 bg-emerald-600 text-white text-[10px]">×{it.stock_qty}</Badge>
                 </div>
                 <div className="px-2 py-2 flex-1 flex flex-col gap-1 bg-white">
