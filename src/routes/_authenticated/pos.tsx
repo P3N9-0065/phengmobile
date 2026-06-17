@@ -335,71 +335,73 @@ function POSPage() {
           </div>
 
           {/* Product grid */}
-          <div className="p-3 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 overflow-auto" style={{ maxHeight: "calc(100vh - 16rem)" }}>
-            {items?.map((it) => (
-              <button
-                key={it.id}
-                onClick={() => addToCart(it as any)}
-                onMouseEnter={() => {
-                  if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-                  hoverTimerRef.current = setTimeout(() => setHoveredId(it.id), 250);
-                }}
-                onMouseLeave={() => {
-                  if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-                  setHoveredId(null);
-                }}
-                className="group text-left bg-white border border-slate-200 rounded-md overflow-hidden hover:border-emerald-500 hover:shadow-md transition-all flex flex-col relative"
-              >
-                {/* Hover popup */}
-                {hoveredId === it.id && (
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-30 w-64 bg-slate-900 text-white rounded-lg shadow-xl p-3 animate-in fade-in zoom-in-95 duration-150 pointer-events-none">
-                    <div className="flex items-start gap-2">
-                      {it.image_url ? (
-                        <img src={it.image_url} alt={it.name} className="h-14 w-14 rounded object-cover shrink-0 bg-slate-700" />
-                      ) : (
-                        <div className="h-14 w-14 rounded bg-slate-700 flex items-center justify-center shrink-0">
-                          <Package className="h-6 w-6 text-slate-400" />
+          <ScrollArea className="flex-1">
+            <div className="p-3 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
+              {items?.map((it) => (
+                <button
+                  key={it.id}
+                  onClick={() => addToCart(it as any)}
+                  onMouseEnter={() => {
+                    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+                    hoverTimerRef.current = setTimeout(() => setHoveredId(it.id), 250);
+                  }}
+                  onMouseLeave={() => {
+                    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+                    setHoveredId(null);
+                  }}
+                  className="group text-left bg-white border border-slate-200 rounded-md overflow-hidden hover:border-emerald-500 hover:shadow-md transition-all flex flex-col relative"
+                >
+                  {/* Hover popup */}
+                  {hoveredId === it.id && (
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-30 w-64 bg-slate-900 text-white rounded-lg shadow-xl p-3 animate-in fade-in zoom-in-95 duration-150 pointer-events-none">
+                      <div className="flex items-start gap-2">
+                        {it.image_url ? (
+                          <img src={it.image_url} alt={it.name} className="h-14 w-14 rounded object-cover shrink-0 bg-slate-700" />
+                        ) : (
+                          <div className="h-14 w-14 rounded bg-slate-700 flex items-center justify-center shrink-0">
+                            <Package className="h-6 w-6 text-slate-400" />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold leading-tight truncate">{it.name}</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">{CATEGORY_LABEL[it.category as ItemCategory] ?? it.category}</p>
                         </div>
-                      )}
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold leading-tight truncate">{it.name}</p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">{CATEGORY_LABEL[it.category as ItemCategory] ?? it.category}</p>
                       </div>
+                      <div className="mt-2 space-y-1 text-[11px] text-slate-300">
+                        {it.sku && <p className="flex justify-between"><span className="text-slate-400">SKU</span> <span className="font-mono text-slate-200">{it.sku}</span></p>}
+                        {it.barcode && <p className="flex justify-between"><span className="text-slate-400">Barcode</span> <span className="font-mono text-slate-200">{it.barcode}</span></p>}
+                        <p className="flex justify-between"><span className="text-slate-400">ລາຄາຂາຍ</span> <span className="font-semibold text-emerald-400">{formatLAK(Number(it.sell_price))}</span></p>
+                        {it.cost_price ? <p className="flex justify-between"><span className="text-slate-400">ຕົ້ນທຶນ</span> <span className="font-mono text-slate-200">{formatLAK(Number(it.cost_price))}</span></p> : null}
+                        <p className="flex justify-between">
+                          <span className="text-slate-400">ສະຕັອກ</span>
+                          <span className={it.stock_qty <= (it.low_stock_threshold ?? 5) ? "text-amber-400 font-semibold" : "text-slate-200"}>
+                            {it.stock_qty} {it.stock_qty <= (it.low_stock_threshold ?? 5) ? "(ໃກ້ໝົດ)" : ""}
+                          </span>
+                        </p>
+                      </div>
+                      {it.description && <p className="mt-2 text-[11px] text-slate-400 line-clamp-2 border-t border-slate-700 pt-1.5">{it.description}</p>}
+                      {/* Arrow */}
+                      <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 rotate-45" />
                     </div>
-                    <div className="mt-2 space-y-1 text-[11px] text-slate-300">
-                      {it.sku && <p className="flex justify-between"><span className="text-slate-400">SKU</span> <span className="font-mono text-slate-200">{it.sku}</span></p>}
-                      {it.barcode && <p className="flex justify-between"><span className="text-slate-400">Barcode</span> <span className="font-mono text-slate-200">{it.barcode}</span></p>}
-                      <p className="flex justify-between"><span className="text-slate-400">ລາຄາຂາຍ</span> <span className="font-semibold text-emerald-400">{formatLAK(Number(it.sell_price))}</span></p>
-                      {it.cost_price ? <p className="flex justify-between"><span className="text-slate-400">ຕົ້ນທຶນ</span> <span className="font-mono text-slate-200">{formatLAK(Number(it.cost_price))}</span></p> : null}
-                      <p className="flex justify-between">
-                        <span className="text-slate-400">ສະຕັອກ</span>
-                        <span className={it.stock_qty <= (it.low_stock_threshold ?? 5) ? "text-amber-400 font-semibold" : "text-slate-200"}>
-                          {it.stock_qty} {it.stock_qty <= (it.low_stock_threshold ?? 5) ? "(ໃກ້ໝົດ)" : ""}
-                        </span>
-                      </p>
-                    </div>
-                    {it.description && <p className="mt-2 text-[11px] text-slate-400 line-clamp-2 border-t border-slate-700 pt-1.5">{it.description}</p>}
-                    {/* Arrow */}
-                    <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 rotate-45" />
-                  </div>
-                )}
-                <div className="relative bg-slate-50 flex items-center justify-center text-slate-300 h-28 shrink-0 overflow-hidden">
-                  {it.image_url ? (
-                    <SignedImg src={it.image_url} alt={it.name} className="h-full w-full object-cover" />
-                  ) : (
-                    <Package className="h-10 w-10" />
                   )}
-                  <Badge className="absolute top-1 right-1 bg-emerald-600 text-white text-[10px]">×{it.stock_qty}</Badge>
-                </div>
-                <div className="px-2 py-2 flex-1 flex flex-col gap-1 bg-white">
-                  <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem] text-slate-900 leading-tight">{it.name}</p>
-                  {it.sku && <p className="text-[10px] text-slate-500 truncate">{it.sku}</p>}
-                  <p className="text-sm font-bold text-emerald-700 mt-auto">{formatLAK(Number(it.sell_price))}</p>
-                </div>
-              </button>
-            ))}
-            {items?.length === 0 && <p className="col-span-full text-center text-sm text-muted-foreground py-12">ບໍ່ພົບສິນຄ້າ</p>}
-          </div>
+                  <div className="relative bg-slate-50 flex items-center justify-center text-slate-300 h-28 shrink-0 overflow-hidden">
+                    {it.image_url ? (
+                      <SignedImg src={it.image_url} alt={it.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <Package className="h-10 w-10" />
+                    )}
+                    <Badge className="absolute top-1 right-1 bg-emerald-600 text-white text-[10px]">×{it.stock_qty}</Badge>
+                  </div>
+                  <div className="px-2 py-2 flex-1 flex flex-col gap-1 bg-white">
+                    <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem] text-slate-900 leading-tight">{it.name}</p>
+                    {it.sku && <p className="text-[10px] text-slate-500 truncate">{it.sku}</p>}
+                    <p className="text-sm font-bold text-emerald-700 mt-auto">{formatLAK(Number(it.sell_price))}</p>
+                  </div>
+                </button>
+              ))}
+              {items?.length === 0 && <p className="col-span-full text-center text-sm text-muted-foreground py-12">ບໍ່ພົບສິນຄ້າ</p>}
+            </div>
+          </ScrollArea>
         </div>
 
         {/* RIGHT — cart panel */}
