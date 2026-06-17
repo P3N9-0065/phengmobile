@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   ScanLine, Plus, Minus, Trash2, Printer, Receipt as ReceiptIcon,
-  Settings, User, Pause, ListChecks, Package, Eraser, Camera, Repeat,
+  Settings, User, Pause, ListChecks, Package, Eraser, Repeat,
 } from "lucide-react";
 import { BarcodeScanner } from "@/components/inventory/BarcodeScanner";
 import { toast } from "sonner";
@@ -428,8 +428,12 @@ function POSPage() {
             <ReceiptIcon className="h-5 w-5 mr-2" />ຊຳລະເງິນ [F2]
           </Button>
 
-          <div className="bg-white rounded-md shadow-sm border flex flex-col flex-1">
-            <div className="grid grid-cols-12 bg-slate-800 text-white text-xs font-semibold px-2 py-2 rounded-t-md">
+          <div className="bg-white rounded-xl shadow-sm border flex flex-col flex-1 overflow-hidden">
+            <div className="flex items-center justify-between bg-slate-800 text-white px-4 py-3">
+              <span className="font-semibold text-sm">ລາຍການສັ່ງຊື້</span>
+              <span className="text-xs bg-white/15 px-2 py-1 rounded-full">{cart.length} ລາຍການ</span>
+            </div>
+            <div className="grid grid-cols-12 bg-slate-700 text-white text-xs font-semibold px-3 py-2">
               <div className="col-span-1">#</div>
               <div className="col-span-6">ສິນຄ້າ</div>
               <div className="col-span-2 text-center">ຈຳນວນ</div>
