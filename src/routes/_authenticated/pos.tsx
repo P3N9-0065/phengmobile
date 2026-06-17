@@ -12,7 +12,7 @@ import {
   ScanLine, Plus, Minus, Trash2, Printer, Receipt as ReceiptIcon,
   Settings, User, Pause, ListChecks, Package, Eraser, Camera, Repeat,
 } from "lucide-react";
-import { BarcodeScanner } from "@/components/inventory/BarcodeScanner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { formatLAK } from "@/lib/format";
 import { CURRENCY_LABEL, formatCurrency, fromLAK, PAYMENT_METHOD_LABEL, toLAK,
