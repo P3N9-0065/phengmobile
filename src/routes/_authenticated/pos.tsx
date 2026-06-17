@@ -386,7 +386,7 @@ function POSPage() {
                   {it.image_url ? (
                     <SignedImg src={it.image_url} alt={it.name} className="h-full w-full object-cover" />
                   ) : (
-                    <Package className="h-10 w-10" />
+                    <Package className="h-20 w-20" />
                   )}
                   <Badge className="absolute top-1 right-1 bg-emerald-600 text-white text-[10px]">×{it.stock_qty}</Badge>
                 </div>
