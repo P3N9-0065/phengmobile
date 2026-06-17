@@ -28,6 +28,7 @@ import { fallbackLookup, type LookupItem } from "@/lib/barcode-lookup";
 import { clearScanCache } from "@/lib/scan-cache";
 import { useLoyaltySettings, computeTier, TIER_LABEL, TIER_COLOR } from "@/lib/loyalty";
 import { Award } from "lucide-react";
+import { SignedImg } from "@/components/SignedImg";
 
 export const Route = createFileRoute("/_authenticated/pos")({
   component: POSPage,
