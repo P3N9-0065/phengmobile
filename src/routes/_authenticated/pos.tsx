@@ -334,7 +334,7 @@ function POSPage() {
           </div>
 
           {/* Product grid */}
-          <div className="p-3 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 overflow-auto" style={{ maxHeight: "calc(100vh - 16rem)" }}>
+          <div className="p-3 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 overflow-auto flex-1 min-h-0">
             {items?.map((it) => (
               <button
                 key={it.id}
