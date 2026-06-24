@@ -106,24 +106,36 @@ export function printReceipt() {
   w.document.write(`<!doctype html><html><head><title>Receipt</title>
 <style>
   @page { size: ${s.paper_width_mm}mm auto; margin: 0; }
-  body { margin: 0; font-family: 'Noto Sans Lao', monospace; font-size: ${s.font_size_px}px; }
-  #pos-receipt { width: ${s.paper_width_mm}mm; padding: 8px; }
-  img { max-width: 100%; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; }
+  body { font-family: 'Noto Sans Lao', 'Noto Sans Thai', monospace; font-size: ${s.font_size_px}px; color: #000; }
+  #pos-receipt {
+    width: ${s.paper_width_mm}mm;
+    max-width: ${s.paper_width_mm}mm;
+    padding: 2mm;
+    margin: 0;
+    box-sizing: border-box;
+    overflow: visible;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  img { max-width: 100%; height: auto; }
   .border-t { border-top: 1px dashed #000; }
   .border-b { border-bottom: 1px dashed #000; }
   .border-black { border-color: #000; }
   .border-dashed { border-style: dashed; }
   .flex { display: flex; }
   .justify-between { justify-content: space-between; }
+  .gap-2 { gap: 6px; }
   .text-center { text-align: center; }
   .font-bold { font-weight: bold; }
-  .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mt-1 { margin-top: 4px; } .mt-2 { margin-top: 8px; } .mt-3 { margin-top: 12px; }
   .mb-1 { margin-bottom: 4px; } .mb-2 { margin-bottom: 8px; }
   .pt-1 { padding-top: 4px; } .pt-2 { padding-top: 8px; } .pb-2 { padding-bottom: 8px; }
   .ml-2 { margin-left: 8px; }
   .mx-auto { margin-left: auto; margin-right: auto; }
   .space-y-1 > * + * { margin-top: 4px; }
+  .truncate { white-space: normal; overflow: visible; text-overflow: clip; }
 </style>
 </head><body>${node.outerHTML}</body></html>`);
   w.document.close();
