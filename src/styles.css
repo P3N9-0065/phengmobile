@@ -145,18 +145,58 @@
 
 @media print {
   @page { size: A5; margin: 6mm; }
-  html, body { background: white !important; }
+  html, body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
   /* Hide everything by default, then reveal only the receipt */
   body * { visibility: hidden !important; }
   .print-only, .print-only * { visibility: visible !important; }
   .print-only {
     display: block !important;
     position: absolute !important;
-    inset: 0 !important;
+    left: 0 !important;
+    top: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
     width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
+    vertical-align: top !important;
   }
+  .print-only * {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    overflow: visible !important;
+  }
+
+  /* Thermal receipt-specific (80mm / 58mm) */
+  @page thermal { size: 80mm auto; margin: 0; }
+  .thermal-receipt {
+    page: thermal;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    margin: 0 !important;
+    padding: 4mm 5mm !important;
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+    box-sizing: border-box !important;
+    vertical-align: top !important;
+    display: block !important;
+  }
+  .thermal-receipt * {
+    max-width: 100% !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+  }
+  .thermal-receipt .thermal-stack {
+    display: block !important;
+    width: 100% !important;
+  }
+
   /* Barcode label printing: reveal only the labels area */
   #barcode-print-area, #barcode-print-area * { visibility: visible !important; }
   #barcode-print-area {
@@ -176,5 +216,6 @@
   }
 }
 .print-only { display: none; }
+
 
 

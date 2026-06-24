@@ -32,7 +32,7 @@ export function SignupSlip({ signup }: { signup: SignupRecord }) {
       : `/signup/${signup.id}`;
 
   return (
-    <div className="print-only" style={{ color: "#000", background: "#fff", padding: "10mm", fontFamily: "sans-serif" }}>
+    <div className="print-only thermal-receipt" style={{ color: "#000", background: "#fff", width: "80mm", maxWidth: "80mm", padding: "4mm 5mm", margin: 0, fontFamily: "sans-serif", fontSize: "11px", lineHeight: 1.4, verticalAlign: "top", wordWrap: "break-word", overflowWrap: "break-word", boxSizing: "border-box" }}>
       <div style={{ textAlign: "center", borderBottom: "2px solid #000", paddingBottom: 8, marginBottom: 10 }}>
         <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{settings.shop_name}</h1>
         {settings.shop_name_en && <p style={{ fontSize: 12, margin: "2px 0" }}>{settings.shop_name_en}</p>}
@@ -41,7 +41,7 @@ export function SignupSlip({ signup }: { signup: SignupRecord }) {
         <h2 style={{ fontSize: 14, fontWeight: 700, marginTop: 8 }}>ໃບຂໍ້ມູນບັນຊີສະໝັກ</h2>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, fontSize: 12, lineHeight: 1.6 }}>
+      <div className="thermal-stack" style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, fontSize: 12, lineHeight: 1.6 }}>
         <div>
           <Row label="ວັນທີ" value={created} />
           <Row label="ລູກຄ້າ" value={signup.customer_name_snapshot} />
