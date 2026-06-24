@@ -73,7 +73,7 @@ export function RepairReceipt({ ticket, customer, trackUrl }: Props) {
         </div>
 
         {/* Right: device photo + QR */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "130px" }}>
+        <div className="thermal-stack" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "130px", maxWidth: "100%" }}>
           {photo && (
             <SignedImg
               src={photo}
