@@ -21,23 +21,16 @@ export function RepairReceipt({ ticket, customer, trackUrl }: Props) {
 
   return (
     <div
-      className="repair-receipt print-only thermal-receipt bg-white text-black"
+      className="repair-receipt bg-white text-black"
       style={{
-        width: "80mm",
-        maxWidth: "80mm",
-        padding: "4mm 5mm",
-        margin: 0,
+        width: "100%",
+        padding: "4mm 6mm",
         fontFamily: "system-ui, sans-serif",
         fontSize: "11px",
-        lineHeight: 1.4,
+        lineHeight: 1.35,
         color: "#000",
-        verticalAlign: "top",
-        wordWrap: "break-word",
-        overflowWrap: "break-word",
-        boxSizing: "border-box",
       }}
     >
-
       {/* Header */}
       <div className="flex items-center justify-between" style={{ borderBottom: "1px solid #000", paddingBottom: "4px" }}>
         <div className="flex items-center gap-2">
@@ -55,8 +48,7 @@ export function RepairReceipt({ ticket, customer, trackUrl }: Props) {
       </div>
 
       {/* Body: info + photo + QR */}
-      <div className="thermal-stack" style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "8px", marginTop: "6px" }}>
-
+      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "8px", marginTop: "6px" }}>
         {/* Left: info */}
         <div>
           <Row label="ລູກຄ້າ" value={customer?.name} />
@@ -73,7 +65,7 @@ export function RepairReceipt({ ticket, customer, trackUrl }: Props) {
         </div>
 
         {/* Right: device photo + QR */}
-        <div className="thermal-stack" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "130px", maxWidth: "100%" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", width: "130px" }}>
           {photo && (
             <SignedImg
               src={photo}
@@ -97,7 +89,7 @@ export function RepairReceipt({ ticket, customer, trackUrl }: Props) {
       </div>
 
       {/* Signatures */}
-      <div className="thermal-stack" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginTop: "10px", fontSize: "10px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginTop: "10px", fontSize: "10px" }}>
         <div style={{ textAlign: "center" }}>
           {ticket.signature_url ? (
             <SignedImg src={ticket.signature_url} alt="sig" style={{ height: "36px", margin: "0 auto", objectFit: "contain" }} />
