@@ -52,14 +52,14 @@ export function Receipt({ data, settings }: { data: ReceiptData; settings?: PosS
       <div className="mb-2" style={{ fontSize: s.font_size_px - 1 }}>
         <div className="flex justify-between"><span>ບິນ:</span><span>{data.sale_code}</span></div>
         <div className="flex justify-between"><span>ວັນທີ:</span><span>{formatDateTime(data.created_at)}</span></div>
-        {data.cashier_email && <div className="flex justify-between"><span>ພະນັກງານ:</span><span className="truncate ml-2">{data.cashier_email}</span></div>}
-        {data.customer_name && <div className="flex justify-between"><span>ລູກຄ້າ:</span><span>{data.customer_name}</span></div>}
+        {data.cashier_email && <div className="flex justify-between gap-2"><span>ພະນັກງານ:</span><span style={{ wordBreak: "break-all", textAlign: "right" }}>{data.cashier_email}</span></div>}
+        {data.customer_name && <div className="flex justify-between gap-2"><span>ລູກຄ້າ:</span><span style={{ wordBreak: "break-word", textAlign: "right" }}>{data.customer_name}</span></div>}
       </div>
 
       <div className="border-t border-dashed border-black pt-2">
         {data.items.map((it, i) => (
           <div key={i} className="mb-1">
-            <div className="truncate">{it.name}</div>
+            <div style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>{it.name}</div>
             <div className="flex justify-between" style={{ fontSize: s.font_size_px - 1 }}>
               <span>{it.qty} × {formatLAK(it.unit_price)}</span>
               <span>{formatLAK(it.line_total)}</span>
