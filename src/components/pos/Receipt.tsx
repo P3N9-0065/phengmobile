@@ -25,9 +25,17 @@ export function Receipt({ data, settings }: { data: ReceiptData; settings?: PosS
   return (
     <div
       id="pos-receipt"
-      className={`font-mono text-black bg-white p-3 mx-auto ${widthClass}`}
-      style={{ fontSize: `${s.font_size_px}px`, lineHeight: 1.35 }}
+      className={`font-mono text-black bg-white mx-auto ${widthClass}`}
+      style={{
+        fontSize: `${s.font_size_px}px`,
+        lineHeight: 1.35,
+        padding: "2mm",
+        boxSizing: "border-box",
+        wordBreak: "break-word",
+        overflowWrap: "anywhere",
+      }}
     >
+
       <div className="text-center border-b border-dashed border-black pb-2 mb-2">
         {s.show_logo && (
           <img src={logoSrc} alt="logo" className="mx-auto mb-1" style={{ width: 56, height: 56, objectFit: "contain" }} />
