@@ -144,42 +144,18 @@
 }
 
 @media print {
-  /* Default page = A5 with tight top margin. Templates that need a
-     different size (thermal receipts) set their own @page via inline CSS
-     in the popup window opened by printReceipt(). */
-  @page { size: A5; margin: 10mm 8mm; }
-  html, body {
-    background: white !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    height: auto !important;
-    min-height: 0 !important;
-  }
+  @page { size: A5; margin: 6mm; }
+  html, body { background: white !important; }
   /* Hide everything by default, then reveal only the receipt */
   body * { visibility: hidden !important; }
   .print-only, .print-only * { visibility: visible !important; }
   .print-only {
     display: block !important;
     position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: auto !important;
+    inset: 0 !important;
     width: 100% !important;
-    height: auto !important;
-    min-height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
-    /* Force top alignment — never vertical-center print content */
-    display: block !important;
-    align-items: stretch !important;
-    justify-content: flex-start !important;
-    page-break-before: avoid;
-    page-break-after: avoid;
-  }
-  .print-only > * {
-    margin-top: 0 !important;
-    page-break-inside: avoid;
   }
   /* Barcode label printing: reveal only the labels area */
   #barcode-print-area, #barcode-print-area * { visibility: visible !important; }

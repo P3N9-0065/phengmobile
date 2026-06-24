@@ -32,7 +32,7 @@ export function SignupSlip({ signup }: { signup: SignupRecord }) {
       : `/signup/${signup.id}`;
 
   return (
-    <div className="print-only" style={{ color: "#000", background: "#fff", padding: "2mm 4mm", fontFamily: "sans-serif" }}>
+    <div className="print-only" style={{ color: "#000", background: "#fff", padding: "10mm", fontFamily: "sans-serif" }}>
       <div style={{ textAlign: "center", borderBottom: "2px solid #000", paddingBottom: 8, marginBottom: 10 }}>
         <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{settings.shop_name}</h1>
         {settings.shop_name_en && <p style={{ fontSize: 12, margin: "2px 0" }}>{settings.shop_name_en}</p>}
