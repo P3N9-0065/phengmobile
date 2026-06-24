@@ -25,9 +25,17 @@ export function Receipt({ data, settings }: { data: ReceiptData; settings?: PosS
   return (
     <div
       id="pos-receipt"
-      className={`font-mono text-black bg-white p-3 mx-auto ${widthClass}`}
-      style={{ fontSize: `${s.font_size_px}px`, lineHeight: 1.35 }}
+      className={`font-mono text-black bg-white mx-auto ${widthClass}`}
+      style={{
+        fontSize: `${s.font_size_px}px`,
+        lineHeight: 1.35,
+        padding: "2mm",
+        boxSizing: "border-box",
+        wordBreak: "break-word",
+        overflowWrap: "anywhere",
+      }}
     >
+
       <div className="text-center border-b border-dashed border-black pb-2 mb-2">
         {s.show_logo && (
           <img src={logoSrc} alt="logo" className="mx-auto mb-1" style={{ width: 56, height: 56, objectFit: "contain" }} />
@@ -44,14 +52,14 @@ export function Receipt({ data, settings }: { data: ReceiptData; settings?: PosS
       <div className="mb-2" style={{ fontSize: s.font_size_px - 1 }}>
         <div className="flex justify-between"><span>ບິນ:</span><span>{data.sale_code}</span></div>
         <div className="flex justify-between"><span>ວັນທີ:</span><span>{formatDateTime(data.created_at)}</span></div>
-        {data.cashier_email && <div className="flex justify-between"><span>ພະນັກງານ:</span><span className="truncate ml-2">{data.cashier_email}</span></div>}
-        {data.customer_name && <div className="flex justify-between"><span>ລູກຄ້າ:</span><span>{data.customer_name}</span></div>}
+        {data.cashier_email && <div className="flex justify-between gap-2"><span>ພະນັກງານ:</span><span style={{ wordBreak: "break-all", textAlign: "right" }}>{data.cashier_email}</span></div>}
+        {data.customer_name && <div className="flex justify-between gap-2"><span>ລູກຄ້າ:</span><span style={{ wordBreak: "break-word", textAlign: "right" }}>{data.customer_name}</span></div>}
       </div>
 
       <div className="border-t border-dashed border-black pt-2">
         {data.items.map((it, i) => (
           <div key={i} className="mb-1">
-            <div className="truncate">{it.name}</div>
+            <div style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>{it.name}</div>
             <div className="flex justify-between" style={{ fontSize: s.font_size_px - 1 }}>
               <span>{it.qty} × {formatLAK(it.unit_price)}</span>
               <span>{formatLAK(it.line_total)}</span>
@@ -98,24 +106,36 @@ export function printReceipt() {
   w.document.write(`<!doctype html><html><head><title>Receipt</title>
 <style>
   @page { size: ${s.paper_width_mm}mm auto; margin: 0; }
-  body { margin: 0; font-family: 'Noto Sans Lao', monospace; font-size: ${s.font_size_px}px; }
-  #pos-receipt { width: ${s.paper_width_mm}mm; padding: 8px; }
-  img { max-width: 100%; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; }
+  body { font-family: 'Noto Sans Lao', 'Noto Sans Thai', monospace; font-size: ${s.font_size_px}px; color: #000; }
+  #pos-receipt {
+    width: ${s.paper_width_mm}mm;
+    max-width: ${s.paper_width_mm}mm;
+    padding: 2mm;
+    margin: 0;
+    box-sizing: border-box;
+    overflow: visible;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  img { max-width: 100%; height: auto; }
   .border-t { border-top: 1px dashed #000; }
   .border-b { border-bottom: 1px dashed #000; }
   .border-black { border-color: #000; }
   .border-dashed { border-style: dashed; }
   .flex { display: flex; }
   .justify-between { justify-content: space-between; }
+  .gap-2 { gap: 6px; }
   .text-center { text-align: center; }
   .font-bold { font-weight: bold; }
-  .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mt-1 { margin-top: 4px; } .mt-2 { margin-top: 8px; } .mt-3 { margin-top: 12px; }
   .mb-1 { margin-bottom: 4px; } .mb-2 { margin-bottom: 8px; }
   .pt-1 { padding-top: 4px; } .pt-2 { padding-top: 8px; } .pb-2 { padding-bottom: 8px; }
   .ml-2 { margin-left: 8px; }
   .mx-auto { margin-left: auto; margin-right: auto; }
   .space-y-1 > * + * { margin-top: 4px; }
+  .truncate { white-space: normal; overflow: visible; text-overflow: clip; }
 </style>
 </head><body>${node.outerHTML}</body></html>`);
   w.document.close();
