@@ -55,7 +55,8 @@ export function RepairReceipt({ ticket, customer, trackUrl }: Props) {
       </div>
 
       {/* Body: info + photo + QR */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "8px", marginTop: "6px" }}>
+      <div className="thermal-stack" style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "8px", marginTop: "6px" }}>
+
         {/* Left: info */}
         <div>
           <Row label="ລູກຄ້າ" value={customer?.name} />
