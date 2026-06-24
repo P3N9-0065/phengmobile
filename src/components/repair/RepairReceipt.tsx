@@ -21,16 +21,23 @@ export function RepairReceipt({ ticket, customer, trackUrl }: Props) {
 
   return (
     <div
-      className="repair-receipt bg-white text-black"
+      className="repair-receipt print-only thermal-receipt bg-white text-black"
       style={{
-        width: "100%",
-        padding: "4mm 6mm",
+        width: "80mm",
+        maxWidth: "80mm",
+        padding: "4mm 5mm",
+        margin: 0,
         fontFamily: "system-ui, sans-serif",
         fontSize: "11px",
-        lineHeight: 1.35,
+        lineHeight: 1.4,
         color: "#000",
+        verticalAlign: "top",
+        wordWrap: "break-word",
+        overflowWrap: "break-word",
+        boxSizing: "border-box",
       }}
     >
+
       {/* Header */}
       <div className="flex items-center justify-between" style={{ borderBottom: "1px solid #000", paddingBottom: "4px" }}>
         <div className="flex items-center gap-2">
