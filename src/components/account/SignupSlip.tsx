@@ -41,7 +41,7 @@ export function SignupSlip({ signup }: { signup: SignupRecord }) {
         <h2 style={{ fontSize: 14, fontWeight: 700, marginTop: 8 }}>ໃບຂໍ້ມູນບັນຊີສະໝັກ</h2>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, fontSize: 12, lineHeight: 1.6 }}>
+      <div className="thermal-stack" style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, fontSize: 12, lineHeight: 1.6 }}>
         <div>
           <Row label="ວັນທີ" value={created} />
           <Row label="ລູກຄ້າ" value={signup.customer_name_snapshot} />
