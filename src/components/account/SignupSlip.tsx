@@ -32,76 +32,92 @@ export function SignupSlip({ signup }: { signup: SignupRecord }) {
       : `/signup/${signup.id}`;
 
   return (
-    <div className="print-only" style={{ color: "#000", background: "#fff", padding: "10mm", fontFamily: "sans-serif" }}>
-      <div style={{ textAlign: "center", borderBottom: "2px solid #000", paddingBottom: 8, marginBottom: 10 }}>
-        <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{settings.shop_name}</h1>
-        {settings.shop_name_en && <p style={{ fontSize: 12, margin: "2px 0" }}>{settings.shop_name_en}</p>}
-        {settings.shop_phone && <p style={{ fontSize: 11, margin: "2px 0" }}>ໂທ: {settings.shop_phone}</p>}
-        {settings.shop_address && <p style={{ fontSize: 11, margin: "2px 0" }}>{settings.shop_address}</p>}
-        <h2 style={{ fontSize: 14, fontWeight: 700, marginTop: 8 }}>ໃບຂໍ້ມູນບັນຊີສະໝັກ</h2>
+    <div
+      className="print-only signup-slip-80"
+      style={{
+        color: "#000",
+        background: "#fff",
+        width: "80mm",
+        padding: "3mm",
+        margin: "0 auto",
+        fontFamily: "'Noto Sans Lao', sans-serif",
+        fontSize: 11,
+        lineHeight: 1.35,
+      }}
+    >
+      <div style={{ textAlign: "center", borderBottom: "1px dashed #000", paddingBottom: 4, marginBottom: 6 }}>
+        <h1 style={{ fontSize: 13, fontWeight: 700, margin: 0 }}>{settings.shop_name}</h1>
+        {settings.shop_name_en && <p style={{ fontSize: 10, margin: "1px 0" }}>{settings.shop_name_en}</p>}
+        {settings.shop_phone && <p style={{ fontSize: 10, margin: "1px 0" }}>ໂທ: {settings.shop_phone}</p>}
+        {settings.shop_address && <p style={{ fontSize: 10, margin: "1px 0" }}>{settings.shop_address}</p>}
+        <h2 style={{ fontSize: 12, fontWeight: 700, marginTop: 4 }}>ໃບຂໍ້ມູນບັນຊີສະໝັກ</h2>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, fontSize: 12, lineHeight: 1.6 }}>
-        <div>
-          <Row label="ວັນທີ" value={created} />
-          <Row label="ລູກຄ້າ" value={signup.customer_name_snapshot} />
-          {signup.customer_phone_snapshot && <Row label="ເບີໂທ" value={signup.customer_phone_snapshot} />}
-          <Row label="ປະເພດບັນຊີ" value={TYPE_LABEL[signup.account_type] ?? signup.account_type} />
+      <div style={{ fontSize: 11, lineHeight: 1.5 }}>
+        <Row label="ວັນທີ" value={created} />
+        <Row label="ລູກຄ້າ" value={signup.customer_name_snapshot} />
+        {signup.customer_phone_snapshot && <Row label="ເບີໂທ" value={signup.customer_phone_snapshot} />}
+        <Row label="ປະເພດ" value={TYPE_LABEL[signup.account_type] ?? signup.account_type} />
+      </div>
+
+      <div style={{ border: "1px dashed #000", padding: 5, margin: "6px 0", borderRadius: 2 }}>
+        <p style={{ fontWeight: 700, margin: "0 0 3px", fontSize: 11 }}>ຂໍ້ມູນບັນຊີ</p>
+        <Row label="ອີເມວ" value={signup.account_email} mono />
+        {signup.account_password && <Row label="ລະຫັດຜ່ານ" value={signup.account_password} mono />}
+        {signup.recovery_email && <Row label="ອີເມວກູ້ຄືນ" value={signup.recovery_email} mono />}
+        {signup.recovery_phone && <Row label="ເບີກູ້ຄືນ" value={signup.recovery_phone} />}
+        {signup.birthdate && <Row label="ວັນເກີດ" value={signup.birthdate} />}
+      </div>
+
+      {Number(signup.service_fee) > 0 && (
+        <Row label="ຄ່າບໍລິການ" value={`${Number(signup.service_fee).toLocaleString()} LAK`} />
+      )}
+
+      {signup.notes && (
+        <div style={{ marginTop: 4 }}>
+          <p style={{ fontSize: 10, fontWeight: 700, margin: 0 }}>ໝາຍເຫດ:</p>
+          <p style={{ fontSize: 10, margin: "1px 0" }}>{signup.notes}</p>
         </div>
-        <div style={{ textAlign: "center" }}>
-          <QRCodeCanvas value={trackUrl} size={90} level="M" includeMargin={false} />
-          <p style={{ fontSize: 9, margin: "4px 0 0" }}>ສະແກນເບິ່ງຂໍ້ມູນ</p>
+      )}
+
+      <div style={{ textAlign: "center", margin: "8px 0" }}>
+        <QRCodeCanvas value={trackUrl} size={80} level="M" includeMargin={false} />
+        <p style={{ fontSize: 9, margin: "2px 0 0" }}>ສະແກນເບິ່ງຂໍ້ມູນ</p>
+      </div>
+
+      <div style={{ padding: 4, border: "1px solid #000", borderRadius: 2, fontSize: 9, textAlign: "center" }}>
+        <p style={{ margin: 0, fontWeight: 700 }}>⚠ ເກັບຮັກສາຂໍ້ມູນໃຫ້ປອດໄພ</p>
+        <p style={{ margin: "1px 0 0" }}>ຢ່າແບ່ງປັນລະຫັດຜ່ານໃຫ້ຜູ້ອື່ນ</p>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16, fontSize: 10, gap: 6 }}>
+        <div style={{ textAlign: "center", flex: 1 }}>
+          <div style={{ borderTop: "1px solid #000", marginBottom: 2 }} />
+          <span>ພະນັກງານ</span>
+        </div>
+        <div style={{ textAlign: "center", flex: 1 }}>
+          <div style={{ borderTop: "1px solid #000", marginBottom: 2 }} />
+          <span>ລູກຄ້າ</span>
         </div>
       </div>
 
-      <div style={{ fontSize: 12, lineHeight: 1.6 }}>
-        <div style={{ border: "1px dashed #000", padding: 8, margin: "10px 0", borderRadius: 4 }}>
-          <p style={{ fontWeight: 700, marginBottom: 4, fontSize: 12 }}>ຂໍ້ມູນບັນຊີ</p>
-          <Row label="ອີເມວ" value={signup.account_email} mono />
-          {signup.account_password && <Row label="ລະຫັດຜ່ານ" value={signup.account_password} mono />}
-          {signup.recovery_email && <Row label="ອີເມວກູ້ຄືນ" value={signup.recovery_email} mono />}
-          {signup.recovery_phone && <Row label="ເບີກູ້ຄືນ" value={signup.recovery_phone} />}
-          {signup.birthdate && <Row label="ວັນເດືອນປີເກີດ" value={signup.birthdate} />}
-        </div>
+      {settings.receipt_footer && (
+        <p style={{ textAlign: "center", fontSize: 10, marginTop: 8, fontStyle: "italic" }}>{settings.receipt_footer}</p>
+      )}
 
-        {Number(signup.service_fee) > 0 && (
-          <Row label="ຄ່າບໍລິການ" value={`${Number(signup.service_fee).toLocaleString()} LAK`} />
-        )}
-
-        {signup.notes && (
-          <div style={{ marginTop: 8 }}>
-            <p style={{ fontSize: 11, fontWeight: 700, margin: 0 }}>ໝາຍເຫດ:</p>
-            <p style={{ fontSize: 11, margin: "2px 0" }}>{signup.notes}</p>
-          </div>
-        )}
-
-        <div style={{ marginTop: 14, padding: 8, border: "1px solid #000", borderRadius: 4, fontSize: 10 }}>
-          <p style={{ margin: 0, fontWeight: 700 }}>⚠ ກະລຸນາເກັບຮັກສາຂໍ້ມູນນີ້ໄວ້ໃຫ້ປອດໄພ</p>
-          <p style={{ margin: "2px 0 0" }}>ບໍ່ຄວນແບ່ງປັນລະຫັດຜ່ານໃຫ້ກັບຜູ້ອື່ນ. ຮ້ານບໍ່ຮັບຜິດຊອບກໍລະນີຂໍ້ມູນຮົ່ວໄຫຼ ຫຼັງຈາກສົ່ງມອບໃຫ້ລູກຄ້າ.</p>
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 30, fontSize: 11 }}>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ borderTop: "1px solid #000", width: 140, marginBottom: 4 }} />
-            <span>ພະນັກງານ</span>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ borderTop: "1px solid #000", width: 140, marginBottom: 4 }} />
-            <span>ລູກຄ້າ</span>
-          </div>
-        </div>
-
-        {settings.receipt_footer && (
-          <p style={{ textAlign: "center", fontSize: 11, marginTop: 14, fontStyle: "italic" }}>{settings.receipt_footer}</p>
-        )}
-      </div>
+      <style>{`
+        @media print {
+          @page { size: 80mm auto; margin: 0; }
+          .signup-slip-80 { width: 80mm !important; padding: 3mm !important; margin: 0 !important; }
+        }
+      `}</style>
     </div>
   );
 }
 
 function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", gap: 6 }}>
       <span style={{ color: "#444" }}>{label}:</span>
       <span style={{ fontFamily: mono ? "monospace" : undefined, textAlign: "right", wordBreak: "break-all" }}>{value}</span>
     </div>
