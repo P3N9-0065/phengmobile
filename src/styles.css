@@ -144,24 +144,35 @@
 }
 
 @media print {
-  @page { size: A5; margin: 6mm; }
-  html, body { background: white !important; }
+  @page { size: 80mm auto; margin: 2mm; }
+  html, body {
+    background: white !important;
+    width: 80mm !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  * { box-sizing: border-box; }
   /* Hide everything by default, then reveal only the receipt */
   body * { visibility: hidden !important; }
   .print-only, .print-only * { visibility: visible !important; }
   .print-only {
     display: block !important;
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
+    position: static !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
     margin: 0 !important;
     padding: 0 !important;
+    page-break-inside: auto;
+  }
+  .print-only * {
+    page-break-inside: avoid;
   }
   /* Barcode label printing: reveal only the labels area */
   #barcode-print-area, #barcode-print-area * { visibility: visible !important; }
   #barcode-print-area {
-    position: absolute !important;
-    left: 0 !important; top: 0 !important;
+    position: static !important;
     width: 100% !important;
     background: white !important;
     padding: 0 !important; margin: 0 !important;
@@ -175,6 +186,7 @@
     margin: 0 auto 2mm auto !important;
   }
 }
+
 .print-only { display: none; }
 
 

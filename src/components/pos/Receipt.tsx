@@ -97,10 +97,12 @@ export function printReceipt() {
   if (!w) return;
   w.document.write(`<!doctype html><html><head><title>Receipt</title>
 <style>
-  @page { size: ${s.paper_width_mm}mm auto; margin: 0; }
-  body { margin: 0; font-family: 'Noto Sans Lao', monospace; font-size: ${s.font_size_px}px; }
-  #pos-receipt { width: ${s.paper_width_mm}mm; padding: 8px; }
-  img { max-width: 100%; }
+  @page { size: ${s.paper_width_mm}mm auto; margin: 2mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: ${s.paper_width_mm}mm; height: auto; margin: 0; padding: 0; overflow: visible;
+    font-family: 'Noto Sans Lao', monospace; font-size: ${s.font_size_px}px; line-height: 1.3; color: #000; background: #fff; }
+  #pos-receipt { width: 100%; padding: 0; margin: 0; }
+  img { max-width: 100%; display: block; }
   .border-t { border-top: 1px dashed #000; }
   .border-b { border-bottom: 1px dashed #000; }
   .border-black { border-color: #000; }
@@ -110,15 +112,17 @@ export function printReceipt() {
   .text-center { text-align: center; }
   .font-bold { font-weight: bold; }
   .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .mt-1 { margin-top: 4px; } .mt-2 { margin-top: 8px; } .mt-3 { margin-top: 12px; }
-  .mb-1 { margin-bottom: 4px; } .mb-2 { margin-bottom: 8px; }
-  .pt-1 { padding-top: 4px; } .pt-2 { padding-top: 8px; } .pb-2 { padding-bottom: 8px; }
-  .ml-2 { margin-left: 8px; }
+  .mt-1 { margin-top: 2px; } .mt-2 { margin-top: 3px; } .mt-3 { margin-top: 4px; }
+  .mb-1 { margin-bottom: 2px; } .mb-2 { margin-bottom: 3px; }
+  .pt-1 { padding-top: 2px; } .pt-2 { padding-top: 3px; } .pb-2 { padding-bottom: 3px; }
+  .ml-2 { margin-left: 6px; }
   .mx-auto { margin-left: auto; margin-right: auto; }
-  .space-y-1 > * + * { margin-top: 4px; }
+  .space-y-1 > * + * { margin-top: 2px; }
+  p { margin: 0; }
 </style>
 </head><body>${node.outerHTML}</body></html>`);
   w.document.close();
   w.focus();
   setTimeout(() => { w.print(); w.close(); }, 300);
 }
+
