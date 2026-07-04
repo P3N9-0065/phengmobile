@@ -77,9 +77,11 @@ export function RepairReceipt({ ticket, customer, trackUrl }: Props) {
       )}
 
       {/* QR */}
-      <div style={{ display: "block", textAlign: "center", marginTop: 2 }}>
-        <QRCodeCanvas value={trackUrl} size={110} level="M" includeMargin={false} />
-        <div style={{ fontSize: 9, marginTop: 1 }}>ສະແກນເພື່ອຕິດຕາມສະຖານະ</div>
+      <div className="qr-section">
+        <div className="qr-code">
+          <QRCodeCanvas value={trackUrl} size={113} level="M" includeMargin={false} style={{ width: "100%", height: "100%" }} />
+        </div>
+        <div className="qr-text">สแกนเพื่อตรวจสอบสถานะงานซ่อม</div>
       </div>
 
       {/* Signatures — stacked block, no flex/space-between */}
