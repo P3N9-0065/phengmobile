@@ -207,6 +207,23 @@
     border: none !important;
     margin: 0 auto 2mm auto !important;
   }
+  .qr-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 8mm 0;
+  }
+  .qr-code {
+    width: 30mm;
+    height: 30mm;
+  }
+  .qr-text {
+    text-align: center;
+    font-size: 10px;
+    margin-top: 2mm;
+  }
 }
 .print-only { display: none; }
 
