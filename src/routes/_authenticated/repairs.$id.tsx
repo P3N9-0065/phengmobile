@@ -133,7 +133,7 @@ function RepairDetailPage() {
   if (!ticket) return <p>ກຳລັງໂຫຼດ...</p>;
 
   const partsTotal = (parts ?? []).reduce((s, p) => s + Number(p.unit_price) * p.qty, 0);
-  const trackUrl = `${window.location.origin}/track/${ticket.ticket_code}`;
+  const trackUrl = `${window.location.origin}/track/${ticket.tracking_token ?? ticket.ticket_code}`;
 
   return (
     <>
