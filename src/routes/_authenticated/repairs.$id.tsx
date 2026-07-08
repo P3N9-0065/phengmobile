@@ -419,7 +419,7 @@ function RepairDetailPage() {
                 </Button>
               </div>
               <a
-                href={`/track/${ticket.ticket_code}`}
+                href={`/track/${ticket.tracking_token ?? ticket.ticket_code}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-primary hover:underline flex items-center gap-1 break-all justify-center"
