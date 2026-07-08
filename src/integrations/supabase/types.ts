@@ -660,6 +660,7 @@ export type Database = {
           status: Database["public"]["Enums"]["repair_status"]
           technician_id: string | null
           ticket_code: string
+          tracking_token: string
           updated_at: string
           warranty_days: number
           warranty_until: string | null
@@ -688,6 +689,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["repair_status"]
           technician_id?: string | null
           ticket_code?: string
+          tracking_token?: string
           updated_at?: string
           warranty_days?: number
           warranty_until?: string | null
@@ -716,6 +718,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["repair_status"]
           technician_id?: string | null
           ticket_code?: string
+          tracking_token?: string
           updated_at?: string
           warranty_days?: number
           warranty_until?: string | null
@@ -1397,6 +1400,7 @@ export type Database = {
         }
         Returns: string
       }
+      track_repair_public: { Args: { _token: string }; Returns: Json }
       track_shop_order: {
         Args: { _code: string }
         Returns: {
